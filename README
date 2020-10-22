@@ -83,7 +83,8 @@ Please include:
 all.h         general include file with all structures and defines
 protos.h      contains all function prototypes and 'extern' variables
 
-main.c        contains main() and argument parsing
+main.c        contains main()
+options.c     contains argument parsing
 load.c        contains all routines necessary for loading the SGF file
               and building up a tree structure
 save.c        just the opposite to load.c
@@ -270,7 +271,7 @@ option. With '-d' it's possible to disable specific messages.
 Fatal error messages cannot be disabled.
 
 Hint: there are messages which can be printed up to 100 times, but which
-are not really critical. This messages are
+are not really critical. These messages are
 Warning 24: removed empty value (e.g. 'C[]')
 Warning 29: deleted property <x> (when specifying -o or -yXX)
 Warning 40: property not part of FF[x] (e.g. FF[3] file without FF[] property)

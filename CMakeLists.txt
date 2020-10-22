@@ -3,18 +3,19 @@ project(sgfc C)
 
 set(CMAKE_C_STANDARD 11)
 
-include_directories(.)
+include_directories(src)
 
 add_executable(sgfc
-        all.h
-        execute.c
-        gameinfo.c
-        load.c
-        main.c
-        parse.c
-        parse2.c
-        properties.c
-        protos.h
-        save.c
-        strict.c
-        util.c)
+        src/all.h
+        src/execute.c
+        src/gameinfo.c
+        src/load.c
+        src/main.c
+        src/options.c
+        src/parse.c
+        src/parse2.c
+        src/properties.c
+        src/protos.h
+        src/save.c
+        src/strict.c
+        src/util.c)

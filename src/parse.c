@@ -95,12 +95,12 @@ static int Parse_Text(char *value, U_SHORT flags)
 	{									/*			and all WS to space */
 		if(*s == '\r' || *s == '\n')	/* linebreak char? */
 		{
-			if(old && old != *s)		/* different from preceeding char? */
+			if(old && old != *s)		/* different from preceding char? */
 				old = 0;				/* -> no real linebreak */
 			else
 			{
 				old = *s;
-				*d++ = nl;				/* insert lienbreak */
+				*d++ = nl;				/* insert linebreak */
 			}
 		}
 		else							/* other chars than \r,\n */

@@ -18,7 +18,7 @@ OPTIMIZATION = -O1
 CFLAGS = $(OPTIMIZATION) $(OPTIONS)
 
 LIB = 
-OBJ = execute.o gameinfo.o load.o main.o parse.o parse2.o\
+OBJ = execute.o gameinfo.o load.o main.o parse.o parse2.o options.o\
 	properties.o save.o strict.o util.o
 
 sgfc: $(OBJ)

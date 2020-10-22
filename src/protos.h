@@ -8,9 +8,10 @@
 **************************************************************************/
 
 
-/**** main.c ****/
+/**** options.c ****/
 
 extern struct SGFInfo *sgfc;
+int ParseArgs(int , char *[]);
 
 extern char option_warnings;
 extern char option_keep_head;
