@@ -10,12 +10,12 @@
 #include <stdlib.h>
 #include <check.h>
 
-extern TCase *sgfc_tc_parse_prop_values();
+extern TCase *sgfc_tc_parse_text();
 
 Suite *sgfc_suite(void)
 {
 	Suite *s = suite_create("SGFC");
-	suite_add_tcase(s, sgfc_tc_parse_prop_values());
+	suite_add_tcase(s, sgfc_tc_parse_text());
 	return s;
 }
 

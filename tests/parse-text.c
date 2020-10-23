@@ -66,8 +66,39 @@ START_TEST (test_trailing_spaces_simpletext)
 }
 END_TEST
 
+START_TEST (test_composed_simpletext_linebreaks)
+{
+	struct Property p;
+	struct PropValue v;
 
-TCase *sgfc_tc_parse_prop_values ()
+	p.flags = PVT_SIMPLE|PVT_COMPOSE;
+	p.value = &v;
+
+	char val1a[] = "aaa \\ ", val2a[] = "bbb \\ ";
+	v.value = val1a;
+	v.value2 = val2a;
+    Check_Text(&p, &v);
+	ck_assert_str_eq(val1a, "aaa");
+	ck_assert_str_eq(val2a, "bbb");
+
+	char val1b[] = "a\\\naa", val2b[] = "b\\\nbb";
+	v.value = val1b;
+	v.value2 = val2b;
+    Check_Text(&p, &v);
+	ck_assert_str_eq(val1b, "aaa");
+	ck_assert_str_eq(val2b, "bbb");
+
+	char val1c[] = "aa\na", val2c[] = "bb\nb";
+	v.value = val1c;
+	v.value2 = val2c;
+    Check_Text(&p, &v);
+	ck_assert_str_eq(val1c, "aa a");
+	ck_assert_str_eq(val2c, "bb b");
+}
+END_TEST
+
+
+TCase *sgfc_tc_parse_text()
 {
 	TCase *tc;
 
@@ -76,5 +107,6 @@ TCase *sgfc_tc_parse_prop_values ()
 	tcase_add_test(tc, test_soft_linebreak);
 	tcase_add_test(tc, test_trailing_spaces);
 	tcase_add_test(tc, test_trailing_spaces_simpletext);
+	tcase_add_test(tc, test_composed_simpletext_linebreaks);
 	return tc;
 }

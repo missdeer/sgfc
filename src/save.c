@@ -331,7 +331,7 @@ void SaveSGF(struct SGFInfo *sgf)
 	char *c, name[500];
 	int nl = 0, i = 1;
 
-	sgfc = sgf;					/* set curent SGFInfo context */
+	sgfc = sgf;					/* set current SGFInfo context */
 
 	if(strlen(sgf->name) > 480)
 		PrintError(FE_DEST_NAME_TOO_LONG);

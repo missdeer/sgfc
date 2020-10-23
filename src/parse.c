@@ -490,13 +490,18 @@ int Check_Value(struct Property *p, struct PropValue *v, U_SHORT flags,
 
 int Check_Text(struct Property *p, struct PropValue *v)
 {
-	if(!Parse_Text(v->value, p->flags))
+	int value_len, value2_len = 0;
+
+	value_len = Parse_Text(v->value, p->flags);
+	if (p->flags & (PVT_COMPOSE|PVT_WEAKCOMPOSE) && v->value2)
 	{
-		if(p->flags & PVT_DEL_EMPTY)
-		{
-			PrintError(W_EMPTY_VALUE_DELETED, v->buffer, p->idstr, "found");
-			return(FALSE);
-		}
+		value2_len = Parse_Text(v->value2, p->flags);
+	}
+
+	if(!value_len && !value2_len && (p->flags & PVT_DEL_EMPTY))
+	{
+		PrintError(W_EMPTY_VALUE_DELETED, v->buffer, p->idstr, "found");
+		return(FALSE);
 	}
 	return(TRUE);
 }
