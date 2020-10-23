@@ -2,7 +2,7 @@
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 properties.c
 ***
-*** Copyright (C) 1996-2018 by Arno Hollosi
+*** Copyright (C) 1996-2020 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
 ***
 **************************************************************************/
@@ -110,7 +110,7 @@ struct SGFToken sgf_token[] =
 	{ "CP",	65, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|DOUBLE_MERGE|SPLIT_SAVE, 0 },
 
 	{ "L",	49,	FF12,	Check_Pos,	Do_Letter,	PVT_LIST|DOUBLE_MERGE, ST_LABEL|ST_OBSOLETE },
-	{ "LB",	50, FF34,	Check_Label,Do_Markup,	PVT_LIST|PVT_COMPOSE|DOUBLE_MERGE, ST_LABEL },
+	{ "LB",	50, FF34,	Check_Label,Do_Markup,	PVT_LIST|PVT_COMPOSE|DOUBLE_MERGE|PVT_SIMPLE, ST_LABEL },
 	{ "AR",	50, FF4,	Check_AR_LN,NULL,		PVT_LIST|PVT_COMPOSE|DOUBLE_MERGE, 0 },
 	{ "LN",	50, FF4,	Check_AR_LN,NULL,		PVT_LIST|PVT_COMPOSE|DOUBLE_MERGE, 0 },
 	{ "M",	49, FF12,	Check_Pos,	Do_Mark,	PVT_LIST|DOUBLE_MERGE, ST_MARKUP|ST_OBSOLETE },
