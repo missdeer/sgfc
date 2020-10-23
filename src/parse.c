@@ -83,10 +83,7 @@ int Parse_Text(char *value, U_SHORT flags)
 
 		if(*d == '\\' && d > value && *(d-1) != '\\')	/* remove trailing '\' */
 			*d = 0;
-	}while(!*d);
-
-	if(flags & PVT_SIMPLE)	nl = ' ';
-	else					nl = '\n';
+	} while(!*d);
 
 	end = value + strlen(value);
 	s = d = value;
@@ -100,7 +97,7 @@ int Parse_Text(char *value, U_SHORT flags)
 			else
 			{
 				old = *s;
-				*d++ = nl;				/* insert linebreak */
+				*d++ = '\n';			/* insert linebreak */
 			}
 		}
 		else							/* other chars than \r,\n */
@@ -144,7 +141,12 @@ int Parse_Text(char *value, U_SHORT flags)
 			continue;
 		}
 
-		if(*s == '\n')
+		if(*s == '\n') {
+			if (flags & PVT_SIMPLE) {
+				*d++ = ' ';
+				s++;
+				continue;
+			}
 			switch(option_linebreaks)
 			{
 				case 1:	/* every line break encountered */
@@ -185,6 +187,7 @@ int Parse_Text(char *value, U_SHORT flags)
 						break;
 						
 			}
+		}
 		else
 			*d++ = *s++;
 	}
