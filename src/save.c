@@ -328,16 +328,15 @@ void SaveSGF(struct SGFInfo *sgf)
 	FILE *sfile;
 	struct Node *n;
 	struct TreeInfo *info;
-	char *c, name[500];
+	char *c, *name;
 	int nl = 0, i = 1;
+	size_t name_buffer_size = strlen(sgf->name) + 6;
 
 	sgfc = sgf;					/* set current SGFInfo context */
 
-	if(strlen(sgf->name) > 480)
-		PrintFatalError(FE_DEST_NAME_TOO_LONG);
-
+	SaveMalloc(char *, name, name_buffer_size, "filename buffer");
 	if(option_split_file)
-		sprintf(name, "%s_%03d.sgf", sgf->name, i);
+		snprintf(name, name_buffer_size, "%s_%03d.sgf", sgf->name, i);
 	else
 		strcpy(name, sgf->name);
 
@@ -380,7 +379,7 @@ void SaveSGF(struct SGFInfo *sgf)
 		{
 			fclose(sfile);
 			i++;
-			sprintf(name, "%s_%03d.sgf", sgf->name, i);
+			snprintf(name, name_buffer_size, "%s_%03d.sgf", sgf->name, i);
 
 			if(!(sfile = fopen(name, "wb")))
 				PrintFatalError(FE_DEST_FILE_OPEN, name);
@@ -388,4 +387,5 @@ void SaveSGF(struct SGFInfo *sgf)
 	}
 
 	fclose(sfile);
+	free(name);
 }

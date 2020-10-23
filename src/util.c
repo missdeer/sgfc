@@ -95,7 +95,7 @@ static const char *error_mesg[] =
 /* 50 */
 	"used feature is not defined in FF[%d] (parsing done anyway)\n",
 	"<VW> property: %s (%s)\n",
-	"destination file name too long (max. length: 480 chars)\n",
+	"", /* currently not used */
 	"values without property id found (deleted)\n",
 	"empty node deleted\n",
 /* 55 */
