@@ -93,7 +93,7 @@ static int WriteChar(FILE *sfile, char c, int spc)
 *** Returns:	TRUE or FALSE
 **************************************************************************/
 
-static int WritePropValue(char *v, int second, U_SHORT flags, FILE *sfile)
+static int WritePropValue(const char *v, int second, U_SHORT flags, FILE *sfile)
 {
 	U_SHORT fl;
 

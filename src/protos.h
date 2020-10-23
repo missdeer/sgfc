@@ -38,9 +38,9 @@ extern char *option_outfile;
 
 /**** load.c ****/
 
-void CopyValue(char *, char *, size_t , int );
-struct PropValue *Add_PropValue(struct Property *, char *, char *,
-								size_t, char *, size_t);
+void CopyValue(char *, const char *, size_t , int );
+struct PropValue *Add_PropValue(struct Property *, char *, const char *,
+								size_t, const char *, size_t);
 struct Property *Add_Property(struct Node *, token , char *, char *);
 struct Node *NewNode(struct Node * , int);
 
@@ -142,7 +142,7 @@ struct PropValue *Del_PropValue(struct Property *, struct PropValue *);
 struct Property *Del_Property(struct Node *, struct Property *);
 struct Node *Del_Node(struct Node *, U_LONG);
 
-struct Property *New_PropValue(struct Node *, token, char *, char *, int);
+struct Property *New_PropValue(struct Node *, token, const char *, const char *, int);
 
 
 /**** strict.c ****/

@@ -200,7 +200,7 @@ static int SkipValues(int print_error)
 *** Returns:	-
 **************************************************************************/
 
-void CopyValue(char *d, char *s, size_t size, int printerror)
+void CopyValue(char *d, const char *s, size_t size, int printerror)
 {
 	while(size--)
 	{
@@ -229,8 +229,8 @@ void CopyValue(char *d, char *s, size_t size, int printerror)
 **************************************************************************/
 
 struct PropValue *Add_PropValue(struct Property *p, char *buffer,
-								char *value, size_t size,
-								char *value2, size_t size2)
+								const char *value, size_t size,
+								const char *value2, size_t size2)
 {
 	struct PropValue *newv;
 

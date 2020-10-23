@@ -857,7 +857,7 @@ struct Node *Del_Node(struct Node *n, U_LONG error_code)
 **************************************************************************/
 
 struct Property *New_PropValue(struct Node *n, token id,
-							   char *value, char *value2, int unique)
+							   const char *value, const char *value2, int unique)
 {
 	struct Property *p;
 	struct PropValue *v;
