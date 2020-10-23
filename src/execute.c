@@ -487,29 +487,25 @@ int Do_GInfo(struct Node *n, struct Property *p, struct BoardStatus *st)
 		PrintError(E4_GINFO_ALREADY_SET, p->buffer, p->idstr, y, x);
 		return(FALSE);
 	}
+
+	st->ginfo = n->buffer;
+	if(p->id != TKN_KI)
+		return(TRUE);
+
+	if(Find_Property(n, TKN_KM))
+		PrintError(W_INT_KOMI_FOUND, p->buffer, "deleted (<KM> property found)");
 	else
 	{
-		st->ginfo = n->buffer;
+		PrintError(W_INT_KOMI_FOUND, p->buffer, "converted to <KM>");
 
-		if(p->id == TKN_KI)
-		{
-			if(Find_Property(n, TKN_KM))
-				PrintError(W_INT_KOMI_FOUND, p->buffer, "deleted (<KM> property found)");
-			else
-			{
-				PrintError(W_INT_KOMI_FOUND, p->buffer, "converted to <KM>");
-
-				ki = strtol(p->value->value, NULL, 10);		/* we can ignore errors here */
-				SaveMalloc(char *, new_km, strlen(p->value->value)+3, "new KM number value");
-				if(ki % 2)	sprintf(new_km, "%ld.5", ki/2);
-				else		sprintf(new_km, "%ld", ki/2);
-				New_PropValue(n, TKN_KM, new_km, NULL, FALSE);
-				free(new_km);
-			}
-			return(FALSE);
-		}
-		return(TRUE);
+		ki = strtol(p->value->value, NULL, 10);		/* we can ignore errors here */
+		SaveMalloc(char *, new_km, strlen(p->value->value)+3, "new KM number value");
+		if(ki % 2)	sprintf(new_km, "%ld.5", ki/2);
+		else		sprintf(new_km, "%ld", ki/2);
+		New_PropValue(n, TKN_KM, new_km, NULL, FALSE);
+		free(new_km);
 	}
+	return(FALSE);
 }
 
 
@@ -576,7 +572,7 @@ int Do_View(struct Node *n, struct Property *p, struct BoardStatus *st)
 
 			Del_PropValue(p, v);
 		}
-		else		/* looks like FF4 defintion (wrong FF set?) */
+		else		/* looks like FF4 definition (wrong FF set?) */
 			PrintError(E_BAD_VW_VALUES, p->buffer, "FF[4] definition in older FF found", "parsing done anyway");
 	}
 

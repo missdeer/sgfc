@@ -13,7 +13,6 @@
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
-#include <stdnoreturn.h>
 
 #include "all.h"
 #include "protos.h"
@@ -182,7 +181,7 @@ int PrintError(U_LONG type, ...) {
 ***				Variadic wrapper around PrintErrorHandler that does not return
 **************************************************************************/
 
-noreturn int PrintFatalError(U_LONG type, ...)
+int __attribute__((noreturn)) PrintFatalError(U_LONG type, ...)
 {
 	va_list arglist;
 	va_start(arglist, type);

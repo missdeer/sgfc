@@ -185,9 +185,8 @@ int ParseArgs(int argc, char *argv[])
 								return(FALSE);
 							}
 							PrintFatalError(FE_UNKNOWN_LONG_OPTION, c);
-							break;
-						default:	PrintFatalError(FE_UNKNOWN_OPTION, *c);
-							break;
+						default:
+							PrintFatalError(FE_UNKNOWN_OPTION, *c);
 					}
 				}
 				break;
