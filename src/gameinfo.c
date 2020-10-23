@@ -156,7 +156,8 @@ static int Parse_Time(char *val, U_SHORT dummy)
 static int Parse_Result(char *val, U_SHORT dummy)
 {
 	char *s, *d;
-	int err = 1, charpoints, type = 0;
+	int err = 1, charpoints;
+	unsigned int type = 0;
 	double points = 0.0;
 
 	if(Kill_Chars(val, C_ISSPACE, NULL))
@@ -225,7 +226,7 @@ static int Parse_Result(char *val, U_SHORT dummy)
 							/* type 64: for search for double numbers */
 
 							if((!(type & 7) && !charpoints) ||
-								((type & 2) && (type& 4)))	/* win and lose? */
+								((type & 2) && (type & 4)))	/* win and lose? */
 							{
 								return(0);
 							}
@@ -595,10 +596,10 @@ static int PromptGameInfo(struct Property *p, struct PropValue *v,
 	if(size < 25)		/* CorrectDate may use up to 15 chars */
 		size = 25;
 
-	SaveMalloc(char *, newgi, size+2, "game info value buffer");
+	SaveMalloc(char *, newgi, size+2, "game info value buffer")
 	CopyValue(newgi, v->buffer+1, oldgi - v->buffer-1, FALSE);
 
-	SaveMalloc(char *, oldgi, strlen(newgi)+2, "game info value buffer");
+	SaveMalloc(char *, oldgi, strlen(newgi)+2, "game info value buffer")
 	strcpy(oldgi, newgi);
 
 	PrintError(E4_FAULTY_GC, v->buffer, p->idstr, "");
@@ -627,7 +628,7 @@ static int PromptGameInfo(struct Property *p, struct PropValue *v,
 			if(ret == 1)
 			{
 				free(v->value);
-				SaveMalloc(char *, v->value, strlen(inp)+4, "game info value buffer");
+				SaveMalloc(char *, v->value, strlen(inp)+4, "game info value buffer")
 				strcpy(v->value, inp);
 				break;
 			}
@@ -638,7 +639,7 @@ static int PromptGameInfo(struct Property *p, struct PropValue *v,
 				{
 					size = (strlen(inp) > 25) ? strlen(inp) : 25;
 					free(newgi);
-					SaveMalloc(char *, newgi, size+2, "game info value buffer");
+					SaveMalloc(char *, newgi, size+2, "game info value buffer")
 					strcpy(newgi, inp);
 				}
 			}
@@ -687,7 +688,7 @@ int Check_GameInfo(struct Property *p, struct PropValue *v)
 	size = (strlen(v->value) > (25-8)) ? (strlen(v->value) + 8) : (25+1);
 	/* correct functions may use up to 25 bytes; +8 because time in hours multiplies by 3600 and adds ".0" */
 
-	SaveMalloc(char *, val, size, "result value buffer");
+	SaveMalloc(char *, val, size, "result value buffer")
 	strcpy(val, v->value);
 
 	res = (*parse)(val, 0);

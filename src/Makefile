@@ -11,9 +11,10 @@ CC = gcc
 #OPTIONS = -pedantic -W -Wimplicit -Wreturn-type -Wswitch -Wformat\
 #	  -Wuninitialized -Wparentheses -Wpointer-arith -Wbad-function-cast\
 #	  -Wcast-qual -Wcast-align -Waggregate-return -Wstrict-prototypes\
-#	  -Wnested-externs -Wshadow -Wchar-subscripts -ansi
+#	  -Wnested-externs -Wshadow -Wchar-subscripts -std=c99\
+#	  -Wimplicit-fallthrough=0
 
-OPTIONS = 
+OPTIONS =
 OPTIMIZATION = -O1
 CFLAGS = $(OPTIMIZATION) $(OPTIONS)
 

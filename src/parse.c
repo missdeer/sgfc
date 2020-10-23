@@ -70,7 +70,7 @@ int Parse_Number(char *value, U_SHORT dummy)
 
 int Parse_Text(char *value, U_SHORT flags)
 {
-	char *s, *d, *end, old = 0, nl;
+	char *s, *d, *end, old = 0;
 
 	do			/* loop, because trailing spaces may be protected by '\' */
 	{
@@ -185,7 +185,6 @@ int Parse_Text(char *value, U_SHORT flags)
 							s++;
 						}
 						break;
-						
 			}
 		}
 		else
@@ -649,7 +648,7 @@ int Check_Figure(struct Property *p, struct PropValue *v)
 			else
 			{
 				v->value2 = v->value;
-				SaveMalloc(char *, v->value, 4, "new FG number value");
+				SaveMalloc(char *, v->value, 4, "new FG number value")
 				strcpy(v->value, "0");
 				PrintError(E_BAD_COMPOSE_CORRECTED, v->buffer, "FG", v->value, v->value2);
 			}

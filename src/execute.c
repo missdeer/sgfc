@@ -119,7 +119,7 @@ static void Capture_Stones(struct BoardStatus *st, int color, int x, int y)
 int Do_Move(struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	int x, y;
-	char color;
+	unsigned char color;
 
 	if(sgfc->info->GM != 1)		/* game != Go? */
 		return(TRUE);
@@ -499,7 +499,7 @@ int Do_GInfo(struct Node *n, struct Property *p, struct BoardStatus *st)
 		PrintError(W_INT_KOMI_FOUND, p->buffer, "converted to <KM>");
 
 		ki = strtol(p->value->value, NULL, 10);		/* we can ignore errors here */
-		SaveMalloc(char *, new_km, strlen(p->value->value)+3, "new KM number value");
+		SaveMalloc(char *, new_km, strlen(p->value->value)+3, "new KM number value")
 		if(ki % 2)	sprintf(new_km, "%ld.5", ki/2);
 		else		sprintf(new_km, "%ld", ki/2);
 		New_PropValue(n, TKN_KM, new_km, NULL, FALSE);

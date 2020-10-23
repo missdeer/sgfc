@@ -7,6 +7,7 @@
 ***
 **************************************************************************/
 
+#include <stdarg.h>
 
 /**** options.c ****/
 
@@ -44,7 +45,7 @@ struct PropValue *Add_PropValue(struct Property *, char *, const char *,
 struct Property *Add_Property(struct Node *, token , char *, char *);
 struct Node *NewNode(struct Node * , int);
 
-char *SkipText(char * , char * , char , int );
+char *SkipText(char * , const char * , char , unsigned int );
 void LoadSGF(struct SGFInfo * );
 void LoadSGFFromFileBuffer(struct SGFInfo * );
 

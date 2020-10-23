@@ -100,7 +100,7 @@ static int WritePropValue(const char *v, int second, U_SHORT flags, FILE *sfile)
 	if(!v)	return(TRUE);
 	
 	if(second)
-		saveputc(sfile, ':');
+		saveputc(sfile, ':')
 
 	fl = option_softlinebreaks && (flags & SPLIT_SAVE);
 
@@ -115,8 +115,8 @@ static int WritePropValue(const char *v, int second, U_SHORT flags, FILE *sfile)
 								 /* if we have just written a single '\' then  */
 				v--;					/* treat it as soft linebreak and set  */
 			else						/* v back so that it is written again. */
-				saveputc(sfile, '\\');	/* else insert soft linebreak */
-			saveputc(sfile, '\n');
+				saveputc(sfile, '\\')	/* else insert soft linebreak */
+			saveputc(sfile, '\n')
 		}
 
 		v++;
@@ -147,8 +147,8 @@ static int WriteProperty(struct TreeInfo *info, struct Property *prop, FILE *sfi
 	{
 		if(!gi_written)
 		{
-			saveputc(sfile, '\n');
-			saveputc(sfile, '\n');
+			saveputc(sfile, '\n')
+			saveputc(sfile, '\n')
 		}
 		gi_written = TRUE;
 	}
@@ -159,7 +159,7 @@ static int WriteProperty(struct TreeInfo *info, struct Property *prop, FILE *sfi
 	p = prop->idstr;			/* write property ID */
 	while(*p)
 	{
-		saveputc(sfile, *p);
+		saveputc(sfile, *p)
 		p++;
 	}
 
@@ -171,7 +171,7 @@ static int WriteProperty(struct TreeInfo *info, struct Property *prop, FILE *sfi
 
 	while(v)
 	{
-		saveputc(sfile, '[');
+		saveputc(sfile, '[')
 
 		if(do_tt && !strlen(v->value))
 			WritePropValue("tt", FALSE, prop->flags, sfile);
@@ -180,22 +180,22 @@ static int WriteProperty(struct TreeInfo *info, struct Property *prop, FILE *sfi
 			WritePropValue(v->value, FALSE, prop->flags, sfile);
 			WritePropValue(v->value2, TRUE, prop->flags, sfile);
 		}
-		saveputc(sfile, ']');
+		saveputc(sfile, ']')
 
-		CheckLineLen(sfile);
+		CheckLineLen(sfile)
 		v = v->next;
 	}
 
 	if(prop->flags & TYPE_GINFO)
 	{
-		saveputc(sfile, '\n');
+		saveputc(sfile, '\n')
 		if(prop->next)
 		{
 			if(!(prop->next->flags & TYPE_GINFO))
-				saveputc(sfile, '\n');
+				saveputc(sfile, '\n')
 		}
 		else
-			saveputc(sfile, '\n');
+			saveputc(sfile, '\n')
 	}
 
 	return(TRUE);
@@ -234,7 +234,7 @@ static int WriteNode(struct TreeInfo *info, struct Node *n, FILE *sfile)
 	   ((save_eol_in_node && save_linelen > 0) ||
 		(!save_eol_in_node &&
 		 save_linelen > MAX_PREDICTED_LINELEN - save_chars_in_node)))
-		saveputc(sfile, '\n');
+		saveputc(sfile, '\n')
 
 	return(TRUE);
 }
@@ -334,7 +334,7 @@ void SaveSGF(struct SGFInfo *sgf)
 
 	sgfc = sgf;					/* set current SGFInfo context */
 
-	SaveMalloc(char *, name, name_buffer_size, "filename buffer");
+	SaveMalloc(char *, name, name_buffer_size, "filename buffer")
 	if(option_split_file)
 		snprintf(name, name_buffer_size, "%s_%03d.sgf", sgf->name, i);
 	else

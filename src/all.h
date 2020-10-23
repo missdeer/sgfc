@@ -106,10 +106,10 @@ struct BoardStatus
 	U_SHORT annotate;		/* flags for annotation props, etc. */
 	char *ginfo;			/* pointer into buffer of first GINFO property */
 	int bwidth;				/* copy of sgfc->info->bwidth */
-	char *board;
-	size_t bsize;				/* board size in bytes */
+	unsigned char *board;
+	size_t bsize;			/* board size in bytes */
 	U_SHORT *markup;
-	size_t msize;				/* markup size in bytes */
+	size_t msize;			/* markup size in bytes */
 	char mrkp_chngd;		/* markup field changed */
 };
 

@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <errno.h>
 #include <string.h>
 
 #include "all.h"
@@ -25,9 +24,9 @@
 
 /* defines for SkipText */
 
-#define INSIDE	0
-#define OUTSIDE 1
-#define P_ERROR	2
+#define INSIDE	0u
+#define OUTSIDE 1u
+#define P_ERROR	2u
 
 
 /**************************************************************************
@@ -38,7 +37,7 @@
 *** Returns:	TRUE or FALSE
 **************************************************************************/
 
-static int SkipSGFText(char brk, int mode)
+static int SkipSGFText(char brk, unsigned int mode)
 {
 	char *pos = SkipText(sgfc->current, sgfc->b_end, brk, mode);
 	if (!pos)
@@ -65,7 +64,7 @@ static int SkipSGFText(char brk, int mode)
 *** Returns:	pointer to break char or NULL
 **************************************************************************/
 
-char *SkipText(char *s, char *e, char end, int mode)
+char *SkipText(char *s, const char *e, char end, unsigned int mode)
 {
 	while(!e || s < e)
 	{
@@ -234,12 +233,12 @@ struct PropValue *Add_PropValue(struct Property *p, char *buffer,
 {
 	struct PropValue *newv;
 
-	SaveMalloc(struct PropValue *, newv, sizeof(struct PropValue), "property value structure");
+	SaveMalloc(struct PropValue *, newv, sizeof(struct PropValue), "property value structure")
 
 	if(value)
 	{
 		/* +2 because Parse_Float may add 1 char and for trailing '\0' byte */
-		SaveMalloc(char *, newv->value, size+2, "property value buffer");
+		SaveMalloc(char *, newv->value, size+2, "property value buffer")
 		CopyValue(newv->value, value, size, TRUE);		/* copy value */
 	}
 	else
@@ -247,7 +246,7 @@ struct PropValue *Add_PropValue(struct Property *p, char *buffer,
 
 	if(value2)
 	{
-		SaveMalloc(char *, newv->value2, size2+2, "property value2 buffer");
+		SaveMalloc(char *, newv->value2, size2+2, "property value2 buffer")
 		CopyValue(newv->value2, value2, size2, TRUE);
 	}
 	else
@@ -316,13 +315,13 @@ struct Property *Add_Property(struct Node *n, token id, char *id_buf, char *idst
 	struct Property *newp;
 	char *str;
 
-	SaveMalloc(struct Property *, newp, sizeof(struct Property), "property structure");
+	SaveMalloc(struct Property *, newp, sizeof(struct Property), "property structure")
 
 	newp->id = id;							/* init property structure */
 
 	if(id == TKN_UNKNOWN)
 	{
-		SaveMalloc(char *, str, strlen(idstr)+2, "ID string");
+		SaveMalloc(char *, str, strlen(idstr)+2, "ID string")
 		strcpy(str, idstr);
 		newp->idstr = str;
 	}
@@ -535,7 +534,7 @@ struct Node *NewNode(struct Node *parent, int newchild)
 {
 	struct Node *newn, *hlp;
 
-	SaveMalloc(struct Node *, newn, sizeof(struct Node), "node structure");
+	SaveMalloc(struct Node *, newn, sizeof(struct Node), "node structure")
 
 	newn->parent	= parent;		/* init node structure */
 	newn->child		= NULL;
@@ -766,7 +765,7 @@ void LoadSGF(struct SGFInfo *sgf)
 	if(size == -1L)
 		PrintFatalError(FE_SOURCE_READ, sgf->name);
 
-	SaveMalloc(char *, sgf->buffer, size, "source file buffer");
+	SaveMalloc(char *, sgf->buffer, size, "source file buffer")
 
 	if(fseek(sgf->file, 0, SEEK_SET) == -1L)	/* read SGF file */
 		PrintFatalError(FE_SOURCE_READ, sgf->name);
