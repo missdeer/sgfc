@@ -220,6 +220,16 @@ struct SGFToken
 };
 
 
+struct SGFCError {
+	U_LONG error;			/* type and number of error */
+	const char *message;	/* message buffer (freed after output handler returns!) */
+	const char *buffer;		/* pointer to position in SGF buffer where error occurred or NULL */
+	int x;					/* column number in buffer or -1 if no position */
+	int y;					/* row number or -1 if no position */
+	int lib_errno;			/* copy of errno in case of file errors */
+};
+
+
 /* Defines for KillChars / TestChars */
 
 #define C_ISSPACE		0x01u
@@ -236,7 +246,7 @@ struct SGFToken
 #define E_WARNING		0x10000000UL
 #define E_ERROR4		0x01000000UL	/* error for FF[4] / warning otherwise */
 #define E_CRITICAL		0x02000000UL
-#define E_WARNING_STRICT 0x04000000UL /* error if strict checking,else warning */
+#define E_WARNING_STRICT 0x04000000UL 	/* error if strict checking,else warning */
 #define E_VALUE			0x00010000UL
 #define E_SEARCHPOS		0x00020000UL
 #define E_ACCUMULATE	0x00040000UL

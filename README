@@ -134,10 +134,6 @@ Note: on some machines, you may have to specify a shell and the processor
       Right now it does not specify either in order to be machine independet.
       See additional defines below too.
 
-      If your compiler does not know the ANSI function strerror(), but is
-      otherwise ANSI compliant, then you can define NO_STRERROR in the
-      file util.c in order to get rid of this compiler error.
-
 If you are compiling SGFC manually then just compile each file to get the
 object files and link those object files together (using a proper link
 library).
