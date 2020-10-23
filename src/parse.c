@@ -45,7 +45,7 @@ int Parse_Number(char *value, U_SHORT dummy)
 			else				ret = 0;
 		}
 
-		if(errno == ERANGE)				/* ot of range? */
+		if(errno == ERANGE)				/* out of range? */
 		{
 			sprintf(value, "%ld", i);	/* set to max range value */
 			ret = -1;
@@ -449,32 +449,42 @@ int Parse_Triple(char *value, U_SHORT dummy)
 
 
 /**************************************************************************
-*** Function:	Check_Value
+*** Function:	Check_Value // Check_Single_Value (helper)
 ***				Checks value type & prints error messages
 *** Parameters: p		... pointer to property containing the value
 ***				v		... pointer to property value
 ***				flags	... flags to be passed on to parse function
 ***				Parse_Value ... function used for parsing
-***				err_corr	... error code if value got corrected
-***				err_del		... error code if value has to be deleted
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
-int Check_Value(struct Property *p, struct PropValue *v, U_SHORT flags,
-				int (*Parse_Value)(char *, U_SHORT))
+static int Check_Single_Value(struct Property *p, char *value, char *buffer,
+							  U_SHORT flags, int (*Parse_Value)(char *, U_SHORT))
 {
-	switch((*Parse_Value)(v->value, flags))
+	switch((*Parse_Value)(value, flags))
 	{
 		case -101:	/* special case for Parse_Move */
-					PrintError(E_FF4_PASS_IN_OLD_FF, v->buffer);
+					PrintError(E_FF4_PASS_IN_OLD_FF, buffer);
 					break;
-		case -1:	PrintError(E_BAD_VALUE_CORRECTED, v->buffer, p->idstr, v->value);
+		case -1:	PrintError(E_BAD_VALUE_CORRECTED, buffer, p->idstr, value);
 					break;
-		case 0:		PrintError(E_BAD_VALUE_DELETED, v->buffer, p->idstr);
+		case 0:		PrintError(E_BAD_VALUE_DELETED, buffer, p->idstr);
 					return(FALSE);
 		case 1:
 		case 2:		break;
 	}
+	return(TRUE);
+}
+
+int Check_Value(struct Property *p, struct PropValue *v, U_SHORT flags,
+				int (*Parse_Value)(char *, U_SHORT))
+{
+	if (!Check_Single_Value(p, v->value, v->buffer, flags, Parse_Value))
+		return(FALSE);
+
+	/* If there's a compose value, then parse the second value like the first one */
+	if (flags & (PVT_COMPOSE|PVT_WEAKCOMPOSE) && v->value2)
+		return(Check_Single_Value(p, v->value2, v->buffer, flags, Parse_Value));
 
 	return(TRUE);
 }
