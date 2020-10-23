@@ -68,7 +68,7 @@ int Parse_Number(char *value, U_SHORT dummy)
 *** Returns:	length of converted string (0 for empty string)
 **************************************************************************/
 
-static int Parse_Text(char *value, U_SHORT flags)
+int Parse_Text(char *value, U_SHORT flags)
 {
 	char *s, *d, *end, old = 0, nl;
 

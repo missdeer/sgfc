@@ -80,37 +80,46 @@ Please include:
 2. List of files:
 =================
 
-all.h         general include file with all structures and defines
-protos.h      contains all function prototypes and 'extern' variables
+The root directory contains the following files:
 
-main.c        contains main()
-options.c     contains argument parsing
-load.c        contains all routines necessary for loading the SGF file
-              and building up a tree structure
-save.c        just the opposite to load.c
-properties.c  contains the array sgf_token[] which defines all properties
-              and their features
-parse.c       contains syntax and semantic checks for property values
-parse2.c      contains parsing of node and property structure
-              and additional functions (fix variations, calculate game
-              signature, delete empty nodes, ...)
-gameinfo.c    contains parsing and correcting of game-info properties.
-              (includes functions for interactive mode)
-execute.c     contains routines that actually execute the properties,
-              e.g. play the game on a board capture stones etc.
-              This is used to detect more sophisticated errors and to do
-              necessary transformations
-strict.c      contains the functions for restrictive checking (option -r)
-util.c        misc. functions; error messages
-test.sgf      a SGF file to test all messages of SGFC
-Makefile      Makefile as used for gcc on my machine
-README        this file
-COPYING       the BSD License
+CMakeLists.txt  CMake file as used on my machine
+README          this file
+COPYING         the BSD License
+
+The program source files are located in the src/ subdirectory:
+
+all.h           general include file with all structures and defines
+protos.h        contains all function prototypes and 'extern' variables
+main.c          contains main()
+options.c       contains argument parsing
+load.c          contains all routines necessary for loading the SGF file
+                and building up a tree structure
+save.c          just the opposite to load.c
+properties.c    contains the array sgf_token[] which defines all properties
+                and their features
+parse.c         contains syntax and semantic checks for property values
+parse2.c        contains parsing of node and property structure
+                and additional functions (fix variations, calculate game
+                signature, delete empty nodes, ...)
+gameinfo.c      contains parsing and correcting of game-info properties.
+                (includes functions for interactive mode)
+execute.c       contains routines that actually execute the properties,
+                e.g. play the game on a board capture stones etc.
+                This is used to detect more sophisticated errors and to do
+                necessary transformations
+strict.c        contains the functions for restrictive checking (option -r)
+util.c          misc. functions; error messages
+test.sgf        a SGF file to test all messages of SGFC
+Makefile        Makefile as used for gcc on my machine
 
 I use tab size of 4 (instead the usual 8) in my sources.
 You've to set the tab size of your editor accordingly to get a
 readable source with reasonable indentations.
 
+A (small number) of unit test cases are located in tests/. They are using
+the Check unit test framework (https://libcheck.github.io/check/). If you'd
+like to run the tests, you need to install this library (and its dependencies)
+first.
 
 
 3. Installing / Building:

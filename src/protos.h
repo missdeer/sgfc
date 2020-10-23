@@ -65,6 +65,7 @@ int Parse_Move(char * , U_SHORT );
 int Parse_Float(char * , U_SHORT );
 int Parse_Color(char * , U_SHORT );
 int Parse_Triple(char * , U_SHORT );
+int Parse_Text(char * , U_SHORT );
 
 int Check_Value(struct Property *, struct PropValue *, U_SHORT ,
 				int (*)(char *, U_SHORT));

@@ -3,3 +3,4 @@ cmake-build-release/
 .idea/
 *.o
 sgfc
+sgfc-test
