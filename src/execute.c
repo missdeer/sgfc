@@ -504,6 +504,7 @@ int Do_GInfo(struct Node *n, struct Property *p, struct BoardStatus *st)
 				if(ki % 2)	sprintf(new_km, "%ld.5", ki/2);
 				else		sprintf(new_km, "%ld", ki/2);
 				New_PropValue(n, TKN_KM, new_km, NULL, FALSE);
+				free(new_km);
 			}
 			return(FALSE);
 		}
