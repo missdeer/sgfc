@@ -25,10 +25,7 @@ int ignored_count = 0;
 char error_enabled[MAX_ERROR_NUM];
 
 
-/* Forward declaration and error reporting hooks */
-static int PrintErrorHandler(U_LONG, va_list);
-static void PrintErrorOutputHook(struct SGFCError *error);
-
+/* Error reporting hooks */
 int (*print_error_handler)(U_LONG, va_list) = PrintErrorHandler;
 void (*print_error_output_hook)(struct SGFCError *) = PrintErrorOutputHook;
 
@@ -192,7 +189,7 @@ int PrintError(U_LONG type, ...) {
 ***				(may quit program, if error is fatal!)
 **************************************************************************/
 
-static int PrintErrorHandler(U_LONG type, va_list arglist) {
+int PrintErrorHandler(U_LONG type, va_list arglist) {
 	int print_c = 0;
 	char *pos = NULL;
 	static char *illegal, *last_pos;
@@ -357,7 +354,7 @@ static int PrintErrorHandler(U_LONG type, va_list arglist) {
 *** Returns:    -
 **************************************************************************/
 
-static void PrintErrorOutputHook(struct SGFCError *error) {
+void PrintErrorOutputHook(struct SGFCError *error) {
 	if(error->x && error->y)		/* print position if required */
 		fprintf(E_OUTPUT, "Line:%d Col:%d - ", error->y, error->x);
 

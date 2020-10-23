@@ -118,6 +118,8 @@ extern void (*print_error_output_hook)(struct SGFCError *);
 
 void SearchPos(const char * , struct SGFInfo * , int * , int * );
 int PrintError(U_LONG , ... );
+int PrintErrorHandler(U_LONG, va_list);
+void PrintErrorOutputHook(struct SGFCError *);
 
 int  DecodePosChar(char );
 char EncodePosChar(int );

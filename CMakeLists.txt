@@ -36,6 +36,7 @@ add_executable(sgfc-test
         src/util.c
         tests/test-common.h
         tests/testrunner.c
-        tests/parse-text.c)
+        tests/parse-text.c
+        tests/check-value.c)
 
 target_link_libraries(sgfc-test check rt pthread subunit m)

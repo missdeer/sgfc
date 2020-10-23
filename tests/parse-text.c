@@ -102,7 +102,7 @@ TCase *sgfc_tc_parse_text()
 {
 	TCase *tc;
 
-	tc = tcase_create("prop_values");
+	tc = tcase_create("parse_text");
 	tcase_add_test(tc, test_basic_string);
 	tcase_add_test(tc, test_soft_linebreak);
 	tcase_add_test(tc, test_trailing_spaces);
