@@ -136,20 +136,20 @@ int ParseArgs(int argc, char *argv[])
 						case 'd':	c++; hlp = c;
 							n = (int)strtol(c, &c, 10);
 							if(n < 1 || n > MAX_ERROR_NUM)
-								PrintError(FE_BAD_PARAMETER, hlp);
+								PrintFatalError(FE_BAD_PARAMETER, hlp);
 							error_enabled[n-1] = FALSE;
 							c--;
 							break;
 						case 'l':	c++;
 							n = *c - '0';
 							if(n < 1 || n > 4)
-								PrintError(FE_BAD_PARAMETER, c);
+								PrintFatalError(FE_BAD_PARAMETER, c);
 							option_linebreaks = n;
 							break;
 						case 'b':	c++;
 							n = *c - '0';
 							if(n < 1 || n > 3)
-								PrintError(FE_BAD_PARAMETER, c);
+								PrintFatalError(FE_BAD_PARAMETER, c);
 							option_findstart = n;
 							break;
 						case 'y':	c++;
@@ -163,7 +163,7 @@ int ParseArgs(int argc, char *argv[])
 										break;
 							}
 							if(!n || !sgf_token[m].id)
-								PrintError(FE_BAD_PARAMETER, c);
+								PrintFatalError(FE_BAD_PARAMETER, c);
 							else
 							{
 								c += n-1;
@@ -184,9 +184,9 @@ int ParseArgs(int argc, char *argv[])
 								PrintHelp(FALSE);
 								return(FALSE);
 							}
-							PrintError(FE_UNKNOWN_LONG_OPTION, c);
+							PrintFatalError(FE_UNKNOWN_LONG_OPTION, c);
 							break;
-						default:	PrintError(FE_UNKNOWN_OPTION, *c);
+						default:	PrintFatalError(FE_UNKNOWN_OPTION, *c);
 							break;
 					}
 				}
@@ -199,13 +199,13 @@ int ParseArgs(int argc, char *argv[])
 				if(!option_outfile)
 					option_outfile = argv[i];
 				else
-					PrintError(FE_TOO_MANY_FILES, argv[i]);
+					PrintFatalError(FE_TOO_MANY_FILES, argv[i]);
 				break;
 		}
 	}
 
 	if(!option_infile)
-		PrintError(FE_MISSING_SOURCE_FILE);
+		PrintFatalError(FE_MISSING_SOURCE_FILE);
 
 	return(TRUE);
 }

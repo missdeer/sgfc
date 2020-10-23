@@ -118,6 +118,7 @@ extern void (*print_error_output_hook)(struct SGFCError *);
 
 void SearchPos(const char * , struct SGFInfo * , int * , int * );
 int PrintError(U_LONG , ... );
+int PrintFatalError(U_LONG , ... );
 int PrintErrorHandler(U_LONG, va_list);
 void PrintErrorOutputHook(struct SGFCError *);
 
@@ -154,4 +155,4 @@ void Strict_Checking(struct SGFInfo *sgf);
 #define Enqueue(h,n) f_Enqueue((struct ListHead *)(h), (struct ListNode *)(n))
 #define Delete(h,n) f_Delete((struct ListHead *)(h), (struct ListNode *)(n))
 
-#define SaveMalloc(type, v, sz, err)	{ v = (type)malloc((size_t)(sz)); if(!(v)) PrintError(FE_OUT_OF_MEMORY, err); }
+#define SaveMalloc(type, v, sz, err)	{ v = (type)malloc((size_t)(sz)); if(!(v)) PrintFatalError(FE_OUT_OF_MEMORY, err); }

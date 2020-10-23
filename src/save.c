@@ -334,7 +334,7 @@ void SaveSGF(struct SGFInfo *sgf)
 	sgfc = sgf;					/* set current SGFInfo context */
 
 	if(strlen(sgf->name) > 480)
-		PrintError(FE_DEST_NAME_TOO_LONG);
+		PrintFatalError(FE_DEST_NAME_TOO_LONG);
 
 	if(option_split_file)
 		sprintf(name, "%s_%03d.sgf", sgf->name, i);
@@ -343,7 +343,7 @@ void SaveSGF(struct SGFInfo *sgf)
 
 	sfile = fopen(name, "wb");
 	if(!sfile)
-		PrintError(FE_DEST_FILE_OPEN, name);
+		PrintFatalError(FE_DEST_FILE_OPEN, name);
 
 	if(option_keep_head)
 	{
@@ -353,7 +353,7 @@ void SaveSGF(struct SGFInfo *sgf)
 			if(fputc((*c), sfile) == EOF)
 			{
 				fclose(sfile);
-				PrintError(FE_DEST_FILE_WRITE, name);
+				PrintFatalError(FE_DEST_FILE_WRITE, name);
 			}
 	}
 
@@ -369,7 +369,7 @@ void SaveSGF(struct SGFInfo *sgf)
 		if(!WriteTree(info, n, sfile, nl))
 		{
 			fclose(sfile);
-			PrintError(FE_DEST_FILE_WRITE, name);
+			PrintFatalError(FE_DEST_FILE_WRITE, name);
 		}
 
 		nl = 2;
@@ -383,7 +383,7 @@ void SaveSGF(struct SGFInfo *sgf)
 			sprintf(name, "%s_%03d.sgf", sgf->name, i);
 
 			if(!(sfile = fopen(name, "wb")))
-				PrintError(FE_DEST_FILE_OPEN, name);
+				PrintFatalError(FE_DEST_FILE_OPEN, name);
 		}
 	}
 

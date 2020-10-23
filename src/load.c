@@ -736,7 +736,7 @@ static int FindStart(int firsttime)
 	}
 
 	if(firsttime)
-		PrintError(FE_NO_SGFDATA);
+		PrintFatalError(FE_NO_SGFDATA);
 
 	return(FALSE);
 }
@@ -759,21 +759,21 @@ void LoadSGF(struct SGFInfo *sgf)
 
 	sgf->file = fopen(sgf->name, "rb");
 	if(!sgf->file)
-		PrintError(FE_SOURCE_OPEN, sgf->name);
+		PrintFatalError(FE_SOURCE_OPEN, sgf->name);
 
 	fseek(sgf->file, 0, SEEK_END);					/* get size of file */
 	size = ftell(sgf->file);
 
 	if(size == -1L)
-		PrintError(FE_SOURCE_READ, sgf->name);
+		PrintFatalError(FE_SOURCE_READ, sgf->name);
 
 	SaveMalloc(char *, sgf->buffer, size, "source file buffer");
 
 	if(fseek(sgf->file, 0, SEEK_SET) == -1L)	/* read SGF file */
-		PrintError(FE_SOURCE_READ, sgf->name);
+		PrintFatalError(FE_SOURCE_READ, sgf->name);
 			
 	if(size != (long)fread(sgf->buffer, 1, (size_t)size, sgf->file))
-		PrintError(FE_SOURCE_READ, sgf->name);
+		PrintFatalError(FE_SOURCE_READ, sgf->name);
 
 	fclose(sgf->file);
 	sgf->file = NULL;

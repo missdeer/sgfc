@@ -707,7 +707,7 @@ static void Init_TreeInfo(struct Node *r)
 		ff = NULL;
 
 	if(ti->FF > 4)
-		PrintError(FE_UNKNOWN_FILE_FORMAT, ff->value->buffer);
+		PrintFatalError(FE_UNKNOWN_FILE_FORMAT, ff->value->buffer);
 
 	gm = Find_Property(r, TKN_GM);
 	if(!GetNumber(r, gm, 1, &ti->GM, 1, "GM[1]"))

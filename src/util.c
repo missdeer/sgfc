@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdnoreturn.h>
 
 #include "all.h"
 #include "protos.h"
@@ -162,7 +163,6 @@ void SearchPos(const char *c, struct SGFInfo *sgf, int *x, int *y)
 /**************************************************************************
 *** Function:	PrintError
 ***				Variadic wrapper around PrintErrorHandler
-***				(see doc comment there for details)
 **************************************************************************/
 
 int PrintError(U_LONG type, ...) {
@@ -174,6 +174,24 @@ int PrintError(U_LONG type, ...) {
 		result = (*print_error_handler)(type, arglist);
 	va_end(arglist);
 	return result;
+}
+
+
+/**************************************************************************
+*** Function:	PrintFatalError
+***				Variadic wrapper around PrintErrorHandler that does not return
+**************************************************************************/
+
+noreturn int PrintFatalError(U_LONG type, ...)
+{
+	va_list arglist;
+	va_start(arglist, type);
+	if (print_error_handler)
+		(*print_error_handler)(type, arglist);
+	va_end(arglist);
+
+	FreeSGFInfo(sgfc);
+	exit(20);			/* say dada */
 }
 
 
@@ -280,69 +298,61 @@ int PrintErrorHandler(U_LONG type, va_list arglist) {
 		critical_count++;
 
 
-	if(type != E_NO_ERROR)
+	if(type == E_NO_ERROR)
+		return(TRUE);
+
+	char *error_msg_buffer = NULL;
+	char *pos2 = NULL;
+	va_list argtmp;
+
+	va_copy(argtmp, arglist);
+	size_t size = vsnprintf(NULL, 0, error_mesg[(type & M_ERROR_NUM)-1], argtmp);
+	va_end(argtmp);
+	size_t malloc_size = size + 1; /* \0 byte */
+
+	if(type & E_VALUE)			/* print a property value ("[value]\n") */
 	{
-		char *error_msg_buffer = NULL;
-		char *pos2 = NULL;
-		va_list argtmp;
-
-		va_copy(argtmp, arglist);
-		size_t size = vsnprintf(NULL, 0, error_mesg[(type & M_ERROR_NUM)-1], argtmp);
-		va_end(argtmp);
-		size_t malloc_size = size + 1; /* \0 byte */
-		if(type & E_VALUE)			/* print a property value ("[value]\n") */
-		{
-			pos2 = SkipText(pos, NULL, ']', 0);
-			if (pos2 >= pos)
-			{
-				malloc_size += pos2 - pos + 2; /* pos2 inclusive + '\n' byte */
-			}
-		}
-
-		if(print_c)
-			malloc_size += ill_count + 4; /* 3 Bytes ""\n + 1 reserve */
-		error_msg_buffer = (char *)malloc(malloc_size);
-		if(!error_msg_buffer)
-			error.message = "out of memory (while printing error)\n";
-		else
-		{
-			char *msg_cursor = error_msg_buffer + size;
-			vsnprintf(error_msg_buffer, size+1, error_mesg[(type & M_ERROR_NUM)-1], arglist);
-			if(print_c)					/* print accumulated string? */
-			{
-				*msg_cursor++ = '"';
-				for(; ill_count; ill_count--)	/* string is not terminated with '\0'! */
-				{
-					*msg_cursor++ = *illegal++;
-				}
-				*msg_cursor++ = '"';
-				*msg_cursor++ = '\n';
-			}
-			if(pos2)
-			{
-				char *valpos = pos;
-				while(valpos <= pos2)
-					*msg_cursor++ = *valpos++;
-				*msg_cursor++ = '\n';
-			}
-			*msg_cursor = 0;
-			error.message = error_msg_buffer;
-		}
-
-		if(type & E_ERRNO)			/* print DOS error message? */
-			error.lib_errno = errno;
-
-		error.error = type;
-		(*print_error_output_hook)(&error);		/* call output hook function */
-		free(error_msg_buffer);
+		pos2 = SkipText(pos, NULL, ']', 0);
+		if (pos2 >= pos)
+			malloc_size += pos2 - pos + 2; /* pos2 inclusive + '\n' byte */
 	}
 
-	if((type & M_ERROR_TYPE) == E_FATAL_ERROR)	/* fatal one? */
+	if(print_c)
+		malloc_size += ill_count + 4; /* 3 Bytes ""\n + 1 reserve */
+	error_msg_buffer = (char *)malloc(malloc_size);
+	if(!error_msg_buffer)
+		error.message = "out of memory (while printing error)\n";
+	else
 	{
-		FreeSGFInfo(sgfc);
-		exit(20);							/* say dada */
+		char *msg_cursor = error_msg_buffer + size;
+		vsnprintf(error_msg_buffer, size+1, error_mesg[(type & M_ERROR_NUM)-1], arglist);
+		if(print_c)					/* print accumulated string? */
+		{
+			*msg_cursor++ = '"';
+			for(; ill_count; ill_count--)	/* string is not terminated with '\0'! */
+			{
+				*msg_cursor++ = *illegal++;
+			}
+			*msg_cursor++ = '"';
+			*msg_cursor++ = '\n';
+		}
+		if(pos2)
+		{
+			char *valpos = pos;
+			while(valpos <= pos2)
+				*msg_cursor++ = *valpos++;
+			*msg_cursor++ = '\n';
+		}
+		*msg_cursor = 0;
+		error.message = error_msg_buffer;
 	}
 
+	if(type & E_ERRNO)			/* print DOS error message? */
+		error.lib_errno = errno;
+
+	error.error = type;
+	(*print_error_output_hook)(&error);		/* call output hook function */
+	free(error_msg_buffer);
 	return(TRUE);
 }
 
