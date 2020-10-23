@@ -753,7 +753,6 @@ static int FindStart(int firsttime)
 void LoadSGF(struct SGFInfo *sgf)
 {
 	long size;
-	int miss;
 
 	sgfc = sgf;			/* set current SGFInfo context */
 
@@ -781,6 +780,23 @@ void LoadSGF(struct SGFInfo *sgf)
 	sgf->b_end   = sgf->buffer + size;
 	sgf->current = sgf->buffer;
 
+	LoadSGFFromFileBuffer(sgf);
+}
+
+
+/**************************************************************************
+*** Function:	LoadSGFFromFileBuffer
+***				Seeks start of SGF data and builds basic tree structure
+***             Assumes sgf->buffer and sgf->b_end is already set
+*** Parameters: sgf ... pointer to SGFInfo structure
+*** Returns:	- (exits on fatal error)
+**************************************************************************/
+
+void LoadSGFFromFileBuffer(struct SGFInfo *sgf)
+{
+	int miss;
+
+	sgfc = sgf;					/* set current SGFInfo context */
 	miss = FindStart(TRUE);		/* skip junk in front of '(;' */
 	sgf->start = sgf->current;
 

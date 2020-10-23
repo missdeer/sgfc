@@ -46,6 +46,7 @@ struct Node *NewNode(struct Node * , int);
 
 char *SkipText(char * , char * , char , int );
 void LoadSGF(struct SGFInfo * );
+void LoadSGFFromFileBuffer(struct SGFInfo * );
 
 
 /**** save.c ****/
