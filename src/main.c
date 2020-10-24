@@ -40,26 +40,34 @@ static struct SGFInfo sgf;
 int main(int argc, char *argv[])
 {
 	int ret = 0;
+	struct SGFCOptions *options;
 
 	memset(error_enabled, TRUE, sizeof(error_enabled));
 
-	if(!ParseArgs(argc, argv))
+	options = ParseArgs(argc, argv);
+	if(!options)	/* help printed? */
 		return(0);
+	if(!options->infile)
+		PrintFatalError(FE_MISSING_SOURCE_FILE, NULL);
 
 	memset(&sgf, 0, sizeof(struct SGFInfo));	/* init SGFInfo structure */
+	sgf.options = options;
 
-	LoadSGF(&sgf, option_infile);
+	LoadSGF(&sgf, options->infile);
 	ParseSGF(&sgf);
 
-	if(option_outfile)
+	if(options->outfile)
 	{
-		if(option_write_critical || !critical_count)
-			SaveSGF(&sgf, &save_file_io, option_outfile);
+		if(options->write_critical || !critical_count)
+		{
+			sgf.sfh = &save_file_io;
+			SaveSGF(&sgf, options->outfile);
+		}
 		else
-			PrintError(E_CRITICAL_NOT_SAVED);
+			PrintError(E_CRITICAL_NOT_SAVED, NULL);
 	}
 
-	fprintf(E_OUTPUT, "%s: ", option_infile);	/* print status line */
+	fprintf(E_OUTPUT, "%s: ", options->infile);	/* print status line */
 
 	if(error_count || warning_count)			/* errors & warnings */
 	{

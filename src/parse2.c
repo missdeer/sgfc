@@ -24,7 +24,7 @@
 *** Returns:	TRUE if success / FALSE on error (exits on low memory)
 **************************************************************************/
 
-int ExpandPointList(struct Property *p, struct PropValue *v, int error)
+int ExpandPointList(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v, int error)
 {
 	int x1, y1, x2, y2, h = 0;
 	char val[2];
@@ -39,7 +39,7 @@ int ExpandPointList(struct Property *p, struct PropValue *v, int error)
 		free(v->value2);
 		v->value2 = NULL;
 		if(error)
-			PrintError(E_BAD_VALUE_CORRECTED, v->buffer, p->idstr, v->value);
+			PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->buffer, p->idstr, v->value);
 		return(FALSE);
 	}
 
@@ -58,14 +58,14 @@ int ExpandPointList(struct Property *p, struct PropValue *v, int error)
 	}
 
 	if(h && error)
-		PrintError(E_BAD_COMPOSE_CORRECTED, v->buffer, p->idstr, v->value, v->value2);
+		PrintError(E_BAD_COMPOSE_CORRECTED, sgfc, v->buffer, p->idstr, v->value, v->value2);
 
 	for(; x1 <= x2; x1++)		/* expand point list */
 		for(h = y1; h <= y2; h++)
 		{
 			val[0] = EncodePosChar(x1);
 			val[1] = EncodePosChar(h);
-			Add_PropValue(p, v->buffer, val, 2, NULL, 0);
+			Add_PropValue(sgfc, p, v->buffer, val, 2, NULL, 0);
 		}
 
 	return(TRUE);
@@ -79,7 +79,7 @@ int ExpandPointList(struct Property *p, struct PropValue *v, int error)
 *** Returns:	- (exits on low memory)
 **************************************************************************/
 
-void CompressPointList(struct Property *p)
+void CompressPointList(struct SGFInfo *sgfc, struct Property *p)
 {
 	char board[MAX_BOARDSIZE+2][MAX_BOARDSIZE+2];
 	int x, y, yy, i, j, m, mx, my, expx, expy;
@@ -151,9 +151,9 @@ void CompressPointList(struct Property *p)
 				val2[1] = EncodePosChar(j);
 
 				if(x != i || y != j)			/* Add new values to property */
-					Add_PropValue(p, NULL, val1, 2, val2, 2);
+					Add_PropValue(sgfc, p, NULL, val1, 2, val2, 2);
 				else
-					Add_PropValue(p, NULL, val1, 2, NULL, 0);
+					Add_PropValue(sgfc, p, NULL, val1, 2, NULL, 0);
 
 				for(; i >= x; i--)				/* remove points from board */
 					for(m = j; m >= y; m--)
@@ -169,7 +169,7 @@ void CompressPointList(struct Property *p)
 *** Returns:	-
 **************************************************************************/
 
-static void Correct_Variation(struct Node *n)
+static void Correct_Variation(struct SGFInfo *sgfc, struct Node *n)
 {
 	struct Node *p, *i, *j, *k;
 	struct Property *pmv, *w, *b, *ae;
@@ -222,7 +222,7 @@ static void Correct_Variation(struct Node *n)
 				else					b->id = TKN_B;
 				b->flags = sgf_token[b->id].flags;	/* update local copy */
 
-				Split_Node(j, TYPE_SETUP|TYPE_ROOT|TYPE_GINFO, TKN_N, FALSE);
+				Split_Node(sgfc, j, TYPE_SETUP|TYPE_ROOT|TYPE_GINFO, TKN_N, FALSE);
 			}
 
 			if(j->child)				/* variation must have a child */
@@ -252,13 +252,13 @@ static void Correct_Variation(struct Node *n)
 
 	if(fault && success)		/* critical case */
 	{
-		PrintError(W_VARLEVEL_UNCERTAIN, n->buffer);
+		PrintError(W_VARLEVEL_UNCERTAIN, sgfc, n->buffer);
 		return;
 	}
 
 	if(success)					/* found variations which can be corrected */
 	{
-		PrintError(W_VARLEVEL_CORRECTED, n->buffer);
+		PrintError(W_VARLEVEL_CORRECTED, sgfc, n->buffer);
 
 		i = n->sibling;
 		while(i)
@@ -281,9 +281,9 @@ static void Correct_Variation(struct Node *n)
 			i->child = NULL;
 			i = i->sibling;
 
-			Del_Node(j->parent, E_NO_ERROR);	/* delete SETUP node */
+			Del_Node(sgfc, j->parent, E_NO_ERROR);	/* delete SETUP node */
 
-			j->parent = p->parent;				/* move tree to new level */
+			j->parent = p->parent;					/* move tree to new level */
 			k = p;
 			while(k->sibling)
 				k = k->sibling;
@@ -300,7 +300,7 @@ static void Correct_Variation(struct Node *n)
 *** Returns:	-
 **************************************************************************/
 
-static void Correct_Variations(struct Node *r, struct TreeInfo *ti)
+static void Correct_Variations(struct SGFInfo *sgfc, struct Node *r, struct TreeInfo *ti)
 {
 	struct Node *n;
 
@@ -311,8 +311,8 @@ static void Correct_Variations(struct Node *r, struct TreeInfo *ti)
 	{
 		if(Find_Property(r, TKN_B) || Find_Property(r, TKN_W))
 		{
-			Split_Node(r, TYPE_ROOT|TYPE_GINFO, TKN_NONE, FALSE);
-			PrintError(WS_MOVE_IN_ROOT, r->buffer);
+			Split_Node(sgfc, r, TYPE_ROOT|TYPE_GINFO, TKN_NONE, FALSE);
+			PrintError(WS_MOVE_IN_ROOT, sgfc, r->buffer);
 		}
 	}
 
@@ -326,13 +326,13 @@ static void Correct_Variations(struct Node *r, struct TreeInfo *ti)
 			n = r;
 			while(n)
 			{
-				if(!r->parent)	Correct_Variations(n->child, ti->next);
-				else			Correct_Variations(n->child, ti);
+				if(!r->parent)	Correct_Variations(sgfc, n->child, ti->next);
+				else			Correct_Variations(sgfc, n->child, ti);
 
 				n = n->sibling;
 			}
 
-			Correct_Variation(r);
+			Correct_Variation(sgfc, r);
 			break;
 		}
 
@@ -348,7 +348,7 @@ static void Correct_Variations(struct Node *r, struct TreeInfo *ti)
 *** Returns:	-
 **************************************************************************/
 
-static void Reorder_Variations(struct Node *r)
+static void Reorder_Variations(struct SGFInfo *sgfc, struct Node *r)
 {
 	struct Node *n, *s[MAX_REORDER_VARIATIONS];
 	int i;
@@ -357,7 +357,7 @@ static void Reorder_Variations(struct Node *r)
 		return;
 
 	if (!r->parent && r->sibling)
-		Reorder_Variations(r->sibling);
+		Reorder_Variations(sgfc, r->sibling);
 
 	while(r)
 	{
@@ -369,11 +369,11 @@ static void Reorder_Variations(struct Node *r)
 			{
 				if(i >= MAX_REORDER_VARIATIONS)
 				{
-					PrintError(E_TOO_MANY_VARIATIONS, n->buffer);
+					PrintError(E_TOO_MANY_VARIATIONS, sgfc, n->buffer);
 					break;
 				}
 				s[i++] = n;
-				Reorder_Variations(n);
+				Reorder_Variations(sgfc, n);
 				n = n->sibling;
 			}
 			if(i < MAX_REORDER_VARIATIONS)
@@ -398,16 +398,16 @@ static void Reorder_Variations(struct Node *r)
 *** Returns:	-
 **************************************************************************/
 
-static void Del_EmptyNodes(struct Node *n)
+static void Del_EmptyNodes(struct SGFInfo *sgf, struct Node *n)
 {
 	if(n->child)
-		Del_EmptyNodes(n->child);
+		Del_EmptyNodes(sgf, n->child);
 
 	if(n->sibling)
-		Del_EmptyNodes(n->sibling);
+		Del_EmptyNodes(sgf, n->sibling);
 
 	if(!n->prop)
-		Del_Node(n, W_EMPTY_NODE_DELETED);
+		Del_Node(sgf, n, W_EMPTY_NODE_DELETED);
 }
 
 
@@ -486,12 +486,12 @@ static void Calc_GameSig(struct Node *r, struct TreeInfo *ti)
 *** Returns:	-
 **************************************************************************/
 
-void Split_Node(struct Node *n, U_SHORT flags, token id, int move)
+void Split_Node(struct SGFInfo *sgfc, struct Node *n, U_SHORT flags, token id, int move)
 {
 	struct Property *p, *hlp;
 	struct Node *newnode;
 
-	newnode = NewNode(n, TRUE);		/* create new child node */
+	newnode = NewNode(sgfc, n, TRUE);		/* create new child node */
 	newnode->buffer = n->buffer;
 
 	p = n->prop;
@@ -519,7 +519,7 @@ void Split_Node(struct Node *n, U_SHORT flags, token id, int move)
 *** Returns:	TRUE if node is split / FALSE otherwise
 **************************************************************************/
 
-static int Split_MoveSetup(struct Node *n)
+static int Split_MoveSetup(struct SGFInfo *sgfc, struct Node *n)
 {
 	struct Property *p, *s = NULL;
 	U_SHORT f, sc = 0;
@@ -543,13 +543,13 @@ static int Split_MoveSetup(struct Node *n)
 	{
 		if(sc == 1 && s->id == TKN_PL)			/* single PL[]? */
 		{
-			PrintError(E4_MOVE_SETUP_MIXED, s->buffer, "deleted PL property");
+			PrintError(E4_MOVE_SETUP_MIXED, sgfc, s->buffer, "deleted PL property");
 			Del_Property(n, s);
 		}
 		else
 		{
-			PrintError(E4_MOVE_SETUP_MIXED, s->buffer, "split into two nodes");
-			Split_Node(n, TYPE_SETUP|TYPE_GINFO|TYPE_ROOT, TKN_N, FALSE);
+			PrintError(E4_MOVE_SETUP_MIXED, sgfc, s->buffer, "split into two nodes");
+			Split_Node(sgfc, n, TYPE_SETUP|TYPE_GINFO|TYPE_ROOT, TKN_N, FALSE);
 			return(TRUE);
 		}
 	}
@@ -566,7 +566,7 @@ static int Split_MoveSetup(struct Node *n)
 *** Returns:	-
 **************************************************************************/
 
-static void Check_DoubleProp(struct Node *n)
+static void Check_DoubleProp(struct SGFInfo *sgfc, struct Node *n)
 {
 	struct Property *p, *q;
 	struct PropValue *v, *w;
@@ -583,7 +583,7 @@ static void Check_DoubleProp(struct Node *n)
 			{
 				if(p->flags & DOUBLE_MERGE)
 				{
-					PrintError(E_DOUBLE_PROP, q->buffer, q->idstr, "values merged");
+					PrintError(E_DOUBLE_PROP, sgfc, q->buffer, q->idstr, "values merged");
 					if(p->flags & PVT_LIST)
 					{
 						v = p->value;
@@ -611,7 +611,7 @@ static void Check_DoubleProp(struct Node *n)
 					}
 				}
 				else
-					PrintError(E_DOUBLE_PROP, q->buffer, q->idstr, "deleted");
+					PrintError(E_DOUBLE_PROP, sgfc, q->buffer, q->idstr, "deleted");
 
 				q = Del_Property(n, q);	/* delete double property */
 			}
@@ -635,8 +635,8 @@ static void Check_DoubleProp(struct Node *n)
 *** Returns:	TRUE ... success / FALSE ... errornous property deleted
 **************************************************************************/
 
-static int GetNumber(struct Node *n, struct Property *p, int value, int *d,
-			  int def, char *err_action)
+static int GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
+					 int value, int *d, int def, char *err_action)
 {
 	char *v;
 
@@ -649,18 +649,18 @@ static int GetNumber(struct Node *n, struct Property *p, int value, int *d,
 	if(value == 2)	v = p->value->value2;
 	else			v = p->value->value;
 
-	switch(Parse_Number(v, 0))
+	switch(Parse_Number(v))
 	{
-		case 0: PrintError(E_BAD_ROOT_PROP, p->value->buffer, p->idstr, err_action);
+		case 0: PrintError(E_BAD_ROOT_PROP, sgfc, p->value->buffer, p->idstr, err_action);
 				*d = def;
 				Del_Property(n, p);
 				return(FALSE);
 
-		case -1: PrintError(E_BAD_VALUE_CORRECTED, p->value->buffer, p->idstr, v);
+		case -1: PrintError(E_BAD_VALUE_CORRECTED, sgfc, p->value->buffer, p->idstr, v);
 		case 1:	*d = atoi(v);
 				if(*d < 1)
 				{
-					PrintError(E_BAD_ROOT_PROP, p->value->buffer, p->idstr, err_action);
+					PrintError(E_BAD_ROOT_PROP, sgfc, p->value->buffer, p->idstr, err_action);
 					*d = def;
 					Del_Property(n, p);
 					return(FALSE);
@@ -680,7 +680,7 @@ static int GetNumber(struct Node *n, struct Property *p, int value, int *d,
 *** Returns:	-
 **************************************************************************/
 
-static void Init_TreeInfo(struct Node *r)
+static void Init_TreeInfo(struct SGFInfo *sgfc, struct Node *r)
 {
 	static int FF_diff = 0, GM_diff = 0;
 	struct TreeInfo *ti;
@@ -702,14 +702,14 @@ static void Init_TreeInfo(struct Node *r)
 	sgfc->info = ti;				/* set as current tree info */
 
 	ff = Find_Property(r, TKN_FF);
-	if(!GetNumber(r, ff, 1, &ti->FF, 1, "FF[1]"))
+	if(!GetNumber(sgfc, r, ff, 1, &ti->FF, 1, "FF[1]"))
 		ff = NULL;
 
 	if(ti->FF > 4)
-		PrintFatalError(FE_UNKNOWN_FILE_FORMAT, ff->value->buffer);
+		PrintFatalError(FE_UNKNOWN_FILE_FORMAT, sgfc, ff->value->buffer);
 
 	gm = Find_Property(r, TKN_GM);
-	if(!GetNumber(r, gm, 1, &ti->GM, 1, "GM[1]"))
+	if(!GetNumber(sgfc, r, gm, 1, &ti->GM, 1, "GM[1]"))
 		gm = NULL;
 
 	if(ti->GM == 1)		/* board size only of interest if Game == Go */
@@ -717,20 +717,20 @@ static void Init_TreeInfo(struct Node *r)
 		sz = Find_Property(r, TKN_SZ);
 		if(sz)
 		{
-			if(GetNumber(r, sz, 1, &ti->bwidth, 19, "19x19"))
+			if(GetNumber(sgfc, r, sz, 1, &ti->bwidth, 19, "19x19"))
 			{
 				if(ti->FF < 4 && (ti->bwidth > 19 || sz->value->value2))
-					PrintError(E_VERSION_CONFLICT, sz->buffer, ti->FF);
+					PrintError(E_VERSION_CONFLICT, sgfc, sz->buffer, ti->FF);
 
 				if(sz->value->value2)	/* rectangular board? */
 				{
-					if(!GetNumber(r, sz, 2, &ti->bheight, 19, "19x19"))
+					if(!GetNumber(sgfc, r, sz, 2, &ti->bheight, 19, "19x19"))
 						ti->bwidth = 19;
 					else
 					{
 						if(ti->bwidth == ti->bheight)
 						{
-							PrintError(E_SQUARE_AS_RECTANGULAR, sz->buffer);
+							PrintError(E_SQUARE_AS_RECTANGULAR, sgfc, sz->buffer);
 							free(sz->value->value2);
 							sz->value->value2 = NULL;
 						}
@@ -760,7 +760,7 @@ static void Init_TreeInfo(struct Node *r)
 						sz->value->value2 = NULL;
 					}
 
-					PrintError(E_BOARD_TOO_BIG, sz->buffer, ti->bwidth, ti->bheight);
+					PrintError(E_BOARD_TOO_BIG, sgfc, sz->buffer, ti->bwidth, ti->bheight);
 				}
 			}
 			else			/* faulty SZ deleted */
@@ -770,7 +770,7 @@ static void Init_TreeInfo(struct Node *r)
 			ti->bwidth = ti->bheight = 19;	/* default size */
 	}
 	else
-		PrintError(WCS_GAME_NOT_GO, gm->buffer, ti->num);
+		PrintError(WCS_GAME_NOT_GO, sgfc, gm->buffer, ti->num);
 
 	if(ti->prev)
 	{
@@ -781,7 +781,7 @@ static void Init_TreeInfo(struct Node *r)
 			if(ff)	buffer = ff->buffer;
 			else	buffer = r->buffer;
 
-			PrintError(WS_ROOT_PROP_DIFFERS, buffer, "file formats");
+			PrintError(WS_ROOT_PROP_DIFFERS, sgfc, buffer, "file formats");
 			FF_diff = 1;
 		}
 
@@ -790,7 +790,7 @@ static void Init_TreeInfo(struct Node *r)
 			if(gm)	buffer = gm->buffer;
 			else	buffer = r->buffer;
 
-			PrintError(WS_ROOT_PROP_DIFFERS, buffer, "game types");
+			PrintError(WS_ROOT_PROP_DIFFERS, sgfc, buffer, "game types");
 			GM_diff = 1;
 		}
 	}
@@ -806,7 +806,7 @@ static void Init_TreeInfo(struct Node *r)
 *** Returns:	-
 **************************************************************************/
 
-static void Check_SGFTree(struct Node *r, struct BoardStatus *old)
+static void Check_SGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatus *old)
 {
 	struct Node *n;
 	struct BoardStatus *st;
@@ -834,7 +834,7 @@ static void Check_SGFTree(struct Node *r, struct BoardStatus *old)
 		}
 		else
 		{
-			Init_TreeInfo(r);		/* set TreeInfo */
+			Init_TreeInfo(sgfc, r);		/* set TreeInfo */
 			memset(st, 0, sizeof(struct BoardStatus));
 			st->bwidth = sgfc->info->bwidth;
 
@@ -859,18 +859,17 @@ static void Check_SGFTree(struct Node *r, struct BoardStatus *old)
 				memset(st->markup, 0, st->msize);
 			st->mrkp_chngd = FALSE;
 
-			if(n->sibling && n != r)	/* for n=r loop is done outside */
+			if(n->sibling && n != r)		/* for n=r loop is done outside */
 			{
-				Check_SGFTree(n, st);
-				break;					/* did complete subtree -> break */
+				Check_SGFTree(sgfc, n, st);
+				break;						/* did complete subtree -> break */
 			}
 
-			Check_DoubleProp(n);		/* remove/merge double properties */
+			Check_DoubleProp(sgfc, n);		/* remove/merge double properties */
+			Check_Properties(sgfc, n, st);	/* perform checks, update board status */
 
-			Check_Properties(n, st);	/* perform checks, update board status */
-
-			if(Split_MoveSetup(n))
-				n = n->child;			/* new child node already parsed */
+			if(Split_MoveSetup(sgfc, n))
+				n = n->child;				/* new child node already parsed */
 
 			n = n->child;
 		}
@@ -891,25 +890,22 @@ static void Check_SGFTree(struct Node *r, struct BoardStatus *old)
 *** Returns:	-
 **************************************************************************/
 
-void ParseSGF(struct SGFInfo *sgf)
+void ParseSGF(struct SGFInfo *sgfc)
 {
-	sgfc = sgf;		/* set current SGFInfo context */
-					/* sgfc->info isn't initialized yet! */
+	Check_SGFTree(sgfc, sgfc->root, NULL);
 
-	Check_SGFTree(sgf->root, NULL);
+	if(sgfc->options->fix_variation)
+		Correct_Variations(sgfc, sgfc->root, sgfc->tree);
 
-	if(option_fix_variation)
-		Correct_Variations(sgfc->root, sgfc->tree);
+	if(sgfc->options->del_empty_nodes)
+		Del_EmptyNodes(sgfc, sgfc->root);
 
-	if(option_del_empty_nodes)
-		Del_EmptyNodes(sgfc->root);
+	if(sgfc->options->reorder_variations)
+		Reorder_Variations(sgfc, sgfc->root);
 
-	if(option_reorder_variations)
-		Reorder_Variations(sgfc->root);
-
-	if(option_game_signature)
+	if(sgfc->options->game_signature)
 		Calc_GameSig(sgfc->root, sgfc->tree);
 
-	if(option_strict_checking)
+	if(sgfc->options->strict_checking)
 		Strict_Checking(sgfc);
 }

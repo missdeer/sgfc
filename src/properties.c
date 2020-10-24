@@ -13,35 +13,35 @@
 #include "protos.h"
 
 
-static int Check_Move(struct Property *p, struct PropValue *v)
+static int Check_Move(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
-	return(Check_Value(p, v, PARSE_MOVE, Parse_Move));
+	return(Check_Value(sgfc, p, v, PARSE_MOVE, Parse_Move));
 }
 
-static int Check_Number(struct Property *p, struct PropValue *v)
+static int Check_Number(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
-	return(Check_Value(p, v, p->flags, Parse_Number));
+	return(Check_Value(sgfc, p, v, p->flags, Parse_Number));
 }
 
-static int Check_Float(struct Property *p, struct PropValue *v)
+static int Check_Float(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
-	return(Check_Value(p, v, p->flags, Parse_Float));
+	return(Check_Value(sgfc, p, v, p->flags, Parse_Float));
 }
 
-static int Check_Color(struct Property *p, struct PropValue *v)
+static int Check_Color(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
-	return(Check_Value(p, v, p->flags, Parse_Color));
+	return(Check_Value(sgfc, p, v, p->flags, Parse_Color));
 }
 
-static int Check_Triple(struct Property *p, struct PropValue *v)
+static int Check_Triple(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
-	return(Check_Value(p, v, p->flags, Parse_Triple));
+	return(Check_Value(sgfc, p, v, p->flags, Parse_Triple));
 }
 
-static int Check_Empty(struct Property *p, struct PropValue *v)
+static int Check_Empty(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	v->value[0] = 0;
-	PrintError(E_BAD_VALUE_CORRECTED, v->buffer, p->idstr, v->value);
+	PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->buffer, p->idstr, v->value);
 	return(TRUE);
 }
 

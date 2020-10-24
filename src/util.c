@@ -26,7 +26,7 @@ char error_enabled[MAX_ERROR_NUM];
 
 
 /* Error reporting hooks */
-int (*print_error_handler)(U_LONG, va_list) = PrintErrorHandler;
+int (*print_error_handler)(U_LONG, struct SGFInfo *, va_list) = PrintErrorHandler;
 void (*print_error_output_hook)(struct SGFCError *) = PrintErrorOutputHook;
 
 
@@ -164,13 +164,13 @@ void SearchPos(const char *c, struct SGFInfo *sgf, int *x, int *y)
 ***				Variadic wrapper around PrintErrorHandler
 **************************************************************************/
 
-int PrintError(U_LONG type, ...) {
+int PrintError(U_LONG type, struct SGFInfo *sgf, ...) {
 	int result = 0;
 
 	va_list arglist;
-	va_start(arglist, type);
+	va_start(arglist, sgf);
 	if (print_error_handler)
-		result = (*print_error_handler)(type, arglist);
+		result = (*print_error_handler)(type, sgf, arglist);
 	va_end(arglist);
 	return result;
 }
@@ -181,15 +181,15 @@ int PrintError(U_LONG type, ...) {
 ***				Variadic wrapper around PrintErrorHandler that does not return
 **************************************************************************/
 
-int __attribute__((noreturn)) PrintFatalError(U_LONG type, ...)
+int __attribute__((noreturn)) PrintFatalError(U_LONG type, struct SGFInfo *sgf, ...)
 {
 	va_list arglist;
-	va_start(arglist, type);
+	va_start(arglist, sgf);
 	if (print_error_handler)
-		(*print_error_handler)(type, arglist);
+		(*print_error_handler)(type, sgf, arglist);
 	va_end(arglist);
 
-	FreeSGFInfo(sgfc);
+	FreeSGFInfo(sgf);
 	exit(20);			/* say dada */
 }
 
@@ -206,7 +206,7 @@ int __attribute__((noreturn)) PrintFatalError(U_LONG type, ...)
 ***				(may quit program, if error is fatal!)
 **************************************************************************/
 
-int PrintErrorHandler(U_LONG type, va_list arglist) {
+int PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 	int print_c = 0;
 	char *pos = NULL;
 	static char *illegal, *last_pos;
@@ -221,12 +221,12 @@ int PrintErrorHandler(U_LONG type, va_list arglist) {
 	}
 	if(type & E_WARNING_STRICT)
 	{
-		if(option_strict_checking)	type |= E_ERROR;
-		else						type |= E_WARNING;
+		if(sgfc->options->strict_checking)	type |= E_ERROR;
+		else								type |= E_WARNING;
 	}
 
 	if((!error_enabled[(type & M_ERROR_NUM)-1] && !(type & E_FATAL_ERROR)
-		 && type != E_NO_ERROR) || (!option_warnings && (type & E_WARNING)))
+		 && type != E_NO_ERROR) || (!sgfc->options->warnings && (type & E_WARNING)))
 	{								/* error message enabled? */
 		ignored_count++;
 		return(FALSE);
@@ -259,8 +259,8 @@ int PrintErrorHandler(U_LONG type, va_list arglist) {
 				if((illegal + ill_count != pos) ||				/* succeed? */
 				  ((ill_type & M_ERROR_NUM)!=(type & M_ERROR_NUM)))
 				{
-					PrintError(ill_type, illegal, FALSE);	/* no -> flush */
-					illegal = pos;							/* set new */
+					PrintError(ill_type, sgfc, illegal, FALSE);	/* no -> flush */
+					illegal = pos;								/* set new */
 					ill_type = type;
 				}
 			}
@@ -277,14 +277,13 @@ int PrintErrorHandler(U_LONG type, va_list arglist) {
 
 			va_end(arglist);
 			return(TRUE);
-		}								/* FALSE: print it */
-		else
+		}
+		else								/* FALSE: print it */
 			print_c = 1;
 	}
 	else								/* not an ACCUMULATE type */
 		if(ill_count)					/* any errors waiting? */
-			PrintError(ill_type, illegal, FALSE);	/* flush buffer */
-													/* and continue ! */
+			PrintError(ill_type, sgfc, illegal, FALSE);	/* flush buffer and continue ! */
 
 	if(type & E_SEARCHPOS)				/* print position if required */
 		SearchPos(pos, sgfc, &error.x, &error.y);
@@ -311,7 +310,7 @@ int PrintErrorHandler(U_LONG type, va_list arglist) {
 
 	if(type & E_VALUE)			/* print a property value ("[value]\n") */
 	{
-		pos2 = SkipText(pos, NULL, ']', 0);
+		pos2 = SkipText(sgfc, pos, NULL, ']', 0);
 		if (pos2 >= pos)
 			malloc_size += pos2 - pos + 2; /* pos2 inclusive + '\n' byte */
 	}
@@ -704,7 +703,6 @@ struct PropValue *Del_PropValue(struct Property *p, struct PropValue *v)
 
 	Delete(&p->value, v);
 	free(v);
-
 	return(next);
 }
 
@@ -735,7 +733,6 @@ struct Property *Del_Property(struct Node *n, struct Property *p)
 		free(p->idstr);
 
 	free(p);
-
 	return(next);
 }
 
@@ -749,7 +746,7 @@ struct Property *Del_Property(struct Node *n, struct Property *p)
 *** Returns:	n->next
 **************************************************************************/
 
-struct Node *Del_Node(struct Node *n, U_LONG error_code)
+struct Node *Del_Node(struct SGFInfo *sgf, struct Node *n, U_LONG error_code)
 {
 	struct Node *p, *h;
 	struct Property *i;
@@ -764,7 +761,7 @@ struct Node *Del_Node(struct Node *n, U_LONG error_code)
 	}
 
 	if(error_code != E_NO_ERROR)
-		PrintError(error_code, n->buffer);
+		PrintError(error_code, sgf, n->buffer);
 
 	if(n->prop)						/* delete properties */
 	{
@@ -781,14 +778,14 @@ struct Node *Del_Node(struct Node *n, U_LONG error_code)
 			n->child->parent = NULL;
 		}
 
-		if(sgfc->root == n)			/* n is first root */
+		if(sgf->root == n)			/* n is first root */
 		{
-			if(n->child)	sgfc->root = n->child;
-			else			sgfc->root = n->sibling;
+			if(n->child)	sgf->root = n->child;
+			else			sgf->root = n->sibling;
 		}
 		else
 		{							/* n is subsequent root */
-			h = sgfc->root;
+			h = sgf->root;
 			while(h->sibling != n)
 				h = h->sibling;
 
@@ -834,7 +831,7 @@ struct Node *Del_Node(struct Node *n, U_LONG error_code)
 	}
 
 	h = n->next;
-	Delete(&sgfc->first, n);
+	Delete(&sgf->first, n);
 	free(n);
 
 	return(h);
@@ -853,7 +850,7 @@ struct Node *Del_Node(struct Node *n, U_LONG error_code)
 *** Returns:	pointer to property
 **************************************************************************/
 
-struct Property *New_PropValue(struct Node *n, token id,
+struct Property *New_PropValue(struct SGFInfo *sgfc, struct Node *n, token id,
 							   const char *value, const char *value2, int unique)
 {
 	struct Property *p;
@@ -871,7 +868,7 @@ struct Property *New_PropValue(struct Node *n, token id,
 
 	size1 = strlen(value);
 	size2 = value2 ? strlen(value2) : 0;
-	Add_PropValue(p, NULL, value, size1, value2, size2);
+	Add_PropValue(sgfc, p, NULL, value, size1, value2, size2);
 
 	return(p);
 }

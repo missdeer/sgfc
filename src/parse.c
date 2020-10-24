@@ -24,7 +24,7 @@
 *** Returns:	-1/0/1 for corrected error / error / OK
 **************************************************************************/
 
-int Parse_Number(char *value, U_SHORT dummy)
+int Parse_Number(char *value, ...)
 {
 	long i;
 	int ret = 1;
@@ -65,12 +65,21 @@ int Parse_Number(char *value, U_SHORT dummy)
 *** Parameters: value	... pointer to property value
 ***				flags	... PVT_SIMPLE (SimpleText type)
 ***							PVT_COMPOSE (compose type)
+***				sgfc    ... pointer to SGFInfo
 *** Returns:	length of converted string (0 for empty string)
 **************************************************************************/
 
-int Parse_Text(char *value, U_SHORT flags)
+int Parse_Text(char *value, ...)
 {
 	char *s, *d, *end, old = 0;
+	U_SHORT flags;
+	struct SGFInfo *sgfc;
+	va_list arglist;
+
+	va_start(arglist, value);
+	flags = va_arg(arglist, U_INT);
+	sgfc = va_arg(arglist, struct SGFInfo *);
+	va_end(arglist);
 
 	do			/* loop, because trailing spaces may be protected by '\' */
 	{
@@ -147,7 +156,7 @@ int Parse_Text(char *value, U_SHORT flags)
 				s++;
 				continue;
 			}
-			switch(option_linebreaks)
+			switch(sgfc->options->linebreaks)
 			{
 				case 1:	/* every line break encountered */
 						*d++ = *s++;
@@ -202,12 +211,21 @@ int Parse_Text(char *value, U_SHORT flags)
 ***				transforms FF[3] PASS 'tt' into FF[4] PASS ''
 *** Parameters: value ... pointer to value string
 ***				flags ... PARSE_MOVE or PARSE_POS (treats 'tt' as error)
+***				sgfc  ... pointer to SGFInfo
 *** Returns:	-101/-1/0/1	for wrong pass / corrected error / error / OK
 **************************************************************************/
 
-int Parse_Move(char *value, U_SHORT flags)
+int Parse_Move(char *value, ...)
 {
 	int ret = 1, emptyOrSpace = FALSE, c;
+	struct SGFInfo *sgfc;
+	U_SHORT flags;
+
+	va_list arglist;
+	va_start(arglist, value);
+	flags = va_arg(arglist, U_INT);
+	sgfc = va_arg(arglist, struct SGFInfo *);
+	va_end(arglist);
 
 	if(sgfc->info->GM != 1)			/* game != GO ? */
 		return(1);
@@ -277,13 +295,20 @@ int Parse_Move(char *value, U_SHORT flags)
 *** Returns:	-1/0/1/2 for corrected error / error / OK / corrected
 **************************************************************************/
 
-int Parse_Float(char *value, U_SHORT flags)
+int Parse_Float(char *value, ...)
 {
 	int ret = 1, where = 0;
 	/* where (bits): 0-minus / 1-int / 2-fraction / 3-'.' / 4-plus */
 	U_LONG i;
 	char *s, *d;
-	char *allowed = (flags & TYPE_GINFO) ? "0123456789.," : "0123456789+-.,";
+	char *allowed;
+	U_SHORT flags;
+	va_list arglist;
+
+	va_start(arglist, value);
+	flags = va_arg(arglist, U_INT);
+	va_end(arglist);
+	allowed = (flags & TYPE_GINFO) ? "0123456789.," : "0123456789+-.,";
 
 	if(Kill_Chars(value, C_NOTinSET, allowed))
 		ret = -1;
@@ -383,7 +408,7 @@ int Parse_Float(char *value, U_SHORT flags)
 *** Returns:	-1/0/1	for corrected error / error / OK
 **************************************************************************/
 
-int Parse_Color(char *value, U_SHORT dummy)
+int Parse_Color(char *value, ...)
 {
 	int ret = 1;
 
@@ -420,7 +445,7 @@ int Parse_Color(char *value, U_SHORT dummy)
 *** Returns:	-1/0/1	for corrected error / error / OK
 **************************************************************************/
 
-int Parse_Triple(char *value, U_SHORT dummy)
+int Parse_Triple(char *value, ...)
 {
 	int ret = 1;
 
@@ -457,17 +482,18 @@ int Parse_Triple(char *value, U_SHORT dummy)
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
-static int Check_Single_Value(struct Property *p, char *value, char *buffer,
-							  U_SHORT flags, int (*Parse_Value)(char *, U_SHORT))
+static int Check_Single_Value(struct SGFInfo *sgfc, struct Property *p,
+							  char *value, char *buffer, U_SHORT flags,
+							  int (*Parse_Value)(char *, ...))
 {
-	switch((*Parse_Value)(value, flags))
+	switch((*Parse_Value)(value, flags, sgfc))
 	{
 		case -101:	/* special case for Parse_Move */
-					PrintError(E_FF4_PASS_IN_OLD_FF, buffer);
+					PrintError(E_FF4_PASS_IN_OLD_FF, sgfc, buffer);
 					break;
-		case -1:	PrintError(E_BAD_VALUE_CORRECTED, buffer, p->idstr, value);
+		case -1:	PrintError(E_BAD_VALUE_CORRECTED, sgfc, buffer, p->idstr, value);
 					break;
-		case 0:		PrintError(E_BAD_VALUE_DELETED, buffer, p->idstr);
+		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, buffer, p->idstr);
 					return(FALSE);
 		case 1:
 		case 2:		break;
@@ -475,15 +501,15 @@ static int Check_Single_Value(struct Property *p, char *value, char *buffer,
 	return(TRUE);
 }
 
-int Check_Value(struct Property *p, struct PropValue *v, U_SHORT flags,
-				int (*Parse_Value)(char *, U_SHORT))
+int Check_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
+				U_SHORT flags, int (*Parse_Value)(char *, ...))
 {
-	if (!Check_Single_Value(p, v->value, v->buffer, flags, Parse_Value))
+	if (!Check_Single_Value(sgfc, p, v->value, v->buffer, flags, Parse_Value))
 		return(FALSE);
 
 	/* If there's a compose value, then parse the second value like the first one */
 	if (flags & (PVT_COMPOSE|PVT_WEAKCOMPOSE) && v->value2)
-		return(Check_Single_Value(p, v->value2, v->buffer, flags, Parse_Value));
+		return(Check_Single_Value(sgfc, p, v->value2, v->buffer, flags, Parse_Value));
 
 	return(TRUE);
 }
@@ -497,19 +523,19 @@ int Check_Value(struct Property *p, struct PropValue *v, U_SHORT flags,
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
-int Check_Text(struct Property *p, struct PropValue *v)
+int Check_Text(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	int value_len, value2_len = 0;
 
-	value_len = Parse_Text(v->value, p->flags);
+	value_len = Parse_Text(v->value, p->flags, sgfc);
 	if (p->flags & (PVT_COMPOSE|PVT_WEAKCOMPOSE) && v->value2)
 	{
-		value2_len = Parse_Text(v->value2, p->flags);
+		value2_len = Parse_Text(v->value2, p->flags, sgfc);
 	}
 
 	if(!value_len && !value2_len && (p->flags & PVT_DEL_EMPTY))
 	{
-		PrintError(W_EMPTY_VALUE_DELETED, v->buffer, p->idstr, "found");
+		PrintError(W_EMPTY_VALUE_DELETED, sgfc, v->buffer, p->idstr, "found");
 		return(FALSE);
 	}
 	return(TRUE);
@@ -524,27 +550,27 @@ int Check_Text(struct Property *p, struct PropValue *v)
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
-int Check_Pos(struct Property *p, struct PropValue *v)
+int Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
-	if(!Check_Value(p, v, PARSE_POS, Parse_Move))
+	if(!Check_Value(sgfc, p, v, PARSE_POS, Parse_Move))
 		return(FALSE);
 
 	if(v->value2)	/* compressed point list */
 	{
 		if(sgfc->info->FF < 4)
-			PrintError(E_VERSION_CONFLICT, v->buffer, sgfc->info->FF);
+			PrintError(E_VERSION_CONFLICT, sgfc, v->buffer, sgfc->info->FF);
 
-		switch((Parse_Move)(v->value2, PARSE_POS))
+		switch(Parse_Move(v->value2, PARSE_POS, sgfc))
 		{
-			case -1:	PrintError(E_BAD_VALUE_CORRECTED, v->buffer, p->idstr, v->value2);
+			case -1:	PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->buffer, p->idstr, v->value2);
 						break;
-			case 0:		PrintError(E_BAD_VALUE_DELETED, v->buffer, p->idstr);
+			case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
 						return(FALSE);
 			case 1:		break;
 		}
 
 		if(sgfc->info->GM == 1)
-			return((!ExpandPointList(p, v, TRUE)));
+			return((!ExpandPointList(sgfc, p, v, TRUE)));
 		else
 			return(TRUE);
 	}
@@ -561,18 +587,18 @@ int Check_Pos(struct Property *p, struct PropValue *v)
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
-int Check_Label(struct Property *p, struct PropValue *v)
+int Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	int error = 0;
 
-	switch(Parse_Move(v->value, PARSE_POS))
+	switch(Parse_Move(v->value, PARSE_POS, sgfc))
 	{
-		case 0:		PrintError(E_BAD_VALUE_DELETED, v->buffer, p->idstr);
+		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
 					return(FALSE);
 		case -1:	error = 1;
-		case 1:		switch(Parse_Text(v->value2, p->flags))
+		case 1:		switch(Parse_Text(v->value2, p->flags, sgfc))
 					{
-						case 0:	PrintError(E_BAD_VALUE_DELETED, v->buffer, p->idstr);
+						case 0:	PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
 								return(FALSE);
 						case 1:	if(strlen(v->value2) > 4 && sgfc->info->FF < 4)
 								{
@@ -582,7 +608,7 @@ int Check_Label(struct Property *p, struct PropValue *v)
 								break;
 					}
 					if(error)
-						PrintError(E_BAD_COMPOSE_CORRECTED, v->buffer, p->idstr, v->value, v->value2);
+						PrintError(E_BAD_COMPOSE_CORRECTED, sgfc, v->buffer, p->idstr, v->value, v->value2);
 					break;
 	}
 
@@ -598,30 +624,30 @@ int Check_Label(struct Property *p, struct PropValue *v)
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
-int Check_AR_LN(struct Property *p, struct PropValue *v)
+int Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	int error = 0;
 
-	switch(Parse_Move(v->value, PARSE_POS))
+	switch(Parse_Move(v->value, PARSE_POS, sgfc))
 	{
-		case 0:		PrintError(E_BAD_VALUE_DELETED, v->buffer, p->idstr);
+		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
 					return(FALSE);
 		case -1:	error = 1;
-		case 1:		switch(Parse_Move(v->value2, PARSE_POS))
+		case 1:		switch(Parse_Move(v->value2, PARSE_POS, sgfc))
 					{
-						case 0:	PrintError(E_BAD_VALUE_DELETED, v->buffer, p->idstr);
+						case 0:	PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
 								return(FALSE);
 						case -1:
 								error = 1;
 						case 1:	if(!strcmp(v->value, v->value2))
 								{
-									PrintError(E_BAD_VALUE_DELETED, v->buffer, p->idstr);
+									PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
 									return(FALSE);
 								}
 								break;
 					}
 					if(error)
-						PrintError(E_BAD_COMPOSE_CORRECTED, v->buffer, p->idstr, v->value, v->value2);
+						PrintError(E_BAD_COMPOSE_CORRECTED, sgfc, v->buffer, p->idstr, v->value, v->value2);
 					break;
 	}
 
@@ -637,31 +663,31 @@ int Check_AR_LN(struct Property *p, struct PropValue *v)
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
-int Check_Figure(struct Property *p, struct PropValue *v)
+int Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	if(!v->value2)	/* no compose type */
 	{
 		if(strlen(v->value))
 		{
-			if(!Parse_Text(v->value, PVT_SIMPLE|PVT_COMPOSE))
-				PrintError(E_BAD_VALUE_CORRECTED, v->buffer, "FG", "");
+			if(!Parse_Text(v->value, PVT_SIMPLE|PVT_COMPOSE, sgfc))
+				PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->buffer, "FG", "");
 			else
 			{
 				v->value2 = v->value;
 				SaveMalloc(char *, v->value, 4, "new FG number value")
 				strcpy(v->value, "0");
-				PrintError(E_BAD_COMPOSE_CORRECTED, v->buffer, "FG", v->value, v->value2);
+				PrintError(E_BAD_COMPOSE_CORRECTED, sgfc, v->buffer, "FG", v->value, v->value2);
 			}
 		}
 	}
 	else
 	{
-		Parse_Text(v->value2, PVT_SIMPLE|PVT_COMPOSE);
-		switch(Parse_Number(v->value, 0))
+		Parse_Text(v->value2, PVT_SIMPLE|PVT_COMPOSE, sgfc);
+		switch(Parse_Number(v->value))
 		{
 			case 0:	strcpy(v->value, "0");
 			case -1:
-					PrintError(E_BAD_COMPOSE_CORRECTED, v->buffer, "FG", v->value, v->value2);
+					PrintError(E_BAD_COMPOSE_CORRECTED, sgfc, v->buffer, "FG", v->value, v->value2);
 			case 1:	break;
 		}
 	}
@@ -677,7 +703,7 @@ int Check_Figure(struct Property *p, struct PropValue *v)
 *** Returns:	-
 **************************************************************************/
 
-static void Check_PropValues(struct Property *p)
+static void Check_PropValues(struct SGFInfo *sgfc, struct Property *p)
 {
 	struct PropValue *v;
 
@@ -688,12 +714,12 @@ static void Check_PropValues(struct Property *p)
 		{
 			if(sgf_token[p->id].flags & PVT_DEL_EMPTY)
 			{
-				PrintError(W_EMPTY_VALUE_DELETED, v->buffer, p->idstr, "found");
+				PrintError(W_EMPTY_VALUE_DELETED, sgfc, v->buffer, p->idstr, "found");
 				v = Del_PropValue(p, v);
 			}
 			else if(!(p->flags & PVT_EMPTY))
 			{
-				PrintError(E_EMPTY_VALUE_DELETED, v->buffer, p->idstr, "not allowed");
+				PrintError(E_EMPTY_VALUE_DELETED, sgfc, v->buffer, p->idstr, "not allowed");
 				v = Del_PropValue(p, v);
 			}
 			else
@@ -702,7 +728,7 @@ static void Check_PropValues(struct Property *p)
 		else
 			if(sgf_token[p->id].CheckValue)
 			{
-				if((*sgf_token[p->id].CheckValue)(p, v))
+				if((*sgf_token[p->id].CheckValue)(sgfc, p, v))
 					v = v->next;
 				else
 					v = Del_PropValue(p, v);
@@ -720,13 +746,13 @@ static void Check_PropValues(struct Property *p)
 *** Returns:	-
 **************************************************************************/
 
-static void CheckID_Lowercase(char *p)
+static void CheckID_Lowercase(struct SGFInfo *sgfc, char *p)
 {
 	while(isalpha(*p))
 	{
 		if(islower(*p))
 		{
-			PrintError(E_LC_IN_PROPID, p);
+			PrintError(E_LC_IN_PROPID, sgfc, p);
 			break;		/* print error only once */
 		}
 		p++;
@@ -743,7 +769,7 @@ static void CheckID_Lowercase(char *p)
 *** Returns:	-
 **************************************************************************/
 
-void Check_Properties(struct Node *n, struct BoardStatus *st)
+void Check_Properties(struct SGFInfo *sgfc, struct Node *n, struct BoardStatus *st)
 {
 	struct Property *p, *hlp;
 
@@ -754,24 +780,24 @@ void Check_Properties(struct Node *n, struct BoardStatus *st)
 			 (p->id != TKN_KI))
 		{
 			if(sgf_token[p->id].data & ST_OBSOLETE)
-				PrintError(WS_PROPERTY_NOT_IN_FF, p->buffer, p->idstr, sgfc->info->FF, "converted");
+				PrintError(WS_PROPERTY_NOT_IN_FF, sgfc, p->buffer, p->idstr, sgfc->info->FF, "converted");
 			else
-				PrintError(WS_PROPERTY_NOT_IN_FF, p->buffer, p->idstr, sgfc->info->FF, "parsing done anyway");
+				PrintError(WS_PROPERTY_NOT_IN_FF, sgfc, p->buffer, p->idstr, sgfc->info->FF, "parsing done anyway");
 		}
 
-		if(!option_keep_obsolete_props && !(sgf_token[p->id].ff & FF4) &&
+		if(!sgfc->options->keep_obsolete_props && !(sgf_token[p->id].ff & FF4) &&
 		   !(sgf_token[p->id].data & ST_OBSOLETE))
 		{
-			PrintError(W_PROPERTY_DELETED, p->buffer, "obsolete ", p->idstr);
+			PrintError(W_PROPERTY_DELETED, sgfc, p->buffer, "obsolete ", p->idstr);
 			p = Del_Property(n, p);
 			continue;
 		}
 
 
 		if(sgfc->info->FF >= 4)
-			CheckID_Lowercase(p->buffer);
+			CheckID_Lowercase(sgfc, p->buffer);
 
-		Check_PropValues(p);
+		Check_PropValues(sgfc, p);
 
 		if(!p->value)				/* all values of property deleted? */
 			p = Del_Property(n, p);	/* -> del property */
@@ -781,7 +807,7 @@ void Check_Properties(struct Node *n, struct BoardStatus *st)
 
 			if(sgf_token[p->id].Execute_Prop)
 			{
-				if(!(*sgf_token[p->id].Execute_Prop)(n, p, st) || !p->value)
+				if(!(*sgf_token[p->id].Execute_Prop)(sgfc, n, p, st) || !p->value)
 					Del_Property(n, p);
 			}
 

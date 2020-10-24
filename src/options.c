@@ -6,33 +6,6 @@
 #include "all.h"
 #include "protos.h"
 
-struct SGFInfo *sgfc = NULL;
-/* pointer to current (actual) SGFInfo structure
-** used by PrintError/ LoadSGF & ParseSGF
-** the latter two set this pointer on calling */
-
-char option_warnings = TRUE;
-char option_keep_head = FALSE;
-char option_keep_unknown_props = TRUE;
-char option_keep_obsolete_props = TRUE;
-char option_del_empty_nodes = FALSE;
-char option_del_move_markup = FALSE;
-char option_split_file = FALSE;
-char option_write_critical = FALSE;
-char option_interactive = FALSE;
-char option_linebreaks = 1;
-char option_softlinebreaks = TRUE;
-char option_nodelinebreaks = FALSE;
-char option_expandcpl = FALSE;
-char option_pass_tt = FALSE;
-char option_fix_variation = FALSE;
-char option_findstart = 1;
-char option_game_signature = FALSE;
-char option_strict_checking = FALSE;
-char option_reorder_variations = FALSE;
-char *option_infile = NULL;
-char *option_outfile = NULL;
-
 
 /**************************************************************************
 *** Function:	PrintHelp
@@ -86,26 +59,57 @@ static void PrintHelp(int everything)
 }
 
 
+struct SGFCOptions *SGFCDefaultOptions()
+{
+	struct SGFCOptions *options;
+	SaveMalloc(struct SGFCOptions *, options, sizeof(struct SGFCOptions), "SGFC options")
+	options->warnings = TRUE;
+	options->keep_head = FALSE;
+	options->keep_unknown_props = TRUE;
+	options->keep_obsolete_props = TRUE;
+	options->del_empty_nodes = FALSE;
+	options->del_move_markup = FALSE;
+	options->split_file = FALSE;
+	options->write_critical = FALSE;
+	options->interactive = FALSE;
+	options->linebreaks = 1;
+	options->softlinebreaks = TRUE;
+	options->nodelinebreaks = FALSE;
+	options->expandcpl = FALSE;
+	options->pass_tt = FALSE;
+	options->fix_variation = FALSE;
+	options->findstart = 1;
+	options->game_signature = FALSE;
+	options->strict_checking = FALSE;
+	options->reorder_variations = FALSE;
+	options->infile = NULL;
+	options->outfile = NULL;
+	return options;
+}
+
+
 /**************************************************************************
 *** Function:	ParseArgs
 ***				Parses commandline options
-***				Options are represented by one char and are preceeded with
+***				Options are represented by one char and are preceded with
 ***				a minus. It's valid to list more than one option per argv[]
 *** Parameters: argc ... argument count (like main())
 ***				argv ... arguments (like main())
 *** Returns:	TRUE for ok / FALSE for exit program (help printed)
 **************************************************************************/
 
-int ParseArgs(int argc, char *argv[])
+struct SGFCOptions *ParseArgs(int argc, char *argv[])
 {
 	int i, n, m;
 	char *c, *hlp;
+	struct SGFCOptions *options;
 
 	if(argc <= 1)		/* called without arguments */
 	{
 		PrintHelp(FALSE);
-		return(FALSE);
+		return(NULL);
 	}
+	options = SGFCDefaultOptions();
 
 	for(i = 1; i < argc; i++)
 	{
@@ -116,45 +120,48 @@ int ParseArgs(int argc, char *argv[])
 				{
 					switch(*c)
 					{
-						case 'w':	option_warnings = FALSE;			break;
-						case 'u':	option_keep_unknown_props = FALSE;	break;
-						case 'o':	option_keep_obsolete_props = FALSE;	break;
-						case 'c':	option_write_critical = TRUE;		break;
-						case 'e':	option_expandcpl = TRUE;			break;
-						case 'k':	option_keep_head = TRUE;			break;
-						case 't':	option_softlinebreaks = FALSE;		break;
-						case 'L':	option_nodelinebreaks = TRUE;		break;
-						case 'p':	option_pass_tt = TRUE;				break;
-						case 's':	option_split_file = TRUE;			break;
-						case 'n':	option_del_empty_nodes = TRUE;		break;
-						case 'm':	option_del_move_markup = TRUE;		break;
-						case 'v':	option_fix_variation = TRUE;		break;
-						case 'i':	option_interactive = TRUE;			break;
-						case 'g':	option_game_signature = TRUE;		break;
-						case 'r':	option_strict_checking = TRUE;		break;
-						case 'z':	option_reorder_variations = TRUE;	break;
-						case 'd':	c++; hlp = c;
+						case 'w':	options->warnings = FALSE;				break;
+						case 'u':	options->keep_unknown_props = FALSE;	break;
+						case 'o':	options->keep_obsolete_props = FALSE;	break;
+						case 'c':	options->write_critical = TRUE;			break;
+						case 'e':	options->expandcpl = TRUE;				break;
+						case 'k':	options->keep_head = TRUE;				break;
+						case 't':	options->softlinebreaks = FALSE;		break;
+						case 'L':	options->nodelinebreaks = TRUE;			break;
+						case 'p':	options->pass_tt = TRUE;				break;
+						case 's':	options->split_file = TRUE;				break;
+						case 'n':	options->del_empty_nodes = TRUE;		break;
+						case 'm':	options->del_move_markup = TRUE;		break;
+						case 'v':	options->fix_variation = TRUE;			break;
+						case 'i':	options->interactive = TRUE;			break;
+						case 'g':	options->game_signature = TRUE;			break;
+						case 'r':	options->strict_checking = TRUE;		break;
+						case 'z':	options->reorder_variations = TRUE;		break;
+						case 'd':
+							c++; hlp = c;
 							n = (int)strtol(c, &c, 10);
 							if(n < 1 || n > MAX_ERROR_NUM)
-								PrintFatalError(FE_BAD_PARAMETER, hlp);
+								PrintFatalError(FE_BAD_PARAMETER, NULL, hlp);
 							error_enabled[n-1] = FALSE;
 							c--;
 							break;
-						case 'l':	c++;
+						case 'l':
+							c++;
 							n = *c - '0';
 							if(n < 1 || n > 4)
-								PrintFatalError(FE_BAD_PARAMETER, c);
-							option_linebreaks = n;
+								PrintFatalError(FE_BAD_PARAMETER, NULL, c);
+							options->linebreaks = n;
 							break;
-						case 'b':	c++;
+						case 'b':
+							c++;
 							n = *c - '0';
 							if(n < 1 || n > 3)
-								PrintFatalError(FE_BAD_PARAMETER, c);
-							option_findstart = n;
+								PrintFatalError(FE_BAD_PARAMETER, NULL, c);
+							options->findstart = n;
 							break;
-						case 'y':	c++;
+						case 'y':
+							c++;
 							for(n = 0; isupper(*c); c++, n++);
-							m = 0;
 							c -= n;
 							if(n)
 							{
@@ -163,48 +170,43 @@ int ParseArgs(int argc, char *argv[])
 										break;
 							}
 							if(!n || !sgf_token[m].id)
-								PrintFatalError(FE_BAD_PARAMETER, c);
+								PrintFatalError(FE_BAD_PARAMETER, NULL, c);
 							else
 							{
 								c += n-1;
 								sgf_token[m].flags |= DELETE_PROP;
 							}
 							break;
-						case 'h':	PrintHelp(TRUE);
-							return(FALSE);
+						case 'h':
+							PrintHelp(TRUE);
+							free(options);
+							return(NULL);
 						case '-':	/* long options */
 							c++;
-							if(!strncmp(c, "help", 4))
-							{
-								PrintHelp(TRUE);
-								return(FALSE);
-							}
-							if(!strncmp(c, "version", 7))
+							if(!strncmp(c, "help", 4) || !strncmp(c, "version", 7))
 							{
 								PrintHelp(FALSE);
-								return(FALSE);
+								free(options);
+								return(NULL);
 							}
-							PrintFatalError(FE_UNKNOWN_LONG_OPTION, c);
+							PrintFatalError(FE_UNKNOWN_LONG_OPTION, NULL, c);
 						default:
-							PrintFatalError(FE_UNKNOWN_OPTION, *c);
+							PrintFatalError(FE_UNKNOWN_OPTION, NULL, *c);
 					}
 				}
 				break;
 
-			default:			/* argument isn't preceeded by '-' */
-				if(!option_infile)
-					option_infile = argv[i];
+			default:			/* argument isn't preceded by '-' */
+				if(!options->infile)
+					options->infile = argv[i];
 				else
-				if(!option_outfile)
-					option_outfile = argv[i];
+				if(!options->outfile)
+					options->outfile = argv[i];
 				else
-					PrintFatalError(FE_TOO_MANY_FILES, argv[i]);
+					PrintFatalError(FE_TOO_MANY_FILES, NULL, argv[i]);
 				break;
 		}
 	}
 
-	if(!option_infile)
-		PrintFatalError(FE_MISSING_SOURCE_FILE);
-
-	return(TRUE);
+	return(options);
 }

@@ -56,7 +56,7 @@ static int Get_Fraction(char *val)
 *** Returns:	-1/0/1/2: corrected error / error / ok / corrected
 **************************************************************************/
 
-static int Parse_Komi(char *val, U_SHORT dummy)
+static int Parse_Komi(char *val, ...)
 {
 	int frac, ret;
 	double points = 0.0;
@@ -93,7 +93,7 @@ static int Parse_Komi(char *val, U_SHORT dummy)
 *** Returns:	-1/0/1/2: corrected error / error / ok / corrected
 **************************************************************************/
 
-static int Parse_Time(char *val, U_SHORT dummy)
+static int Parse_Time(char *val, ...)
 {
 	int ret = 1, hour = 0, min = 0;
 	double time;
@@ -153,7 +153,7 @@ static int Parse_Time(char *val, U_SHORT dummy)
 *** Returns:	-1/0/1/2: corrected error / error / ok / corrected
 **************************************************************************/
 
-static int Parse_Result(char *val, U_SHORT dummy)
+static int Parse_Result(char *val, ...)
 {
 	char *s, *d;
 	int err = 1, charpoints;
@@ -202,8 +202,8 @@ static int Parse_Result(char *val, U_SHORT dummy)
 
 					if(val[1] != '+')	/* some text between 'B/W' and '+' */
 					{
-						s = SkipText(val, NULL, '+', 0);
-						if(s)
+						for(s=val; *s && *s != '+'; s++);
+						if(*s)
 						{
 							err = -1;
 							d = &val[1];
@@ -425,7 +425,7 @@ static int Correct_Date(char *value)
 *** Returns:	-1/0/1: corrected error / error / ok
 **************************************************************************/
 
-static int Parse_Date(char *value, U_SHORT dummy)
+static int Parse_Date(char *value, ...)
 {
 	int ret = 1, allowed, type, hasgoty, turn, oldtype;
 	char *c, *d;
@@ -578,35 +578,35 @@ static int Parse_Date(char *value, U_SHORT dummy)
 *** Returns:	TRUE / FALSE if property should be deleted
 **************************************************************************/
 
-static int PromptGameInfo(struct Property *p, struct PropValue *v,
-				   int (*Parse_Value)(char *, U_SHORT))
+static int PromptGameInfo(struct SGFInfo * sgfc, struct Property *p,
+		struct PropValue *v, int (*Parse_Value)(char *, ...))
 {
 	char *newgi, *oldgi, inp[2001];
 	long size;
 	int ret;
 
-	if(!option_interactive)
+	if(!sgfc->options->interactive)
 	{
-		PrintError(E4_FAULTY_GC, v->buffer, p->idstr, "(NOT CORRECTED!)");
+		PrintError(E4_FAULTY_GC, sgfc, v->buffer, p->idstr, "(NOT CORRECTED!)");
 		return(TRUE);
 	}
 
-	oldgi = SkipText(v->buffer, NULL, ']', 0);
+	oldgi = SkipText(sgfc, v->buffer, NULL, ']', 0);
 	size = oldgi - v->buffer;
 	if(size < 25)		/* CorrectDate may use up to 15 chars */
 		size = 25;
 
 	SaveMalloc(char *, newgi, size+2, "game info value buffer")
-	CopyValue(newgi, v->buffer+1, oldgi - v->buffer-1, FALSE);
+	CopyValue(sgfc, newgi, v->buffer+1, oldgi - v->buffer-1, FALSE);
 
 	SaveMalloc(char *, oldgi, strlen(newgi)+2, "game info value buffer")
 	strcpy(oldgi, newgi);
 
-	PrintError(E4_FAULTY_GC, v->buffer, p->idstr, "");
+	PrintError(E4_FAULTY_GC, sgfc, v->buffer, p->idstr, "");
 
 	while(TRUE)
 	{
-		ret = (*Parse_Value)(newgi, 0);
+		ret = (*Parse_Value)(newgi, 0, sgfc);
 
 		if(ret)	printf("--> Use [%s] (enter), delete (d) or type in new value? ", newgi);
 		else	printf("--> Keep faulty value (enter), delete (d) or type in new value? ");
@@ -666,14 +666,14 @@ static int PromptGameInfo(struct Property *p, struct PropValue *v,
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
-int Check_GameInfo(struct Property *p, struct PropValue *v)
+int Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	char *val;
 	size_t size;
 	int res;
-	int (*parse)(char *, U_SHORT);
+	int (*parse)(char *, ...);
 
-	if(!Check_Text(p, v))		/* parse text (converts spaces) */
+	if(!Check_Text(sgfc, p, v))		/* parse text (converts spaces) */
 		return(FALSE);
 
 	switch(p->id)
@@ -691,13 +691,13 @@ int Check_GameInfo(struct Property *p, struct PropValue *v)
 	SaveMalloc(char *, val, size, "result value buffer")
 	strcpy(val, v->value);
 
-	res = (*parse)(val, 0);
+	res = (*parse)(val);
 
-	if(option_interactive)
+	if(sgfc->options->interactive)
 	{
 
 		if(res < 1)
-			if(!PromptGameInfo(p, v, parse))
+			if(!PromptGameInfo(sgfc, p, v, parse))
 			{
 				free(val);
 				return(FALSE);
@@ -707,9 +707,9 @@ int Check_GameInfo(struct Property *p, struct PropValue *v)
 	{
 		switch(res)
 		{
-			case 0:		PrintError(E4_FAULTY_GC, v->buffer, p->idstr, "(NOT CORRECTED!)");
+			case 0:		PrintError(E4_FAULTY_GC, sgfc, v->buffer, p->idstr, "(NOT CORRECTED!)");
 				break;
-			case -1:	PrintError(E4_BAD_VALUE_CORRECTED, v->buffer, p->idstr, val);
+			case -1:	PrintError(E4_BAD_VALUE_CORRECTED, sgfc, v->buffer, p->idstr, val);
 				free(v->value);
 				v->value = val;
 				return(TRUE);

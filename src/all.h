@@ -10,6 +10,7 @@
 ***
 **************************************************************************/
 
+#include <stdbool.h>
 
 /* #define VERSION_NO_MAIN */		/* In case you've written a new main()
 									** e.g. for writing a mouse-interface
@@ -24,6 +25,7 @@
 
 typedef unsigned char	U_CHAR;
 typedef unsigned short	U_SHORT;
+typedef unsigned int	U_INT;
 typedef unsigned long	U_LONG;
 
 #ifndef TRUE
@@ -105,7 +107,8 @@ struct BoardStatus
 {
 	U_SHORT annotate;		/* flags for annotation props, etc. */
 	char *ginfo;			/* pointer into buffer of first GINFO property */
-	int bwidth;				/* copy of sgfc->info->bwidth */
+	int bwidth;				/* copy of sgf->info->bwidth */
+	int bheight;			/* copy of sgf->info->bheight */
 	unsigned char *board;
 	size_t bsize;			/* board size in bytes */
 	U_SHORT *markup;
@@ -172,6 +175,49 @@ struct TreeInfo
 	struct Node *root;	/* root node of this tree */
 };
 
+struct SGFCOptions
+{
+	char *infile;
+	char *outfile;
+	int linebreaks;
+	int findstart;
+	bool warnings;
+	bool keep_head;
+	bool keep_unknown_props;
+	bool keep_obsolete_props;
+	bool del_empty_nodes;
+	bool del_move_markup;
+	bool split_file;
+	bool write_critical;
+	bool interactive;
+	bool softlinebreaks;
+	bool nodelinebreaks;
+	bool expandcpl;
+	bool pass_tt;
+	bool fix_variation;
+	bool game_signature;
+	bool strict_checking;
+	bool reorder_variations;
+};
+
+/* used by save.c when using memory_io SaveFileHandler functions */
+struct SaveBuffer {
+	char *buffer;
+	size_t buffer_size;
+	char *pos;
+};
+
+/* used by save.c as hooks to writing to file or to memory */
+struct SaveFileHandler {
+	int (*open)(struct SaveFileHandler *, const char *, const char *);
+	/* close() also gets error code, so that it knows whether writing finished successfully */
+	int (*close)(struct SaveFileHandler *, U_LONG);
+	int (*putc)(struct SaveFileHandler *, int);
+	union {
+		FILE *fh;
+		struct SaveBuffer buffer;
+	};
+};
 
 struct SGFInfo
 {
@@ -188,6 +234,9 @@ struct SGFInfo
 	char *b_end;		/* file buffer end address */
 	char *start;		/* start of SGF data within buffer */
 	char *current;		/* actual read positon (cursor) in buffer */
+
+	struct SGFCOptions *options;
+	struct SaveFileHandler *sfh;	/* used during SaveSGF() */
 };
 
 #define SGF_EOF			(sgfc->current >= sgfc->b_end)
@@ -211,9 +260,9 @@ struct SGFToken
 	char *id;
 	U_CHAR priority;
 	U_CHAR ff;		/* file format */
-	int (*CheckValue)(struct Property *, struct PropValue *);
-	int (*Execute_Prop)(struct Node *, struct Property *, struct BoardStatus *);
-	U_SHORT flags;
+	int (*CheckValue)(struct SGFInfo *, struct Property *, struct PropValue *);
+	int (*Execute_Prop)(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
+	U_INT flags;
 	U_SHORT data;	/* for Do_XXX */
 };
 
@@ -340,23 +389,3 @@ struct SGFCError {
 #define FE_UNKNOWN_LONG_OPTION	(68UL | E_FATAL_ERROR)
 
 #define MAX_ERROR_NUM			68
-
-
-/* used by save.c when using memory_io SaveFileHandler functions */
-struct SaveBuffer {
-	char *buffer;
-	size_t buffer_size;
-	char *pos;
-};
-
-/* used by save.c as hooks to writing to file or to memory */
-struct SaveFileHandler {
-	int (*open)(struct SaveFileHandler *, const char *, const char *);
-	/* close() also gets error code, so that it knows whether writing finished successfully */
-	int (*close)(struct SaveFileHandler *, U_LONG);
-	int (*putc)(struct SaveFileHandler *, int);
-	union {
-		FILE *fh;
-		struct SaveBuffer buffer;
-	};
-};
