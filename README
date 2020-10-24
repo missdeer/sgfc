@@ -598,12 +598,12 @@ Fatal error 7: no SGF data found: e.g. 'sgfc COPYING'
 Error 9: variation nesting incomplete: add ']' to the end of test.sgf
 Fatal error 26: could not open destination file
 Fatal error 27: could not write destination file
+Warning 29: invoke sgfc with -o option; warning 29 on line 40 (SC property)
 Error 34: critical file not saved: e.g. 'sgfc test.sgf out.sgf'
 Fatal error 46: unknown file format: create a file consisting of "(;FF[5])"
 Fatal error 48: no source file specified: e.g. 'sgfc -u'
 Fatal error 49: error in commandline: e.g. 'sgfc -ld'
-Fatal error 53: destination file name too long (max: 480 chars)
-Warning 29: invoke sgfc with -o option; warning 29 on line 40 (SC property)
+Error 53: (currently unused)
 Warning 55: invoke sgfc with -n option; warning 55 on line 55
 
 Every line yields one or more errors/warnings.

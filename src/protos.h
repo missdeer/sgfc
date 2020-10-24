@@ -46,13 +46,17 @@ struct Property *Add_Property(struct Node *, token , char *, char *);
 struct Node *NewNode(struct Node * , int);
 
 char *SkipText(char * , const char * , char , unsigned int );
-void LoadSGF(struct SGFInfo * );
+void LoadSGF(struct SGFInfo * , char *);
 void LoadSGFFromFileBuffer(struct SGFInfo * );
 
 
 /**** save.c ****/
 
-void SaveSGF(struct SGFInfo * );
+extern struct SaveFileHandler save_file_io;
+int SaveFile_BufferIO_Close(struct SaveFileHandler *, U_LONG );
+struct SaveFileHandler *init_save_buffer_io(int (* )(struct SaveFileHandler *, U_LONG));
+
+void SaveSGF(struct SGFInfo * , struct SaveFileHandler *, char *);
 
 
 /**** properties.c ****/

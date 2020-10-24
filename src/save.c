@@ -37,6 +37,86 @@ static int save_eol_in_node;
 						{ saveputc(s, '\n')	} }
 
 
+static int SaveFile_FileIO_Open(struct SaveFileHandler *sfh, const char *path, const char *mode)
+{
+	sfh->fh = fopen(path, mode);
+	return(!!sfh->fh);
+}
+
+static int SaveFile_FileIO_Close(struct SaveFileHandler *sfh, U_LONG error)
+{
+	return fclose(sfh->fh);
+}
+
+static int SaveFile_FileIO_Putc(struct SaveFileHandler *sfh, int c)
+{
+	return fputc(c, sfh->fh);
+}
+
+
+static int SaveFile_BufferIO_Open(struct SaveFileHandler *sfh, const char *path, const char *mode)
+{
+	/* Start with ~5kb buffer which suffices in many cases */
+	sfh->buffer.buffer = (char *)malloc((size_t)5000);
+	if(!sfh->buffer.buffer)
+		return(FALSE);
+	sfh->buffer.buffer_size = 5000;
+	sfh->buffer.pos = sfh->buffer.buffer;
+	return(TRUE);
+}
+
+int SaveFile_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
+{
+	free(sfh->buffer.buffer);
+	sfh->buffer.buffer = NULL;
+	sfh->buffer.pos = NULL;
+	sfh->buffer.buffer_size = 0;
+	return(TRUE);
+}
+
+static int SaveFile_BufferIO_Putc(struct SaveFileHandler *sfh, int c)
+{
+	/* -1 so that we can always null-terminate buffer in close() function */
+	if (sfh->buffer.pos == sfh->buffer.buffer + sfh->buffer.buffer_size - 1)
+	{
+		char *new_buffer = (char *)malloc(sfh->buffer.buffer_size*2);
+		if (!new_buffer)
+			return EOF;
+		memcpy(new_buffer, sfh->buffer.buffer, sfh->buffer.buffer_size);
+		free(sfh->buffer.buffer);
+		sfh->buffer.buffer = new_buffer;
+		sfh->buffer.pos = new_buffer + sfh->buffer.buffer_size;
+		sfh->buffer.buffer_size *= 2;
+	}
+
+	*sfh->buffer.pos++ = (char)c;
+	return(c);
+}
+
+struct SaveFileHandler save_file_io = {
+		SaveFile_FileIO_Open,
+		SaveFile_FileIO_Close,
+		SaveFile_FileIO_Putc,
+		NULL
+};
+
+struct SaveFileHandler *init_save_buffer_io(int (*close)(struct SaveFileHandler *, U_LONG))
+{
+	struct SaveFileHandler *sfh;
+	SaveMalloc(struct SaveFileHandler *, sfh, sizeof(struct SaveFileHandler), "memory file handler")
+	sfh->open = SaveFile_BufferIO_Open;
+	sfh->putc = SaveFile_BufferIO_Putc;
+	if(close)
+		sfh->close = close;
+	else
+		sfh->close = SaveFile_BufferIO_Close;
+	sfh->buffer.buffer = NULL;
+	sfh->buffer.pos = NULL;
+	sfh->buffer.buffer_size = 0;
+	return sfh;
+}
+
+
 /**************************************************************************
 *** Function:	WriteChar
 ***				Writes char to file, modifies save_linelen
@@ -48,7 +128,7 @@ static int save_eol_in_node;
 *** Returns:	TRUE or FALSE
 **************************************************************************/
 
-static int WriteChar(FILE *sfile, char c, int spc)
+static int WriteChar(struct SaveFileHandler *sfile, char c, U_SHORT spc)
 {
 	save_chars_in_node++;
 
@@ -59,7 +139,7 @@ static int WriteChar(FILE *sfile, char c, int spc)
 	{
 		save_linelen++;
 
-		if(fputc(c, sfile) == EOF)
+		if((*sfile->putc)(sfile, c) == EOF)
 			return(FALSE);
 	}
 	else
@@ -68,12 +148,12 @@ static int WriteChar(FILE *sfile, char c, int spc)
 		save_linelen = 0;
 
 #if EOLCHAR
-		if(fputc(EOLCHAR, sfile) == EOF)
+		if((*sfile->putc)(sfile, EOLCHAR) == EOF)
 			return(FALSE);
 #else
-		if(fputc('\r', sfile) == EOF)		/* MSDOS EndOfLine */
+		if((*sfile->putc)(sfile, '\r') == EOF)		/* MSDOS EndOfLine */
 			return(FALSE);
-		if(fputc('\n', sfile) == EOF)
+		if((*sfile->putc)(sfile, '\n') == EOF)
 			return(FALSE);
 #endif
 	}
@@ -93,12 +173,12 @@ static int WriteChar(FILE *sfile, char c, int spc)
 *** Returns:	TRUE or FALSE
 **************************************************************************/
 
-static int WritePropValue(const char *v, int second, U_SHORT flags, FILE *sfile)
+static int WritePropValue(const char *v, int second, U_SHORT flags, struct SaveFileHandler *sfile)
 {
 	U_SHORT fl;
 
 	if(!v)	return(TRUE);
-	
+
 	if(second)
 		saveputc(sfile, ':')
 
@@ -135,7 +215,7 @@ static int WritePropValue(const char *v, int second, U_SHORT flags, FILE *sfile)
 *** Returns:	TRUE or FALSE
 **************************************************************************/
 
-static int WriteProperty(struct TreeInfo *info, struct Property *prop, FILE *sfile)
+static int WriteProperty(struct TreeInfo *info, struct Property *prop, struct SaveFileHandler *sfile)
 {
 	static int gi_written = FALSE;
 
@@ -210,7 +290,7 @@ static int WriteProperty(struct TreeInfo *info, struct Property *prop, FILE *sfi
 *** Returns:	TRUE or FALSE
 **************************************************************************/
 
-static int WriteNode(struct TreeInfo *info, struct Node *n, FILE *sfile)
+static int WriteNode(struct TreeInfo *info, struct Node *n, struct SaveFileHandler *sfile)
 {
 	struct Property *p;
 	save_chars_in_node = 0;
@@ -232,8 +312,7 @@ static int WriteNode(struct TreeInfo *info, struct Node *n, FILE *sfile)
 
 	if(option_nodelinebreaks &&
 	   ((save_eol_in_node && save_linelen > 0) ||
-		(!save_eol_in_node &&
-		 save_linelen > MAX_PREDICTED_LINELEN - save_chars_in_node)))
+		(!save_eol_in_node && save_linelen > MAX_PREDICTED_LINELEN - save_chars_in_node)))
 		saveputc(sfile, '\n')
 
 	return(TRUE);
@@ -275,7 +354,7 @@ static void SetRootProps(struct TreeInfo *info, struct Node *r)
 *** Returns:	TRUE: success / FALSE error
 **************************************************************************/
 
-static int WriteTree(struct TreeInfo *info, struct Node *n, FILE *sfile, int newlines)
+static int WriteTree(struct TreeInfo *info, struct Node *n, struct SaveFileHandler *sfile, int newlines)
 {
 	if(newlines && save_linelen > 0)
 		saveputc(sfile, '\n')
@@ -323,25 +402,23 @@ static int WriteTree(struct TreeInfo *info, struct Node *n, FILE *sfile, int new
 *** Returns:	-
 **************************************************************************/
 
-void SaveSGF(struct SGFInfo *sgf)
+void SaveSGF(struct SGFInfo *sgf, struct SaveFileHandler *sfile, char *base_name)
 {
-	FILE *sfile;
 	struct Node *n;
 	struct TreeInfo *info;
 	char *c, *name;
 	int nl = 0, i = 1;
-	size_t name_buffer_size = strlen(sgf->name) + 6;
+	size_t name_buffer_size = strlen(base_name) + 14; /* +14 == "_99999999.sgf" + \0 */
 
 	sgfc = sgf;					/* set current SGFInfo context */
 
 	SaveMalloc(char *, name, name_buffer_size, "filename buffer")
 	if(option_split_file)
-		snprintf(name, name_buffer_size, "%s_%03d.sgf", sgf->name, i);
+		snprintf(name, name_buffer_size, "%s_%03d.sgf", base_name, i);
 	else
-		strcpy(name, sgf->name);
+		strcpy(name, base_name);
 
-	sfile = fopen(name, "wb");
-	if(!sfile)
+	if(!(*sfile->open)(sfile, name, "wb"))
 		PrintFatalError(FE_DEST_FILE_OPEN, name);
 
 	if(option_keep_head)
@@ -349,9 +426,9 @@ void SaveSGF(struct SGFInfo *sgf)
 		*sgf->start = '\n';
 
 		for(c = sgf->buffer; c <= sgf->start; c++)
-			if(fputc((*c), sfile) == EOF)
+			if((*sfile->putc)(sfile, *c) == EOF)
 			{
-				fclose(sfile);
+				(*sfile->close)(sfile, FE_DEST_FILE_WRITE);
 				PrintFatalError(FE_DEST_FILE_WRITE, name);
 			}
 	}
@@ -367,7 +444,7 @@ void SaveSGF(struct SGFInfo *sgf)
 	{
 		if(!WriteTree(info, n, sfile, nl))
 		{
-			fclose(sfile);
+			(*sfile->close)(sfile, FE_DEST_FILE_WRITE);
 			PrintFatalError(FE_DEST_FILE_WRITE, name);
 		}
 
@@ -377,15 +454,15 @@ void SaveSGF(struct SGFInfo *sgf)
 
 		if(option_split_file && n)
 		{
-			fclose(sfile);
+			(*sfile->close)(sfile, E_NO_ERROR);
 			i++;
-			snprintf(name, name_buffer_size, "%s_%03d.sgf", sgf->name, i);
+			snprintf(name, name_buffer_size, "%s_%03d.sgf", base_name, i);
 
-			if(!(sfile = fopen(name, "wb")))
+			if(!(*sfile->open)(sfile, name, "wb"))
 				PrintFatalError(FE_DEST_FILE_OPEN, name);
 		}
 	}
 
-	fclose(sfile);
+	(*sfile->close)(sfile, E_NO_ERROR);
 	free(name);
 }

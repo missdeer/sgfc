@@ -184,8 +184,6 @@ struct SGFInfo
 
 	struct Node *root;	/* first root node (tree) */
 
-	char *name;			/* file name */
-	FILE *file;			/* file handle */
 	char *buffer;		/* file buffer */
 	char *b_end;		/* file buffer end address */
 	char *start;		/* start of SGF data within buffer */
@@ -342,3 +340,23 @@ struct SGFCError {
 #define FE_UNKNOWN_LONG_OPTION	(68UL | E_FATAL_ERROR)
 
 #define MAX_ERROR_NUM			68
+
+
+/* used by save.c when using memory_io SaveFileHandler functions */
+struct SaveBuffer {
+	char *buffer;
+	size_t buffer_size;
+	char *pos;
+};
+
+/* used by save.c as hooks to writing to file or to memory */
+struct SaveFileHandler {
+	int (*open)(struct SaveFileHandler *, const char *, const char *);
+	/* close() also gets error code, so that it knows whether writing finished successfully */
+	int (*close)(struct SaveFileHandler *, U_LONG);
+	int (*putc)(struct SaveFileHandler *, int);
+	union {
+		FILE *fh;
+		struct SaveBuffer buffer;
+	};
+};

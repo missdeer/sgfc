@@ -47,18 +47,14 @@ int main(int argc, char *argv[])
 		return(0);
 
 	memset(&sgf, 0, sizeof(struct SGFInfo));	/* init SGFInfo structure */
-	sgf.name = option_infile;
 
-	LoadSGF(&sgf);
+	LoadSGF(&sgf, option_infile);
 	ParseSGF(&sgf);
 
 	if(option_outfile)
 	{
 		if(option_write_critical || !critical_count)
-		{
-			sgf.name = option_outfile;
-			SaveSGF(&sgf);
-		}
+			SaveSGF(&sgf, &save_file_io, option_outfile);
 		else
 			PrintError(E_CRITICAL_NOT_SAVED);
 	}

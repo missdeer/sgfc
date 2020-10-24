@@ -466,9 +466,6 @@ void FreeSGFInfo(struct SGFInfo *sgf)
 
 	if(sgf->buffer)						/* free buffer & file */
 		free(sgf->buffer);
-
-	if(sgf->file)
-		fclose(sgf->file);
 }
 
 

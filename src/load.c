@@ -749,37 +749,44 @@ static int FindStart(int firsttime)
 *** Returns:	- (exits on fatal error)
 **************************************************************************/
 
-void LoadSGF(struct SGFInfo *sgf)
+void LoadSGF(struct SGFInfo *sgf, char *name)
 {
 	long size;
+	FILE *file;
 
 	sgfc = sgf;			/* set current SGFInfo context */
 
-	sgf->file = fopen(sgf->name, "rb");
-	if(!sgf->file)
-		PrintFatalError(FE_SOURCE_OPEN, sgf->name);
+	file = fopen(name, "rb");
+	if(!file)
+		PrintFatalError(FE_SOURCE_OPEN, name);
 
-	fseek(sgf->file, 0, SEEK_END);					/* get size of file */
-	size = ftell(sgf->file);
+	fseek(file, 0, SEEK_END);
+	size = ftell(file);
 
 	if(size == -1L)
-		PrintFatalError(FE_SOURCE_READ, sgf->name);
+		goto load_error;
 
-	SaveMalloc(char *, sgf->buffer, size, "source file buffer")
+	sgf->buffer = (char *) malloc((size_t) size);
+	if(!sgf->buffer)
+	{
+		fclose(file);
+		PrintFatalError(FE_OUT_OF_MEMORY, "source file buffer");
+	}
 
-	if(fseek(sgf->file, 0, SEEK_SET) == -1L)	/* read SGF file */
-		PrintFatalError(FE_SOURCE_READ, sgf->name);
-			
-	if(size != (long)fread(sgf->buffer, 1, (size_t)size, sgf->file))
-		PrintFatalError(FE_SOURCE_READ, sgf->name);
-
-	fclose(sgf->file);
-	sgf->file = NULL;
+	if(fseek(file, 0, SEEK_SET) == -1L)
+		goto load_error;
+	if(size != (long)fread(sgf->buffer, 1, (size_t)size, file))
+		goto load_error;
 
 	sgf->b_end   = sgf->buffer + size;
 	sgf->current = sgf->buffer;
-
+	fclose(file);
 	LoadSGFFromFileBuffer(sgf);
+	return;
+
+load_error:
+	fclose(file);
+	PrintFatalError(FE_SOURCE_READ, name);
 }
 
 
