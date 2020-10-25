@@ -313,10 +313,15 @@ static void Correct_Variations(struct SGFInfo *sgfc, struct Node *r, struct Tree
 
 	if(!r->parent)		/* root node? */
 	{
-		if(Find_Property(r, TKN_B) || Find_Property(r, TKN_W))
+		n = r;
+		while(n)
 		{
-			Split_Node(sgfc, r, TYPE_ROOT|TYPE_GINFO, TKN_NONE, FALSE);
-			PrintError(WS_MOVE_IN_ROOT, sgfc, r->buffer);
+			if(Find_Property(n, TKN_B) || Find_Property(n, TKN_W))
+			{
+				Split_Node(sgfc, n, TYPE_ROOT|TYPE_GINFO, TKN_NONE, FALSE);
+				PrintError(WS_MOVE_IN_ROOT, sgfc, n->buffer);
+			}
+			n = n->sibling;
 		}
 	}
 

@@ -131,8 +131,9 @@ START_TEST (test_WS_MOVE_IN_ROOT)
 {
 	sgfc->options->fix_variation = TRUE;
 	trigger_error(WS_MOVE_IN_ROOT,
-				  "(;B[aa])",
-				  "(;FF[4]GM[1]SZ[19];B[aa])\n");
+				  "(;B[aa])(;W[bb])",
+				  "(;FF[4]GM[1]SZ[19];B[aa])\n"
+				  "(;FF[4]GM[1]SZ[19];W[bb])\n");
 }
 END_TEST
 
