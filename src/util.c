@@ -19,16 +19,6 @@
 #include "protos.h"
 
 
-/* statics for PrintError */
-struct Util_C_internal {
-	char *illegal;
-	char *last_pos;
-	int ill_count;
-	U_LONG ill_type;
-	U_LONG last_type;
-	bool error_seen[MAX_ERROR_NUM];	/* used for E_ONLY_ONCE */
-};
-
 /* Error reporting hooks */
 int (*print_error_handler)(U_LONG, struct SGFInfo *, va_list) = PrintErrorHandler;
 void (*print_error_output_hook)(struct SGFCError *) = PrintErrorOutputHook;
@@ -120,6 +110,26 @@ static const char *error_mesg[] =
 	"unknown command line option '%s' (-h for help)\n"
 };
 
+
+/* internal data for util.c functions (currently only for PrintErrorHandler) */
+/* Used instead of local static variables */
+struct Util_C_internal {
+	char *last_pos;
+	char *illegal;
+	int ill_count;
+	U_LONG ill_type;
+	U_LONG last_type;
+	bool error_seen[MAX_ERROR_NUM];	/* used for E_ONLY_ONCE */
+};
+
+
+/**************************************************************************
+*** Function:	Setup_Util_C_internal
+***				Allocate and initialize internal data structure local to util.c
+*** Parameters: -
+*** Returns:	pointer to internal structure
+**************************************************************************/
+
 struct Util_C_internal *Setup_Util_C_internal()
 {
 	struct Util_C_internal *utilc;
@@ -134,21 +144,21 @@ struct Util_C_internal *Setup_Util_C_internal()
 *** Function:	SearchPos
 ***				Calculate the position in rows/columns within a buffer
 *** Parameters: c ... current position
-***				sgf ... for start/end of buffer pointers
+***				sgfc ... for start/end of buffer pointers
 ***				x ... result: #columns
 ***				y ... result: #rows
 *** Returns:	- (result stored in x,y)
 **************************************************************************/
 
-void SearchPos(const char *c, struct SGFInfo *sgf, int *x, int *y)
+void SearchPos(const char *c, struct SGFInfo *sgfc, int *x, int *y)
 {
 	char newline = 0;
-	char *s = sgf->buffer;
+	char *s = sgfc->buffer;
 
 	*y = 1;
 	*x = 1;
 
-	while(s != c && s < sgf->b_end)
+	while(s != c && s < sgfc->b_end)
 	{
 		if(*s == '\r' || *s == '\n')		/* linebreak char? */
 		{
@@ -177,13 +187,13 @@ void SearchPos(const char *c, struct SGFInfo *sgf, int *x, int *y)
 ***				Variadic wrapper around PrintErrorHandler
 **************************************************************************/
 
-int PrintError(U_LONG type, struct SGFInfo *sgf, ...) {
+int PrintError(U_LONG type, struct SGFInfo *sgfc, ...) {
 	int result = 0;
 
 	va_list arglist;
-	va_start(arglist, sgf);
+	va_start(arglist, sgfc);
 	if (print_error_handler)
-		result = (*print_error_handler)(type, sgf, arglist);
+		result = (*print_error_handler)(type, sgfc, arglist);
 	va_end(arglist);
 	return result;
 }
@@ -194,15 +204,15 @@ int PrintError(U_LONG type, struct SGFInfo *sgf, ...) {
 ***				Variadic wrapper around PrintErrorHandler that does not return
 **************************************************************************/
 
-int __attribute__((noreturn)) PrintFatalError(U_LONG type, struct SGFInfo *sgf, ...)
+int __attribute__((noreturn)) PrintFatalError(U_LONG type, struct SGFInfo *sgfc, ...)
 {
 	va_list arglist;
-	va_start(arglist, sgf);
+	va_start(arglist, sgfc);
 	if (print_error_handler)
-		(*print_error_handler)(type, sgf, arglist);
+		(*print_error_handler)(type, sgfc, arglist);
 	va_end(arglist);
 
-	FreeSGFInfo(sgf);
+	FreeSGFInfo(sgfc);
 	exit(20);			/* say dada */
 }
 
@@ -717,11 +727,13 @@ struct Property *Del_Property(struct Node *n, struct Property *p)
 ***				Deletes empty node if
 ***				- node has no siblings
 ***				- has siblings (or is root) but has max. one child
-*** Parameters: n		... node that should be deleted
+*** Parameters: sgfc ... pointer to SGFInfo
+***				n	 ... node that should be deleted
+***				error_code ... error code to report (while deleting) or E_NO_ERROR
 *** Returns:	n->next
 **************************************************************************/
 
-struct Node *Del_Node(struct SGFInfo *sgf, struct Node *n, U_LONG error_code)
+struct Node *Del_Node(struct SGFInfo *sgfc, struct Node *n, U_LONG error_code)
 {
 	struct Node *p, *h;
 	struct Property *i;
@@ -736,7 +748,7 @@ struct Node *Del_Node(struct SGFInfo *sgf, struct Node *n, U_LONG error_code)
 	}
 
 	if(error_code != E_NO_ERROR)
-		PrintError(error_code, sgf, n->buffer);
+		PrintError(error_code, sgfc, n->buffer);
 
 	if(n->prop)						/* delete properties */
 	{
@@ -753,14 +765,14 @@ struct Node *Del_Node(struct SGFInfo *sgf, struct Node *n, U_LONG error_code)
 			n->child->parent = NULL;
 		}
 
-		if(sgf->root == n)			/* n is first root */
+		if(sgfc->root == n)			/* n is first root */
 		{
-			if(n->child)	sgf->root = n->child;
-			else			sgf->root = n->sibling;
+			if(n->child) sgfc->root = n->child;
+			else sgfc->root = n->sibling;
 		}
 		else
 		{							/* n is subsequent root */
-			h = sgf->root;
+			h = sgfc->root;
 			while(h->sibling != n)
 				h = h->sibling;
 
@@ -806,7 +818,7 @@ struct Node *Del_Node(struct SGFInfo *sgf, struct Node *n, U_LONG error_code)
 	}
 
 	h = n->next;
-	Delete(&sgf->first, n);
+	Delete(&sgfc->first, n);
 	free(n);
 
 	return(h);
@@ -817,11 +829,12 @@ struct Node *Del_Node(struct SGFInfo *sgf, struct Node *n, U_LONG error_code)
 *** Function:	New_PropValue
 ***				Adds (or sets) a new property value
 ***				(adds property to node if necessary)
-*** Parameters: n ... node
-***				id .. property id
-***				value  ... first value
-***				value2 ... second value (if compose type) or NULL
-***				unique ... TRUE - old values get deleted
+*** Parameters: sgfc	... pointer to SGFInfo structure
+***				n		... node
+***				id		... property id
+***				value	... first value
+***				value2	... second value (if compose type) or NULL
+***				unique	... TRUE - old values get deleted
 *** Returns:	pointer to property
 **************************************************************************/
 

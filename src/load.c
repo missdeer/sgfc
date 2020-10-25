@@ -31,7 +31,8 @@
 /**************************************************************************
 *** Function:	SkipSGFText
 ***				Wrapper for SkipText, using sgfc->current as buffer
-*** Parameters: brk		... break char
+*** Parameters: sgfc	... pointer to SGFInfo structure
+***				brk		... break char
 ***				mode	... see SkipText
 *** Returns:	TRUE or FALSE
 **************************************************************************/
@@ -53,7 +54,8 @@ static int SkipSGFText(struct SGFInfo *sgfc, char brk, unsigned int mode)
 *** Function:	SkipText
 ***				Skips all chars until break char is detected or
 ***				end of buffer is reached
-*** Parameters: s		... pointer to buffer start
+*** Parameters: sgfc	... pointer to SGFInfo structure
+***				s		... pointer to buffer start
 ***				e		... pointer to buffer end
 ***							(may be NULL -> buffer terminated with '\0')
 ***				end		... break char
@@ -88,7 +90,6 @@ char *SkipText(struct SGFInfo *sgfc, char *s, const char *e, char end, unsigned 
 				continue;
 			}
 		}
-
 		s++;
 	}
 
@@ -106,8 +107,9 @@ char *SkipText(struct SGFInfo *sgfc, char *s, const char *e, char end, unsigned 
 ***				Chars: ( ) ; [ uppercase
 ***					In last case sgfc->current points to beginning of text
 ***				 	(leading lowercase possible)
-*** Parameters: print_error ... print error message
-***				errc ... error code for printing on failure (or E_NO_ERROR)
+*** Parameters: sgfc		... pointer to SGFInfo structure
+***				print_error ... print error message
+***				errc		... error code for printing on failure (or E_NO_ERROR)
 *** Returns:	TRUE or FALSE
 **************************************************************************/
 
@@ -160,7 +162,8 @@ static int GetNextChar(struct SGFInfo *sgfc, int print_error, U_LONG errc)
 /**************************************************************************
 *** Function:	SkipValues
 ***				Skips all property values of current value list
-*** Parameters: print_error ... print error message
+*** Parameters: sgfc		... pointer to SGFInfo structure
+***				print_error ... print error message
 ***								(passed on to GetNextChar)
 *** Returns:	TRUE or FALSE
 **************************************************************************/
@@ -191,7 +194,8 @@ static int SkipValues(struct SGFInfo *sgfc, int print_error)
 ***				Copies property value into new buffer and
 ***				deletes all CTRL chars and adds a '\0' at the end ->
 ***				value becomes real C string
-*** Parameters: d		... destination buffer
+*** Parameters: sgfc	... pointer to SGFInfo structure
+***				d		... destination buffer
 ***				s		... source buffer
 ***				size	... number of bytes to copy
 ***				printerror ... to print or not to print
@@ -215,7 +219,8 @@ void CopyValue(struct SGFInfo *sgfc, char *d, const char *s, size_t size, int pr
 /**************************************************************************
 *** Function:	Add_PropValue
 ***				Adds a value to the property (inits structure etc.)
-*** Parameters: p		... pointer to property
+*** Parameters: sgfc	... pointer to SGFInfo structure
+***				p		... pointer to property
 ***				buffer	... pointer to position in source buffer (or NULL)
 ***				value	... pointer to first value
 ***				size	... length of first value (excluding any 0 bytes)
@@ -261,7 +266,8 @@ struct PropValue *Add_PropValue(struct SGFInfo *sgfc,
 /**************************************************************************
 *** Function:	NewValue
 ***				Adds one property value to the given property
-*** Parameters: p		... pointer to property
+*** Parameters: sgfc	... pointer to SGFInfo structure
+***				p		... pointer to property
 ***				flags	... property flags (as in sgf_token[])
 *** Returns:	TRUE or FALSE
 **************************************************************************/
@@ -301,7 +307,8 @@ static int NewValue(struct SGFInfo *sgfc, struct Property *p, U_SHORT flags)
 /**************************************************************************
 *** Function:	Add_Property
 ***				Creates new property structure and adds it to the node
-*** Parameters: n		... node to which property belongs to
+*** Parameters: sgfc	... pointer to SGFInfo structure
+***				n		... node to which property belongs to
 ***				id		... tokenized ID of property
 ***				id_buf	... pointer to property ID string
 ***				idstr	... ID string
@@ -343,7 +350,8 @@ struct Property *Add_Property(struct Node *n, token id, char *id_buf, char *idst
 /**************************************************************************
 *** Function:	NewProperty
 ***				Adds one property (id given) to a node
-*** Parameters: n		... node to which property belongs to
+*** Parameters: sgfc	... pointer to SGFInfo structure
+***				n		... node to which property belongs to
 ***				id		... tokenized ID of property
 ***				id_buf	... pointer to property ID
 ***				idstr	... ID string
@@ -406,7 +414,8 @@ static int NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id_
 /**************************************************************************
 *** Function:	MakeProperties
 ***				builds property-list from a given SGF string
-*** Parameters: n	... node to which properties should belong
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... node to which properties should belong
 *** Returns:	TRUE or FALSE
 **************************************************************************/
 
@@ -522,7 +531,8 @@ static int MakeProperties(struct SGFInfo *sgfc, struct Node *n)
 /**************************************************************************
 *** Function:	NewNode
 ***				Inserts a new node into the current SGF tree
-*** Parameters: parent	 ... parent node
+*** Parameters: sgfc	 ... pointer to SGFInfo structure
+***				parent	 ... parent node
 ***				newchild ... create a new child for parent node
 ***							 (insert an empty node into the tree)
 *** Returns:	pointer to node or NULL (success / error)
@@ -595,7 +605,8 @@ struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, int newchild)
 /**************************************************************************
 *** Function:	BuildSGFTree
 ***				Recursive function to build up the sgf tree structure
-*** Parameters: r ... tree root
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				r	 ... tree root
 *** Returns:	TRUE or FALSE on success/error
 **************************************************************************/
 
@@ -659,12 +670,13 @@ static int BuildSGFTree(struct SGFInfo *sgfc, struct Node *r)
 /**************************************************************************
 *** Function:	FindStart
 ***				sets sgfc->current to '(' of start mark '(;'
-*** Parameters: firsttime ... search for the first time?
+*** Parameters: sgfc	   ... pointer to SGFInfo structure
+***				first_time ... search for the first time?
 ***							  (TRUE -> if search fails -> fatal error)
 *** Returns:	FALSE ... ok/ TRUE ... missing ';'  (exits on fatal error)
 **************************************************************************/
 
-static int FindStart(struct SGFInfo *sgfc, int firsttime)
+static int FindStart(struct SGFInfo *sgfc, int first_time)
 {
 	int warn = 0, o, c;
 	char *tmp;
@@ -684,7 +696,7 @@ static int FindStart(struct SGFInfo *sgfc, int firsttime)
 					warn = 1;
 				}
 
-				if(!firsttime)
+				if(!first_time)
 					PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, sgfc->current, TRUE, 4);
 
 				sgfc->current += 4;	/* skip '[aa]' */
@@ -727,13 +739,13 @@ static int FindStart(struct SGFInfo *sgfc, int firsttime)
 			}
 		}
 		else
-			if(!firsttime && !isspace(*sgfc->current))
+			if(!first_time && !isspace(*sgfc->current))
 				PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, sgfc->current, TRUE);
 
 		sgfc->current++;
 	}
 
-	if(firsttime)
+	if(first_time)
 		PrintFatalError(FE_NO_SGFDATA, sgfc);
 
 	return(FALSE);
@@ -744,18 +756,19 @@ static int FindStart(struct SGFInfo *sgfc, int firsttime)
 *** Function:	LoadSGF
 ***				Loads a SGF file into the memory and inits all
 ***				necessary information in sgfinfo-structure
-*** Parameters: sgf ... pointer to SGFInfo structure
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				name ... filename/path
 *** Returns:	- (exits on fatal error)
 **************************************************************************/
 
-void LoadSGF(struct SGFInfo *sgf, char *name)
+void LoadSGF(struct SGFInfo *sgfc, char *name)
 {
 	long size;
 	FILE *file;
 
 	file = fopen(name, "rb");
 	if(!file)
-		PrintFatalError(FE_SOURCE_OPEN, sgf, name);
+		PrintFatalError(FE_SOURCE_OPEN, sgfc, name);
 
 	fseek(file, 0, SEEK_END);
 	size = ftell(file);
@@ -763,27 +776,27 @@ void LoadSGF(struct SGFInfo *sgf, char *name)
 	if(size == -1L)
 		goto load_error;
 
-	sgf->buffer = (char *) malloc((size_t) size);
-	if(!sgf->buffer)
+	sgfc->buffer = (char *) malloc((size_t) size);
+	if(!sgfc->buffer)
 	{
 		fclose(file);
-		PrintFatalError(FE_OUT_OF_MEMORY, sgf, "source file buffer");
+		PrintFatalError(FE_OUT_OF_MEMORY, sgfc, "source file buffer");
 	}
 
 	if(fseek(file, 0, SEEK_SET) == -1L)
 		goto load_error;
-	if(size != (long)fread(sgf->buffer, 1, (size_t)size, file))
+	if(size != (long)fread(sgfc->buffer, 1, (size_t)size, file))
 		goto load_error;
 
-	sgf->b_end   = sgf->buffer + size;
-	sgf->current = sgf->buffer;
+	sgfc->b_end   = sgfc->buffer + size;
+	sgfc->current = sgfc->buffer;
 	fclose(file);
-	LoadSGFFromFileBuffer(sgf);
+	LoadSGFFromFileBuffer(sgfc);
 	return;
 
 load_error:
 	fclose(file);
-	PrintFatalError(FE_SOURCE_READ, sgf, name);
+	PrintFatalError(FE_SOURCE_READ, sgfc, name);
 }
 
 
@@ -791,7 +804,7 @@ load_error:
 *** Function:	LoadSGFFromFileBuffer
 ***				Seeks start of SGF data and builds basic tree structure
 ***             Assumes sgf->buffer and sgf->b_end is already set
-*** Parameters: sgf ... pointer to SGFInfo structure
+*** Parameters: sgfc ... pointer to SGFInfo structure
 *** Returns:	- (exits on fatal error)
 **************************************************************************/
 

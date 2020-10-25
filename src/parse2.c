@@ -18,8 +18,9 @@
 /**************************************************************************
 *** Function:	ExpandPointList
 ***				Expanding compressed pointlists
-*** Parameters: p ... property
-***				v ... compose value to be expanded
+*** Parameters: sgfc  ... pointer to SGFInfo structure
+***				p	  ... property
+***				v	  ... compose value to be expanded
 ***				error ... if TRUE print errors
 *** Returns:	TRUE if success / FALSE on error (exits on low memory)
 **************************************************************************/
@@ -75,7 +76,8 @@ int ExpandPointList(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 /**************************************************************************
 *** Function:	CompressPointList
 ***				A simple greedy algorithm to compress pointlists
-*** Parameters: p ... property which list should get compressed
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... property which list should get compressed
 *** Returns:	- (exits on low memory)
 **************************************************************************/
 
@@ -165,7 +167,8 @@ void CompressPointList(struct SGFInfo *sgfc, struct Property *p)
 /**************************************************************************
 *** Function:	Correct_Variation
 ***				Checks if variation criteria fit and corrects level
-*** Parameters: n ... first node of siblings (child of parent)
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... first node of siblings (child of parent)
 *** Returns:	-
 **************************************************************************/
 
@@ -295,8 +298,9 @@ static void Correct_Variation(struct SGFInfo *sgfc, struct Node *n)
 /**************************************************************************
 *** Function:	Correct_Variations
 ***				Checks for wrong variation levels and corrects them
-*** Parameters: r ... start node
-***				ti ... pointer to TreeInfo (for check of GM)
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				r	 ... start node
+***				ti	 ... pointer to TreeInfo (for check of GM)
 *** Returns:	-
 **************************************************************************/
 
@@ -344,7 +348,8 @@ static void Correct_Variations(struct SGFInfo *sgfc, struct Node *r, struct Tree
 /**************************************************************************
 *** Function:	Reorder_Variations
 ***				Reorders variations (including main branch) from A,B,C to C,B,A
-*** Parameters: r ... start node
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				r	 ... start node
 *** Returns:	-
 **************************************************************************/
 
@@ -394,7 +399,8 @@ static void Reorder_Variations(struct SGFInfo *sgfc, struct Node *r)
 /**************************************************************************
 *** Function:	Del_EmptyNodes (recursive)
 ***				Deletes empty nodes
-*** Parameters: n ... start node
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... start node
 *** Returns:	-
 **************************************************************************/
 
@@ -478,7 +484,8 @@ static void Calc_GameSig(struct Node *r, struct TreeInfo *ti)
 *** Function:	Split_Node
 ***				Splits one node into two and moves selected properties
 ***				into the second node
-*** Parameters: n		... node that should be split
+*** Parameters: sgfc	... pointer to SGFInfo structure
+***				n		... node that should be split
 ***				flags	... prop->flags to select properties
 ***				id		... id of an extra property
 ***				move	... TRUE:  move selected to second node
@@ -515,7 +522,8 @@ void Split_Node(struct SGFInfo *sgfc, struct Node *n, U_SHORT flags, token id, i
 ***				if yes -> splits node into two: setup & N[] --- other props
 ***				Deletes PL[] property if it's the only setup property
 ***				(frequent error of an application (which one?))
-*** Parameters: n ... pointer to Node
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... pointer to Node
 *** Returns:	TRUE if node is split / FALSE otherwise
 **************************************************************************/
 
@@ -562,7 +570,8 @@ static int Split_MoveSetup(struct SGFInfo *sgfc, struct Node *n)
 ***				Checks uniqueness of properties within a node
 ***				Tries to merge or link values, otherwise deletes property
 ***				- can't merge !PVT_LIST && PVT_COMPOSE
-*** Parameters: n ... pointer to Node
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... pointer to Node
 *** Returns:	-
 **************************************************************************/
 
@@ -627,11 +636,12 @@ static void Check_DoubleProp(struct SGFInfo *sgfc, struct Node *n)
 *** Function:	GetNumber
 ***				Parses a positive int value for correctness
 ***				deletes property otherwise
-*** Parameters: n ... pointer to node that contains property
-***				p ... pointer to property
+*** Parameters: sgfc  ... pointer to SGFInfo structure
+***				n	  ... pointer to node that contains property
+***				p	  ... pointer to property
 ***				value ... 2: parse value2 else parse value1
-***				d ... pointer to int variable
-***				def ... default return value
+***				d	  ... pointer to int variable
+***				def   ... default return value
 *** Returns:	TRUE ... success / FALSE ... errornous property deleted
 **************************************************************************/
 
@@ -676,7 +686,8 @@ static int GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 *** Function:	Init_TreeInfo
 ***				Creates new TreeInfo structure, inits it
 ***				and set sgfc->info to the new structure
-*** Parameters: r ... pointer to root node
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				r	 ... pointer to root node
 *** Returns:	-
 **************************************************************************/
 
@@ -798,8 +809,9 @@ static void Init_TreeInfo(struct SGFInfo *sgfc, struct Node *r)
 *** Function:	Check_SGFTree
 ***				Steps recursive through the SGF tree and
 ***				calls Check_Properties for each node
-*** Parameters: r   ... pointer to root node of current tree
-***				old ... board status before parsing root node
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				r    ... pointer to root node of current tree
+***				old  ... board status before parsing root node
 *** Returns:	-
 **************************************************************************/
 
@@ -887,7 +899,7 @@ static void Check_SGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStat
 /**************************************************************************
 *** Function:	ParseSGF
 ***				Calls the check routines one after another
-*** Parameters: sgf ... pointer to SGFInfo structure
+*** Parameters: sgfc ... pointer to SGFInfo structure
 *** Returns:	-
 **************************************************************************/
 

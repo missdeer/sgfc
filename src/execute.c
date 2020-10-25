@@ -101,9 +101,10 @@ static void Capture_Stones(struct BoardStatus *st, int color, int x, int y)
 /**************************************************************************
 *** Function:	Do_Move
 ***				Executes a move and check for B/W in one node
-*** Parameters: n	... Node that contains the property
-***				p	... property
-***				st	... current board status
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... Node that contains the property
+***				p	 ... property
+***				st	 ... current board status
 *** Returns:	TRUE: ok / FALSE: delete property
 **************************************************************************/
 
@@ -154,9 +155,10 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 /**************************************************************************
 *** Function:	Do_AddStones
 ***				Executes property checks for unique positions
-*** Parameters: n	... Node that contains the property
-***				p	... property
-***				st	... current board status
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... Node that contains the property
+***				p	 ... property
+***				st	 ... current board status
 *** Returns:	TRUE: ok / FALSE: delete property
 **************************************************************************/
 
@@ -226,9 +228,10 @@ int Do_Addstones(struct SGFInfo *sgf, struct Node *n, struct Property *p, struct
 /**************************************************************************
 *** Function:	Do_Letter
 ***				Converts L to LB values / checks unique position
-*** Parameters: n	... Node that contains the property
-***				p	... property
-***				st	... current board status
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... Node that contains the property
+***				p	 ... property
+***				st	 ... current board status
 *** Returns:	TRUE: ok / FALSE: delete property
 **************************************************************************/
 
@@ -269,9 +272,10 @@ int Do_Letter(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 /**************************************************************************
 *** Function:	Do_Mark
 ***				Converts M to MA/TR depending on board / checks uniqueness
-*** Parameters: n	... Node that contains the property
-***				p	... property
-***				st	... current board status
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... Node that contains the property
+***				p	 ... property
+***				st	 ... current board status
 *** Returns:	TRUE: ok / FALSE: delete property
 **************************************************************************/
 
@@ -313,9 +317,10 @@ int Do_Mark(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 /**************************************************************************
 *** Function:	Do_Markup
 ***				Checks unique positions for markup properties
-*** Parameters: n	... Node that contains the property
-***				p	... property
-***				st	... current board status
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... Node that contains the property
+***				p	 ... property
+***				st	 ... current board status
 *** Returns:	TRUE: ok / FALSE: delete property
 **************************************************************************/
 
@@ -388,13 +393,14 @@ int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 /**************************************************************************
 *** Function:	Do_Annotate
 ***				Checks annotation properties / converts BM_TE / TE_BM
-*** Parameters: n	... Node that contains the property
-***				p	... property
-***				st	... current board status
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... Node that contains the property
+***				p	 ... property
+***				st	 ... current board status
 *** Returns:	TRUE: ok / FALSE: delete property
 **************************************************************************/
 
-int Do_Annotate(struct SGFInfo *sgf, struct Node *n, struct Property *p, struct BoardStatus *st)
+int Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	struct Property *hlp;
 	U_SHORT flag;
@@ -403,7 +409,7 @@ int Do_Annotate(struct SGFInfo *sgf, struct Node *n, struct Property *p, struct 
 
 	if((st->annotate & ST_ANN_BM) && p->id == TKN_TE) /* DO (doubtful) */
 	{
-		PrintError(E4_BM_TE_IN_NODE, sgf, p->buffer, "BM-TE", "DO");
+		PrintError(E4_BM_TE_IN_NODE, sgfc, p->buffer, "BM-TE", "DO");
 		hlp = Find_Property(n, TKN_BM);
 		hlp->id = TKN_DO;
 		hlp->value->value[0] = 0;
@@ -412,7 +418,7 @@ int Do_Annotate(struct SGFInfo *sgf, struct Node *n, struct Property *p, struct 
 
 	if(st->annotate & ST_ANN_TE && p->id == TKN_BM)	/* IT (interesting) */
 	{
-		PrintError(E4_BM_TE_IN_NODE, sgf, p->buffer, "TE-BM", "IT");
+		PrintError(E4_BM_TE_IN_NODE, sgfc, p->buffer, "TE-BM", "IT");
 		hlp = Find_Property(n, TKN_TE);
 		hlp->id = TKN_IT;
 		hlp->value->value[0] = 0;
@@ -421,13 +427,13 @@ int Do_Annotate(struct SGFInfo *sgf, struct Node *n, struct Property *p, struct 
 
 	if(st->annotate & flag)
 	{
-		PrintError(E_ANNOTATE_NOT_UNIQUE, sgf, p->buffer, p->idstr);
+		PrintError(E_ANNOTATE_NOT_UNIQUE, sgfc, p->buffer, p->idstr);
 		return(FALSE);
 	}
 
 	if((flag & (ST_ANN_MOVE|ST_KO)) && !(st->annotate & ST_MOVE))
 	{
-		PrintError(E_ANNOTATE_WITHOUT_MOVE, sgf, p->buffer, p->idstr);
+		PrintError(E_ANNOTATE_WITHOUT_MOVE, sgfc, p->buffer, p->idstr);
 		return(FALSE);
 	}
 
@@ -439,9 +445,10 @@ int Do_Annotate(struct SGFInfo *sgf, struct Node *n, struct Property *p, struct 
 /**************************************************************************
 *** Function:	Do_Root
 ***				Checks if root properties are stored in root
-*** Parameters: n	... Node that contains the property
-***				p	... property
-***				st	... current board status
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... Node that contains the property
+***				p	 ... property
+***				st	 ... current board status
 *** Returns:	TRUE: ok / FALSE: delete property
 **************************************************************************/
 
@@ -460,9 +467,10 @@ int Do_Root(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 /**************************************************************************
 *** Function:	Do_GInfo
 ***				checks for uniqueness of properties within the tree
-*** Parameters: n	... Node that contains the property
-***				p	... property
-***				st	... current board status
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... Node that contains the property
+***				p	 ... property
+***				st	 ... current board status
 *** Returns:	TRUE: ok / FALSE: delete property
 **************************************************************************/
 
@@ -503,9 +511,10 @@ int Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 /**************************************************************************
 *** Function:	Do_View
 ***				checks and converts VW property
-*** Parameters: n	... Node that contains the property
-***				p	... property
-***				st	... current board status
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... Node that contains the property
+***				p	 ... property
+***				st	 ... current board status
 *** Returns:	TRUE: ok / FALSE: delete property
 **************************************************************************/
 

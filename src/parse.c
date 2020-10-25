@@ -475,7 +475,8 @@ int Parse_Triple(char *value, ...)
 /**************************************************************************
 *** Function:	Check_Value // Check_Single_Value (helper)
 ***				Checks value type & prints error messages
-*** Parameters: p		... pointer to property containing the value
+*** Parameters: sgfc	... pointer to SGFInfo structure
+***				p		... pointer to property containing the value
 ***				v		... pointer to property value
 ***				flags	... flags to be passed on to parse function
 ***				Parse_Value ... function used for parsing
@@ -518,8 +519,9 @@ int Check_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
 /**************************************************************************
 *** Function:	Check_Text
 ***				Checks type value & prints error messages
-*** Parameters: p ... pointer to property containing the value
-***				v ... pointer to property value
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... pointer to property containing the value
+***				v	 ... pointer to property value
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
@@ -545,8 +547,9 @@ int Check_Text(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 /**************************************************************************
 *** Function:	Check_Pos
 ***				Checks position type & expand compressed point lists
-*** Parameters: p ... pointer to property containing the value
-***				v ... pointer to property value
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... pointer to property containing the value
+***				v	 ... pointer to property value
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
@@ -582,8 +585,9 @@ int Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 /**************************************************************************
 *** Function:	Check_Label
 ***				Checks label type value & prints error messages
-*** Parameters: p ... pointer to property containing the value
-***				v ... pointer to property value
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... pointer to property containing the value
+***				v	 ... pointer to property value
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
@@ -619,8 +623,9 @@ int Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 /**************************************************************************
 *** Function:	Check_AR_LN
 ***				Checks arrow/line type values & prints error messages
-*** Parameters: p ... pointer to property containing the value
-***				v ... pointer to property value
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... pointer to property containing the value
+***				v	 ... pointer to property value
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
@@ -658,8 +663,9 @@ int Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 /**************************************************************************
 *** Function:	Check_Figure
 ***				Check FG property values
-*** Parameters: p ... pointer to property containing the value
-***				v ... pointer to property value
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... pointer to property containing the value
+***				v	 ... pointer to property value
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 
@@ -699,7 +705,8 @@ int Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 /**************************************************************************
 *** Function:	Check_PropValues
 ***				Checks values for syntax errors (calls Check_XXX functions)
-*** Parameters: p ... pointer to property
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... pointer to property
 *** Returns:	-
 **************************************************************************/
 
@@ -742,7 +749,8 @@ static void Check_PropValues(struct SGFInfo *sgfc, struct Property *p)
 /**************************************************************************
 *** Function:	CheckID_Lowercase
 ***				Checks if the property ID contains lowercase letters (FF[4])
-*** Parameters: p ... pointer to property ID (in source buffer)
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... pointer to property ID (in source buffer)
 *** Returns:	-
 **************************************************************************/
 
@@ -764,8 +772,9 @@ static void CheckID_Lowercase(struct SGFInfo *sgfc, char *p)
 *** Function:	Check_Properties
 ***				Performs various checks on properties ID's
 ***				and calls Check_PropValues
-*** Parameters: p   ... pointer to node containing the properties
-***				st	... pointer to board status
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... pointer to node containing the properties
+***				st	 ... pointer to board status
 *** Returns:	-
 **************************************************************************/
 

@@ -59,8 +59,10 @@ void PrintHelp(enum option_help format)
 
 
 /**************************************************************************
-*** Function:	PrintHelp
-***				Prints banner + options
+*** Function:	PrintStatusLine
+***				Prints final status line with error/warning count
+*** Parameters: sgfc ... pointer to SGFInfo
+*** Returns:	-
 **************************************************************************/
 
 void PrintStatusLine(const struct SGFInfo *sgfc) {
@@ -206,6 +208,14 @@ struct SGFCOptions *ParseArgs(int argc, char *argv[])
 }
 
 
+/**************************************************************************
+*** Function:	SGFCDefaultOptions
+***				Allocates SGFCOptions structure and initializes it with
+***				default option values.
+*** Parameters: -
+*** Returns:	-
+**************************************************************************/
+
 struct SGFCOptions *SGFCDefaultOptions()
 {
 	struct SGFCOptions *options;
@@ -238,6 +248,16 @@ struct SGFCOptions *SGFCDefaultOptions()
 }
 
 
+/**************************************************************************
+*** Function:	Setup_SGFInfo
+***				Allocates SGFInfo structure and initializes it with
+***             default values for ->options, ->sfh, and internal structures.
+*** Parameters: options ... pointer to SGFCOptions;
+***							if NULL filled with SGFCDefaultOptions()
+***				sfh     ... SaveFileHandler; if NULL filled with Setup_SaveFileIO()
+*** Returns:	pointer to SGFInfo structure ready for use in LoadSGF etc.
+**************************************************************************/
+
 struct SGFInfo *Setup_SGFInfo(struct SGFCOptions *options, struct SaveFileHandler *sfh)
 {
 	struct SGFInfo *sgfc;
@@ -258,7 +278,7 @@ struct SGFInfo *Setup_SGFInfo(struct SGFCOptions *options, struct SaveFileHandle
 
 /**************************************************************************
 *** Function:	FreeSGFInfo
-***				Frees all memory and other resources of a SGFInfo
+***				Frees all memory and other resources of an SGFInfo structure
 ***				including(!) referenced sub structures and SGFInfo itself
 *** Parameters: sgf ... pointer to SGFInfo structure
 *** Returns:	-

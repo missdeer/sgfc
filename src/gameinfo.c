@@ -16,8 +16,6 @@
 #include "protos.h"
 
 
-
-
 /**************************************************************************
 *** Function:	Get_Fraction
 ***				Checks for written out fractions and small numbers
@@ -439,12 +437,9 @@ static int Parse_Date(char *value, ...)
 	   allowed: bitmask of type
 	*/
 
-
 	/* bad chars? -> pass on to CorrectDate */
-
 	if(Test_Chars(value, C_NOTinSET, "0123456789-,"))
 		return(Correct_Date(value));
-
 
 	c = d = value;
 	while(*c)				/* remove spaces, and unnecessary '-', ',' */
@@ -573,8 +568,9 @@ static int Parse_Date(char *value, ...)
 *** Function:	PromptGameInfo
 ***				If interactive mode: prompts for game-info value
 ***				else just print error message
-*** Parameters: p ... property
-***				v ... faulty value (part of p)
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... property
+***				v	 ... faulty value (part of p)
 *** Returns:	TRUE / FALSE if property should be deleted
 **************************************************************************/
 
@@ -661,8 +657,9 @@ static int PromptGameInfo(struct SGFInfo * sgfc, struct Property *p,
 /**************************************************************************
 *** Function:	Check_GameInfo
 ***				Checks RE,DT,TM, KM value
-*** Parameters: p ... pointer to property containing the value
-***				v ... pointer to property value
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... pointer to property containing the value
+***				v	 ... pointer to property value
 *** Returns:	TRUE for success / FALSE if value has to be deleted
 **************************************************************************/
 

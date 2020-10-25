@@ -32,12 +32,23 @@
 #define CheckLineLen(s) { if((s)->_save_c->linelen > MAX_LINELEN) \
 						{ saveputc(s, '\n')	} }
 
+
+/* internal data for save.c functions. */
+/* Used instead of local static variables */
 struct Save_C_internal {
-	int linelen;
+	int linelen;	/* used for line breaking algorithm */
 	int chars_in_node;
 	int eol_in_node;
-	int gi_written;
+	int gi_written; /* used by WriteProperty for newlines after gameinfo properties */
 };
+
+
+/**************************************************************************
+*** Function:	Setup_Save_C_internal
+***				Allocate and initialize internal data structure local to save.c
+*** Parameters: -
+*** Returns:	pointer to internal structure
+**************************************************************************/
 
 struct Save_C_internal *Setup_Save_C_internal()
 {
@@ -47,6 +58,14 @@ struct Save_C_internal *Setup_Save_C_internal()
 	return savec;
 }
 
+
+/**************************************************************************
+*** Function:	Setup_SaveFileIO
+***				Allocate and initialize SaveFileHandler for regular file access
+*** Parameters: -
+*** Returns:	pointer to SafeFileHandler
+**************************************************************************/
+
 static int SaveFile_FileIO_Open(struct SaveFileHandler *sfh, const char *path, const char *mode)
 {
 	sfh->fh = fopen(path, mode);
@@ -55,14 +74,33 @@ static int SaveFile_FileIO_Open(struct SaveFileHandler *sfh, const char *path, c
 
 static int SaveFile_FileIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 {
-	return fclose(sfh->fh);
+	return(fclose(sfh->fh));
 }
 
 static int SaveFile_FileIO_Putc(struct SaveFileHandler *sfh, int c)
 {
-	return fputc(c, sfh->fh);
+	return(fputc(c, sfh->fh));
 }
 
+struct SaveFileHandler *Setup_SaveFileIO()
+{
+	struct SaveFileHandler *sfh;
+	SaveMalloc(struct SaveFileHandler *, sfh, sizeof(struct SaveFileHandler), "file handler")
+	sfh->open = SaveFile_FileIO_Open;
+	sfh->close = SaveFile_FileIO_Close;
+	sfh->putc = SaveFile_FileIO_Putc;
+	sfh->fh = NULL;
+}
+
+
+/**************************************************************************
+*** Function:	SaveFile_BufferIO_Open
+***				Initializes SaveBuffer structure for saving to memory
+***             Allocates 5000 bytes as initial value
+*** Parameters: sfh ... pointer to SaveFileHandler
+***				path, mode ... dummy
+*** Returns:	TRUE on success, FALSE on error (out of memory)
+**************************************************************************/
 
 static int SaveFile_BufferIO_Open(struct SaveFileHandler *sfh, const char *path, const char *mode)
 {
@@ -75,6 +113,16 @@ static int SaveFile_BufferIO_Open(struct SaveFileHandler *sfh, const char *path,
 	return(TRUE);
 }
 
+
+/**************************************************************************
+*** Function:	SaveFile_BufferIO_Close
+***				Frees buffer inside SaveBuffer structure
+*** Parameters: sfh ... pointer to SaveFileHandler
+***				error ... SGFC error code or E_NO_ERROR
+***                       (useful for functions that replace this one)
+*** Returns:	TRUE
+**************************************************************************/
+
 int SaveFile_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 {
 	free(sfh->buffer.buffer);
@@ -84,11 +132,22 @@ int SaveFile_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 	return(TRUE);
 }
 
+
+/**************************************************************************
+*** Function:	SaveFile_BufferIO_Putc
+***				Writes char to buffer, allocates more memory if current
+***				buffer is too small to hold next char.
+*** Parameters: sfh ... pointer to SaveFileHandler
+***				c   ... char to write
+*** Returns:	char written or EOF in case of error
+**************************************************************************/
+
 static int SaveFile_BufferIO_Putc(struct SaveFileHandler *sfh, int c)
 {
 	/* -1 so that we can always null-terminate buffer in close() function */
 	if (sfh->buffer.pos == sfh->buffer.buffer + sfh->buffer.buffer_size - 1)
 	{
+		/* size*2 ... typical strategy used by ArrayList structures */
 		char *new_buffer = (char *)malloc(sfh->buffer.buffer_size*2);
 		if (!new_buffer)
 			return EOF;
@@ -103,16 +162,13 @@ static int SaveFile_BufferIO_Putc(struct SaveFileHandler *sfh, int c)
 	return(c);
 }
 
-struct SaveFileHandler *Setup_SaveFileIO()
-{
-	struct SaveFileHandler *sfh;
-	SaveMalloc(struct SaveFileHandler *, sfh, sizeof(struct SaveFileHandler), "file handler")
-	sfh->open = SaveFile_FileIO_Open;
-	sfh->close = SaveFile_FileIO_Close;
-	sfh->putc = SaveFile_FileIO_Putc;
-	sfh->fh = NULL;
-}
 
+/**************************************************************************
+*** Function:	Setup_SaveBufferIO
+***				Allocates and initializes SaveFileHandler for BufferIO
+*** Parameters: close ... custom close() function or NULL
+*** Returns:	pointer to SaveFileHandler
+**************************************************************************/
 
 struct SaveFileHandler *Setup_SaveBufferIO(int (*close)(struct SaveFileHandler *, U_LONG))
 {
@@ -180,10 +236,10 @@ static int WriteChar(struct SGFInfo *sgfc, char c, U_SHORT spc)
 *** Function:	WritePropValue
 ***				Value into the given file
 ***				does necessary conversions
-*** Parameters: v ... pointer to value
+*** Parameters: sgfc   ... pointer to SGFInfo
+***				v	   ... pointer to value
 ***				second ... TRUE: write value2, FALSE:write value1
-***				flags ... property flags
-***				sfile .. file handle
+***				flags  ... property flags
 *** Returns:	TRUE or FALSE
 **************************************************************************/
 
@@ -223,9 +279,9 @@ static int WritePropValue(struct SGFInfo *sgfc, const char *v, int second, U_SHO
 *** Function:	WriteProperty
 ***				writes ID & value into the given file
 ***				does necessary conversions
-*** Parameters: info ... game-tree info
+*** Parameters: sgfc  ... pointer to SGFInfo
+***				info ... game-tree info
 ***				prop ... pointer to property
-***				sfile .. file handle
 *** Returns:	TRUE or FALSE
 **************************************************************************/
 
@@ -297,8 +353,9 @@ static int WriteProperty(struct SGFInfo *sgfc, struct TreeInfo *info, struct Pro
 /**************************************************************************
 *** Function:	WriteNode
 ***				writes the node char ';' calls WriteProperty for all props
-*** Parameters: n ... node to write
-***				sfile ... file handle
+*** Parameters: sgfc ... pointer to SGFInfo
+***				info ... pointer current TreeInfo
+***				n	 ... node to write
 *** Returns:	TRUE or FALSE
 **************************************************************************/
 
@@ -335,8 +392,9 @@ static int WriteNode(struct SGFInfo *sgfc, struct TreeInfo *info, struct Node *n
 /**************************************************************************
 *** Function:	SetRootProps
 ***				Sets new root properties for the game tree
-*** Parameters: info 	 ... TreeInfo
-***				r		 ... root node of tree
+*** Parameters: sgfc ... pointer to SGFInfo
+***				info ... TreeInfo
+***				r	 ... root node of tree
 *** Returns:	-
 **************************************************************************/
 
@@ -360,9 +418,9 @@ static void SetRootProps(struct SGFInfo *sgfc, struct TreeInfo *info, struct Nod
 /**************************************************************************
 *** Function:	WriteTree
 ***				recursive function which writes a complete SGF tree
-*** Parameters: info 	 ... TreeInfo
+*** Parameters: sgfc ... pointer to SGFInfo
+***				info 	 ... TreeInfo
 ***				n		 ... root node of tree
-***				sfile	 ... file handle
 ***				newlines ... number of nl to print
 *** Returns:	TRUE: success / FALSE error
 **************************************************************************/
@@ -412,7 +470,8 @@ static int WriteTree(struct SGFInfo *sgfc, struct TreeInfo *info,
 /**************************************************************************
 *** Function:	SaveSGF
 ***				writes the complete SGF tree to a file
-*** Parameters: sgf ... pointer to sgfinfo structure
+*** Parameters: sgfc      ... pointer to SGFInfo structure
+***				base_name ... filename/path of destination file
 *** Returns:	-
 **************************************************************************/
 

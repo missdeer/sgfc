@@ -20,6 +20,7 @@
 #define EOLCHAR '\n'	/* EndOfLine-Character
 						** '\n' for UNIX, AMIGA (SGF standard)
 						** '\r' for MAC
+						** if undefined, uses MS DOS "\r\n"
 						*/
 
 
@@ -381,6 +382,7 @@ struct SaveFileHandler {
 	};
 };
 
+/* The big singleton -- contains everything that needs to be known throughout SGFC */
 struct SGFInfo
 {
 	struct Node *first;	/* node list head */
@@ -409,6 +411,7 @@ struct SGFInfo
 	struct Util_C_internal *_util_c;
 };
 
+/* for defining properties (see sgf_token[] in properties.c) */
 struct SGFToken
 {
 	char *id;
