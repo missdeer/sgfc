@@ -673,7 +673,7 @@ static int BuildSGFTree(struct SGFInfo *sgfc, struct Node *r)
 *** Parameters: sgfc	   ... pointer to SGFInfo structure
 ***				first_time ... search for the first time?
 ***							  (TRUE -> if search fails -> fatal error)
-*** Returns:	FALSE ... ok/ TRUE ... missing ';'  (exits on fatal error)
+*** Returns:	0 ... ok / 1 ... missing ';'  / -1 ... fatal error
 **************************************************************************/
 
 static int FindStart(struct SGFInfo *sgfc, int first_time)
@@ -684,7 +684,6 @@ static int FindStart(struct SGFInfo *sgfc, int first_time)
 	while(!SGF_EOF)
 	{
 		/* search for '[' (lc) (lc) ']' */
-
 		if((sgfc->current + 4 <= sgfc->b_end) &&
 		  (*sgfc->current == '['))
 			if(islower(*(sgfc->current+1)) && islower(*(sgfc->current+2)) &&
@@ -713,7 +712,7 @@ static int FindStart(struct SGFInfo *sgfc, int first_time)
 				break;
 
 			if(*tmp == ';')
-				return(FALSE);
+				return(0);
 			else
 			{
 				o = c = 0;
@@ -734,7 +733,7 @@ static int FindStart(struct SGFInfo *sgfc, int first_time)
 				{
 					PrintError(E_MISSING_SEMICOLON, sgfc, sgfc->current);
 					*sgfc->current = ';';
-					return(TRUE);
+					return(1);
 				}
 			}
 		}
@@ -746,9 +745,12 @@ static int FindStart(struct SGFInfo *sgfc, int first_time)
 	}
 
 	if(first_time)
-		PrintFatalError(FE_NO_SGFDATA, sgfc);
+	{
+		PrintError(FE_NO_SGFDATA, sgfc);
+		return(-1);
+	}
 
-	return(FALSE);
+	return(0);
 }
 
 
@@ -758,17 +760,20 @@ static int FindStart(struct SGFInfo *sgfc, int first_time)
 ***				necessary information in sgfinfo-structure
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				name ... filename/path
-*** Returns:	- (exits on fatal error)
+*** Returns:	TRUE on success, FALSE on fatal error
 **************************************************************************/
 
-void LoadSGF(struct SGFInfo *sgfc, char *name)
+int LoadSGF(struct SGFInfo *sgfc, char *name)
 {
 	long size;
 	FILE *file;
 
 	file = fopen(name, "rb");
 	if(!file)
-		PrintFatalError(FE_SOURCE_OPEN, sgfc, name);
+	{
+		PrintError(FE_SOURCE_OPEN, sgfc, name);
+		return(FALSE);
+	}
 
 	fseek(file, 0, SEEK_END);
 	size = ftell(file);
@@ -780,7 +785,8 @@ void LoadSGF(struct SGFInfo *sgfc, char *name)
 	if(!sgfc->buffer)
 	{
 		fclose(file);
-		PrintFatalError(FE_OUT_OF_MEMORY, sgfc, "source file buffer");
+		PrintError(FE_OUT_OF_MEMORY, sgfc, "source file buffer");
+		return(FALSE);
 	}
 
 	if(fseek(file, 0, SEEK_SET) == -1L)
@@ -791,12 +797,13 @@ void LoadSGF(struct SGFInfo *sgfc, char *name)
 	sgfc->b_end   = sgfc->buffer + size;
 	sgfc->current = sgfc->buffer;
 	fclose(file);
-	LoadSGFFromFileBuffer(sgfc);
-	return;
+
+	return(LoadSGFFromFileBuffer(sgfc));
 
 load_error:
 	fclose(file);
-	PrintFatalError(FE_SOURCE_READ, sgfc, name);
+	PrintError(FE_SOURCE_READ, sgfc, name);
+	return(FALSE);
 }
 
 
@@ -805,14 +812,17 @@ load_error:
 ***				Seeks start of SGF data and builds basic tree structure
 ***             Assumes sgf->buffer and sgf->b_end is already set
 *** Parameters: sgfc ... pointer to SGFInfo structure
-*** Returns:	- (exits on fatal error)
+*** Returns:	TRUE on success, FALSE on fatal error
 **************************************************************************/
 
-void LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
+int LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 {
 	int miss;
 
 	miss = FindStart(sgfc, TRUE);		/* skip junk in front of '(;' */
+	if(miss == -1)
+		return(FALSE);
+
 	sgfc->start = sgfc->current;
 
 	while(!SGF_EOF)
@@ -825,4 +835,5 @@ void LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 	}
 
 	PrintError(E_NO_ERROR, sgfc);		/* flush accumulated messages */
+	return(TRUE);
 }

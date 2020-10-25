@@ -94,21 +94,17 @@ void PrintStatusLine(const struct SGFInfo *sgfc) {
 ***				Parses commandline options
 ***				Options are represented by one char and are preceded with
 ***				a minus. It's valid to list more than one option per argv[]
-*** Parameters: argc ... argument count (like main())
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				argc ... argument count (like main())
 ***				argv ... arguments (like main())
-*** Returns:	SGFCOptions or NULL if no arguments were given
+*** Returns:	TRUE for success / FALSE in case of argument error
 **************************************************************************/
 
-struct SGFCOptions *ParseArgs(int argc, char *argv[])
+int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 {
 	int i, n, m;
 	char *c, *hlp;
-	struct SGFCOptions *options;
-
-	if(argc <= 1)		/* called without arguments */
-		return(NULL);
-
-	options = SGFCDefaultOptions();
+	struct SGFCOptions *options = sgfc->options;
 
 	for(i = 1; i < argc; i++)
 	{
@@ -141,7 +137,10 @@ struct SGFCOptions *ParseArgs(int argc, char *argv[])
 							c++; hlp = c;
 							n = (int)strtol(c, &c, 10);
 							if(n < 1 || n > MAX_ERROR_NUM)
-								PrintFatalError(FE_BAD_PARAMETER, NULL, hlp);
+							{
+								PrintError(FE_BAD_PARAMETER, sgfc, hlp);
+								return(FALSE);
+							}
 							options->error_enabled[n-1] = FALSE;
 							c--;
 							break;
@@ -149,14 +148,20 @@ struct SGFCOptions *ParseArgs(int argc, char *argv[])
 							c++;
 							n = *c - '0';
 							if(n < 1 || n > 4)
-								PrintFatalError(FE_BAD_PARAMETER, NULL, c);
+							{
+								PrintError(FE_BAD_PARAMETER, sgfc, c);
+								return(FALSE);
+							}
 							options->linebreaks = n;
 							break;
 						case 'b':
 							c++;
 							n = *c - '0';
 							if(n < 1 || n > 3)
-								PrintFatalError(FE_BAD_PARAMETER, NULL, c);
+							{
+								PrintError(FE_BAD_PARAMETER, sgfc, c);
+								return(FALSE);
+							}
 							options->findstart = n;
 							break;
 						case 'y':
@@ -170,7 +175,10 @@ struct SGFCOptions *ParseArgs(int argc, char *argv[])
 										break;
 							}
 							if(!n || !sgf_token[m].id)
-								PrintFatalError(FE_BAD_PARAMETER, NULL, c);
+							{
+								PrintError(FE_BAD_PARAMETER, sgfc, c);
+								return(FALSE);
+							}
 							else
 							{
 								c += n-1;
@@ -184,10 +192,16 @@ struct SGFCOptions *ParseArgs(int argc, char *argv[])
 							else if (!strncmp(c, "version", 7))
 								options->help = 1;
 							else
-								PrintFatalError(FE_UNKNOWN_LONG_OPTION, NULL, c);
+							{
+								PrintError(FE_UNKNOWN_LONG_OPTION, sgfc, c);
+								return(FALSE);
+							}
 							break;
 						default:
-							PrintFatalError(FE_UNKNOWN_OPTION, NULL, *c);
+						{
+							PrintError(FE_UNKNOWN_OPTION, sgfc, *c);
+							return(FALSE);
+						}
 					}
 				}
 				break;
@@ -199,12 +213,15 @@ struct SGFCOptions *ParseArgs(int argc, char *argv[])
 				if(!options->outfile)
 					options->outfile = argv[i];
 				else
-					PrintFatalError(FE_TOO_MANY_FILES, NULL, argv[i]);
+				{
+					PrintError(FE_TOO_MANY_FILES, sgfc, argv[i]);
+					return(FALSE);
+				}
 				break;
 		}
 	}
 
-	return(options);
+	return(TRUE);
 }
 
 

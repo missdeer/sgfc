@@ -13,7 +13,7 @@
 
 void PrintHelp(enum option_help format);
 void PrintStatusLine(const struct SGFInfo *sgfc);
-struct SGFCOptions *ParseArgs(int , char *[]);
+int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[]);
 struct SGFCOptions *SGFCDefaultOptions(void);
 
 struct SGFInfo *Setup_SGFInfo(struct SGFCOptions *options, struct SaveFileHandler *sfh);
@@ -29,8 +29,8 @@ struct Property *Add_Property(struct Node *, token, char *, char *);
 struct Node *NewNode(struct SGFInfo *, struct Node * , int);
 
 char *SkipText(struct SGFInfo *, char *, const char *, char , unsigned int );
-void LoadSGF(struct SGFInfo *, char *);
-void LoadSGFFromFileBuffer(struct SGFInfo *);
+int LoadSGF(struct SGFInfo *, char *);
+int LoadSGFFromFileBuffer(struct SGFInfo *);
 
 
 /**** save.c ****/
@@ -41,7 +41,7 @@ struct SaveFileHandler *Setup_SaveFileIO(void);
 struct SaveFileHandler *Setup_SaveBufferIO(int (* )(struct SaveFileHandler *, U_LONG));
 struct Save_C_internal *Setup_Save_C_internal(void);
 
-void SaveSGF(struct SGFInfo * , char *);
+int SaveSGF(struct SGFInfo * , char *);
 
 
 /**** properties.c ****/
@@ -105,7 +105,7 @@ extern void (*print_error_output_hook)(struct SGFCError *);
 
 void SearchPos(const char * , struct SGFInfo * , int * , int * );
 int PrintError(U_LONG, struct SGFInfo *, ... );
-int  __attribute__((noreturn)) PrintFatalError(U_LONG, struct SGFInfo *, ... );
+int  __attribute__((noreturn)) PrintOOMError(char *);
 int PrintErrorHandler(U_LONG, struct SGFInfo *, va_list);
 void PrintErrorOutputHook(struct SGFCError *);
 
@@ -140,4 +140,4 @@ void Strict_Checking(struct SGFInfo *sgf);
 #define Enqueue(h,n) f_Enqueue((struct ListHead *)(h), (struct ListNode *)(n))
 #define Delete(h,n) f_Delete((struct ListHead *)(h), (struct ListNode *)(n))
 
-#define SaveMalloc(type, v, sz, err)	{ v = (type)malloc((size_t)(sz)); if(!(v)) PrintFatalError(FE_OUT_OF_MEMORY, NULL, err); }
+#define SaveMalloc(type, v, sz, err)	{ v = (type)malloc((size_t)(sz)); if(!(v)) PrintOOMError(err); }

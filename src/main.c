@@ -38,46 +38,54 @@
 
 int main(int argc, char *argv[])
 {
-	int ret = 0;
+	int ret = 20;
 	struct SGFInfo *sgfc;
-	struct SGFCOptions *options;
 
-	options = ParseArgs(argc, argv);
-
-	if(!options)	/* no options given? */
+	if(argc <= 1)		/* called without arguments */
 	{
-		PrintHelp(FALSE);
-		return(0);
-	}
-	if(options->help)
-	{
-		PrintHelp(options->help);
-		free(options);
+		PrintHelp(OPTION_HELP_SHORT);
 		return(0);
 	}
 
-	if(!options->infile)
-		PrintFatalError(FE_MISSING_SOURCE_FILE, NULL);
+	sgfc = Setup_SGFInfo(NULL, NULL);
 
-	sgfc = Setup_SGFInfo(options, NULL);
+	if(!ParseArgs(sgfc, argc, argv))
+		goto fatal_error;
 
-	LoadSGF(sgfc, options->infile);
+	if(sgfc->options->help)
+	{
+		PrintHelp(sgfc->options->help);
+		FreeSGFInfo(sgfc);
+		return(0);
+	}
+
+	if(!sgfc->options->infile)
+	{
+		PrintError(FE_MISSING_SOURCE_FILE, sgfc);
+		goto fatal_error;
+	}
+
+	if(!LoadSGF(sgfc, sgfc->options->infile))
+		goto fatal_error;
+
 	ParseSGF(sgfc);
 
-	if(options->outfile)
+	if(sgfc->options->outfile)
 	{
-		if(options->write_critical || !sgfc->critical_count)
-			SaveSGF(sgfc, options->outfile);
+		if(sgfc->options->write_critical || !sgfc->critical_count)
+			SaveSGF(sgfc, sgfc->options->outfile);
 		else
-			PrintError(E_CRITICAL_NOT_SAVED, NULL);
+			PrintError(E_CRITICAL_NOT_SAVED, sgfc);
 	}
 
 	if(sgfc->error_count)			ret = 10;
 	else if (sgfc->warning_count)	ret = 5;
+	else							ret = 0;
 
 	PrintStatusLine(sgfc);
-	FreeSGFInfo(sgfc);
 
+fatal_error:
+	FreeSGFInfo(sgfc);
 	return(ret);
 }
 #endif

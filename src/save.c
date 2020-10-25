@@ -473,10 +473,10 @@ static int WriteTree(struct SGFInfo *sgfc, struct TreeInfo *info,
 ***				writes the complete SGF tree to a file
 *** Parameters: sgfc      ... pointer to SGFInfo structure
 ***				base_name ... filename/path of destination file
-*** Returns:	-
+*** Returns:	TRUE on success, FALSE on error while writing file(s)
 **************************************************************************/
 
-void SaveSGF(struct SGFInfo *sgfc, char *base_name)
+int SaveSGF(struct SGFInfo *sgfc, char *base_name)
 {
 	struct Node *n;
 	struct TreeInfo *info;
@@ -491,7 +491,10 @@ void SaveSGF(struct SGFInfo *sgfc, char *base_name)
 		strcpy(name, base_name);
 
 	if(!(*sgfc->sfh->open)(sgfc->sfh, name, "wb"))
-		PrintFatalError(FE_DEST_FILE_OPEN, sgfc, name);
+	{
+		PrintError(FE_DEST_FILE_OPEN, sgfc, name);
+		return(FALSE);
+	}
 
 	if(sgfc->options->keep_head)
 	{
@@ -501,7 +504,8 @@ void SaveSGF(struct SGFInfo *sgfc, char *base_name)
 			if((*sgfc->sfh->putc)(sgfc->sfh, *c) == EOF)
 			{
 				(*sgfc->sfh->close)(sgfc->sfh, FE_DEST_FILE_WRITE);
-				PrintFatalError(FE_DEST_FILE_WRITE, sgfc, name);
+				PrintError(FE_DEST_FILE_WRITE, sgfc, name);
+				return(FALSE);
 			}
 	}
 
@@ -517,7 +521,8 @@ void SaveSGF(struct SGFInfo *sgfc, char *base_name)
 		if(!WriteTree(sgfc, info, n, nl))
 		{
 			(*sgfc->sfh->close)(sgfc->sfh, FE_DEST_FILE_WRITE);
-			PrintFatalError(FE_DEST_FILE_WRITE, sgfc, name);
+			PrintError(FE_DEST_FILE_WRITE, sgfc, name);
+			return(FALSE);
 		}
 
 		nl = 2;
@@ -531,10 +536,14 @@ void SaveSGF(struct SGFInfo *sgfc, char *base_name)
 			snprintf(name, name_buffer_size, "%s_%03d.sgf", base_name, i);
 
 			if(!(*sgfc->sfh->open)(sgfc->sfh, name, "wb"))
-				PrintFatalError(FE_DEST_FILE_OPEN, sgfc, name);
+			{
+				PrintError(FE_DEST_FILE_OPEN, sgfc, name);
+				return(FALSE);
+			}
 		}
 	}
 
 	(*sgfc->sfh->close)(sgfc->sfh, E_NO_ERROR);
 	free(name);
+	return(TRUE);
 }

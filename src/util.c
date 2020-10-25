@@ -136,7 +136,7 @@ struct Util_C_internal *Setup_Util_C_internal(void)
 	SaveMalloc(struct Util_C_internal *, utilc, sizeof(struct Util_C_internal), "static util.c struct")
 	memset(utilc, 0, sizeof(struct Util_C_internal));
 	utilc->ill_type = E_NO_ERROR;
-	return utilc;
+	return(utilc);
 }
 
 
@@ -200,20 +200,18 @@ int PrintError(U_LONG type, struct SGFInfo *sgfc, ...) {
 
 
 /**************************************************************************
-*** Function:	PrintFatalError
-***				Variadic wrapper around PrintErrorHandler that does not return
+*** Function:	PrintOOMError
+***				Special error printer in case when memory runs out
+***				Panics: does not return; does not free up resources; just dies
+***				Might be called, when SGFInfo is not properly set up yet.
 **************************************************************************/
 
-int __attribute__((noreturn)) PrintFatalError(U_LONG type, struct SGFInfo *sgfc, ...)
+int __attribute__((noreturn)) PrintOOMError(char *detail)
 {
-	va_list arglist;
-	va_start(arglist, sgfc);
-	if (print_error_handler)
-		(*print_error_handler)(type, sgfc, arglist);
-	va_end(arglist);
-
-	FreeSGFInfo(sgfc);
-	exit(20);			/* say dada */
+	int err_num = FE_OUT_OF_MEMORY & M_ERROR_NUM;
+	fprintf(E_OUTPUT, "Fatal error %d: ", err_num);
+	fprintf(E_OUTPUT, error_mesg[err_num - 1], detail);
+	exit(20);
 }
 
 
@@ -226,7 +224,6 @@ int __attribute__((noreturn)) PrintFatalError(U_LONG type, struct SGFInfo *sgfc,
 ***				[position] [accumulate] [acc_size] 
 *** Returns:	TRUE: error printed
 ***				FALSE: error disabled
-***				(may quit program, if error is fatal!)
 **************************************************************************/
 
 int PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
