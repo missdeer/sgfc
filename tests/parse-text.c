@@ -9,18 +9,6 @@
 
 #include "test-common.h"
 
-static struct SGFInfo *sgfc;
-
-static void setup()
-{
-	sgfc = Setup_SGFInfo(NULL, NULL);
-}
-
-static void teardown()
-{
-	FreeSGFInfo(sgfc);
-}
-
 
 START_TEST (test_basic_string)
 {
@@ -30,6 +18,7 @@ START_TEST (test_basic_string)
 	ck_assert_str_eq(text, "basic test");
 }
 END_TEST
+
 
 START_TEST (test_soft_linebreak)
 {
@@ -42,6 +31,7 @@ START_TEST (test_soft_linebreak)
 	ck_assert_str_eq(text2, "softbreak:SIMPLE");
 }
 END_TEST
+
 
 START_TEST (test_trailing_spaces)
 {
@@ -63,6 +53,7 @@ START_TEST (test_trailing_spaces)
 }
 END_TEST
 
+
 START_TEST (test_trailing_spaces_simpletext)
 {
     char text[] = "trailing \n ";
@@ -78,6 +69,7 @@ START_TEST (test_trailing_spaces_simpletext)
 	ck_assert_str_eq(text3, "trailing3");
 }
 END_TEST
+
 
 START_TEST (test_composed_simpletext_linebreaks)
 {
@@ -116,7 +108,7 @@ TCase *sgfc_tc_parse_text()
 	TCase *tc;
 
 	tc = tcase_create("parse_text");
-	tcase_add_checked_fixture(tc, setup, teardown);
+	tcase_add_checked_fixture(tc, common_setup, common_teardown);
 
 	tcase_add_test(tc, test_basic_string);
 	tcase_add_test(tc, test_soft_linebreak);

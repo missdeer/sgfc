@@ -49,7 +49,7 @@ static void Make_Capture(int x, int y, struct BoardStatus *st)
 *** Returns:	TRUE if capture / FALSE if liberty found
 **************************************************************************/
 
-static int Recursive_Capture(int color, int x, int y, struct BoardStatus *st)
+static int Recursive_Capture(unsigned char color, int x, int y, struct BoardStatus *st)
 {
 	if(!st->board[MXY(x,y)])
 		return(FALSE);		/* liberty found */
@@ -82,7 +82,7 @@ static int Recursive_Capture(int color, int x, int y, struct BoardStatus *st)
 *** Returns:	-
 **************************************************************************/
 
-static void Capture_Stones(struct BoardStatus *st, int color, int x, int y)
+static void Capture_Stones(struct BoardStatus *st, unsigned char color, int x, int y)
 {
 	if(x < 0 || y < 0 || x >= st->bwidth || y >= st->bheight)
 		return;		/* not on board */
@@ -130,7 +130,7 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 
 	x = DecodePosChar(p->value->value[0]) - 1;
 	y = DecodePosChar(p->value->value[1]) - 1;
-	color = (char)sgf_token[p->id].data;
+	color = (unsigned char)sgf_token[p->id].data;
 
 	if(st->board[MXY(x,y)])
 		PrintError(WS_ILLEGAL_MOVE, sgfc, p->buffer);
@@ -165,7 +165,7 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 int Do_Addstones(struct SGFInfo *sgf, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	int x, y;
-	char color;
+	unsigned char color;
 	struct PropValue *v, *w;
 	struct Property h;
 
@@ -175,7 +175,7 @@ int Do_Addstones(struct SGFInfo *sgf, struct Node *n, struct Property *p, struct
 	h.value = NULL;
 	h.valend = NULL;
 
-	color = (char)sgf_token[p->id].data;
+	color = (unsigned char)sgf_token[p->id].data;
 
 	v = p->value;
 	while(v)

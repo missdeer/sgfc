@@ -17,4 +17,13 @@
 #include "all.h"
 #include "protos.h"
 
+/* test-helper.c */
+
+extern struct SGFInfo *sgfc;
+extern char *expected_output;
+
+int Test_BufferIO_Close(struct SaveFileHandler *, U_LONG );
+void common_setup(void);
+void common_teardown(void);
+
 #endif /* TEST_COMMON_H_ */

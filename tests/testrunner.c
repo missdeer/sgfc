@@ -13,6 +13,7 @@
 extern TCase *sgfc_tc_parse_text();
 extern TCase *sgfc_tc_check_value();
 extern TCase *sgfc_tc_trigger_errors();
+extern TCase *sgfc_tc_position();
 
 Suite *sgfc_suite(void)
 {
@@ -20,6 +21,7 @@ Suite *sgfc_suite(void)
 	suite_add_tcase(s, sgfc_tc_parse_text());
 	suite_add_tcase(s, sgfc_tc_check_value());
 	suite_add_tcase(s, sgfc_tc_trigger_errors());
+	suite_add_tcase(s, sgfc_tc_position());
 	return s;
 }
 

@@ -9,21 +9,6 @@
 
 #include "test-common.h"
 
-static struct SGFInfo *sgfc;
-
-static void setup()
-{
-	/* run tests without PrintError (makes setup easier) */
-	print_error_handler = NULL;
-	sgfc = Setup_SGFInfo(NULL, NULL);
-}
-
-static void teardown()
-{
-	print_error_handler = PrintErrorHandler;
-	FreeSGFInfo(sgfc);
-}
-
 
 START_TEST (test_composed_value_check)
 {
@@ -74,7 +59,7 @@ TCase *sgfc_tc_check_value()
 	TCase *tc;
 
 	tc = tcase_create("check_value");
-	tcase_add_checked_fixture(tc, setup, teardown);
+	tcase_add_checked_fixture(tc, common_setup, common_teardown);
 
 	tcase_add_test(tc, test_composed_value_check);
 	tcase_add_test(tc, test_composed_value_removed);

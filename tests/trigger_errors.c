@@ -9,18 +9,9 @@
 
 #include "test-common.h"
 
-static struct SGFInfo *sgfc;
 static U_LONG expected_error;
 static bool expected_error_occurred;
-static char *expected_output;
 
-static int Test_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
-{
-	ck_assert_uint_eq(error, E_NO_ERROR);
-	*sfh->fh.memh.pos = 0;
-	ck_assert_str_eq(sfh->fh.memh.buffer, expected_output);
-	return(SaveFile_BufferIO_Close(sfh, E_NO_ERROR));
-}
 
 static int mock_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglist)
 {
@@ -33,19 +24,12 @@ static int mock_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglist
 	return(TRUE);
 }
 
+
 static void setup(void)
 {
-	struct SaveFileHandler *sfh = Setup_SaveBufferIO(Test_BufferIO_Close);
-	sgfc = Setup_SGFInfo(NULL, sfh);
-	sgfc->options->add_sgfc_ap_property = FALSE;
+	common_setup();
 	print_error_handler = mock_error_handler;
 	expected_error_occurred = FALSE;
-}
-
-static void teardown(void)
-{
-	sgfc->buffer = NULL;
-	FreeSGFInfo(sgfc);
 }
 
 
@@ -143,7 +127,7 @@ TCase *sgfc_tc_trigger_errors()
 	TCase *tc;
 
 	tc = tcase_create("trigger_errors");
-	tcase_add_checked_fixture(tc, setup, teardown);
+	tcase_add_checked_fixture(tc, setup, common_teardown);
 
 	tcase_add_test(tc, test_W_SGF_IN_HEADER);
 	tcase_add_test(tc, test_E_ILLEGAL_OUTSIDE_CHARS);
