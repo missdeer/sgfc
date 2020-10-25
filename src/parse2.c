@@ -682,7 +682,6 @@ static int GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 
 static void Init_TreeInfo(struct SGFInfo *sgfc, struct Node *r)
 {
-	static int FF_diff = 0, GM_diff = 0;
 	struct TreeInfo *ti;
 	struct Property *ff, *gm, *sz;
 
@@ -706,7 +705,7 @@ static void Init_TreeInfo(struct SGFInfo *sgfc, struct Node *r)
 		ff = NULL;
 
 	if(ti->FF > 4)
-		PrintFatalError(FE_UNKNOWN_FILE_FORMAT, sgfc, ff->value->buffer);
+		PrintError(E_UNKNOWN_FILE_FORMAT, sgfc, ff->value->buffer, ti->FF);
 
 	gm = Find_Property(r, TKN_GM);
 	if(!GetNumber(sgfc, r, gm, 1, &ti->GM, 1, "GM[1]"))
@@ -776,22 +775,20 @@ static void Init_TreeInfo(struct SGFInfo *sgfc, struct Node *r)
 	{
 		char *buffer;
 
-		if(ti->prev->FF != ti->FF && !FF_diff)
+		if(ti->prev->FF != ti->FF)
 		{
 			if(ff)	buffer = ff->buffer;
 			else	buffer = r->buffer;
 
-			PrintError(WS_ROOT_PROP_DIFFERS, sgfc, buffer, "file formats");
-			FF_diff = 1;
+			PrintError(WS_FF_DIFFERS, sgfc, buffer);
 		}
 
-		if(ti->prev->GM != ti->GM && !GM_diff)
+		if(ti->prev->GM != ti->GM)
 		{
 			if(gm)	buffer = gm->buffer;
 			else	buffer = r->buffer;
 
-			PrintError(WS_ROOT_PROP_DIFFERS, sgfc, buffer, "game types");
-			GM_diff = 1;
+			PrintError(WS_GM_DIFFERS, sgfc, buffer);
 		}
 	}
 }
@@ -810,44 +807,43 @@ static void Check_SGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStat
 {
 	struct Node *n;
 	struct BoardStatus *st;
+	int area;
 
 	SaveMalloc(struct BoardStatus *, st, sizeof(struct BoardStatus), "board status buffer")
 
 	while(r)
 	{
-		st->board = NULL;
-		st->markup = NULL;
 		if(old)
 		{
 			memcpy(st, old, sizeof(struct BoardStatus));
+			area = old->bwidth * old->bheight;
 
-			if(st->bsize)
+			if(st->board)
 			{
-				SaveMalloc(unsigned char *, st->board, st->bsize, "goban buffer")
-				memcpy(st->board, old->board, st->bsize);
+				SaveMalloc(unsigned char *, st->board, area * sizeof(char), "goban buffer")
+				memcpy(st->board, old->board, area * sizeof(char));
 			}
 
-			if(st->msize)
-				SaveMalloc(U_SHORT *, st->markup, st->msize, "markup buffer")
-
+			/* markup is reused (set to 0 for each new node) */
 			st->mrkp_chngd = TRUE;
+
+			/* path_board is reused (paths marked with different path_num) */
 		}
 		else
 		{
 			Init_TreeInfo(sgfc, r);		/* set TreeInfo */
 			memset(st, 0, sizeof(struct BoardStatus));
 			st->bwidth = sgfc->info->bwidth;
-
-			st->bsize = st->bwidth * sgfc->info->bheight * sizeof(char);
-			if(st->bsize)
+			st->bheight = sgfc->info->bheight;
+			area = st->bwidth * st->bheight;
+			if(area)
 			{
-				SaveMalloc(unsigned char *, st->board, st->bsize, "goban buffer")
-				memset(st->board, 0, st->bsize);
+				SaveMalloc(unsigned char *, st->board, area * sizeof(char), "goban buffer")
+				memset(st->board, 0, area * sizeof(char));
+				SaveMalloc(U_SHORT *, st->markup, area * sizeof(U_SHORT), "markup buffer")
+				SaveMalloc(U_LONG *, st->path_board, area * sizeof(U_LONG), "path_board buffer")
+				memset(st->path_board, 0, area * sizeof(U_LONG));
 			}
-
-			st->msize = st->bwidth * sgfc->info->bheight * sizeof(U_SHORT);
-			if(st->msize)
-				SaveMalloc(U_SHORT *, st->markup, st->msize, "markup buffer")
 			st->mrkp_chngd = TRUE;
 		}
 
@@ -855,8 +851,8 @@ static void Check_SGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStat
 		while(n)
 		{
 			st->annotate = 0;
-			if(st->mrkp_chngd && st->msize)
-				memset(st->markup, 0, st->msize);
+			if(st->mrkp_chngd && st->markup)
+				memset(st->markup, 0, area * sizeof(U_SHORT));
 			st->mrkp_chngd = FALSE;
 
 			if(n->sibling && n != r)		/* for n=r loop is done outside */
@@ -875,8 +871,13 @@ static void Check_SGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStat
 		}
 
 		r = r->sibling;
-		if(st->board)	free(st->board);
-		if(st->markup)	free(st->markup);
+		if(st->board)
+			free(st->board);
+		if(!old)
+		{
+			if(st->markup)		free(st->markup);
+			if(st->path_board)	free(st->path_board);
+		}
 	}
 
 	free(st);

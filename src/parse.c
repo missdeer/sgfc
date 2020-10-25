@@ -158,10 +158,10 @@ int Parse_Text(char *value, ...)
 			}
 			switch(sgfc->options->linebreaks)
 			{
-				case 1:	/* every line break encountered */
+				case OPTION_LINEBREAK_ANY:	/* every line break encountered */
 						*d++ = *s++;
 						break;
-				case 2:	/* MGT style */
+				case OPTION_LINEBREAK_NOSPACE:	/* MGT style */
 						if((s != value) && (*(s-1) == ' '))
 						{
 							*d++ = ' ';
@@ -170,7 +170,7 @@ int Parse_Text(char *value, ...)
 						else
 							*d++ = *s++;
 						break;
-				case 3: /* two linebreaks in a row */
+				case OPTION_LINEBREAK_2BRK: /* two linebreaks in a row */
 						if(*(s+1) == '\n')
 						{
 							*d++ = *s;
@@ -182,7 +182,7 @@ int Parse_Text(char *value, ...)
 							s++;
 						}
 						break;
-				case 4: /* paragraph style (ISHI format, MFGO) */
+				case OPTION_LINEBREAK_PRGRPH: /* paragraph style (ISHI format, MFGO) */
 						if(*(s+1) == '\n')
 						{
 							*d++ = *s++;

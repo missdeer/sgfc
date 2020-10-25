@@ -16,10 +16,6 @@
 #include "protos.h"
 
 
-static int save_linelen;
-static int save_chars_in_node;
-static int save_eol_in_node;
-
 #define MAX_LINELEN		58
 #define MAXTEXT_LINELEN 70
 
@@ -33,9 +29,23 @@ static int save_eol_in_node;
 
 #define saveputc(s,c) { if(!WriteChar((s), (c), FALSE))	return(FALSE);	}
 
-#define CheckLineLen(s) { if(save_linelen > MAX_LINELEN) \
+#define CheckLineLen(s) { if((s)->_save_c->linelen > MAX_LINELEN) \
 						{ saveputc(s, '\n')	} }
 
+struct Save_C_internal {
+	int linelen;
+	int chars_in_node;
+	int eol_in_node;
+	int gi_written;
+};
+
+struct Save_C_internal *Setup_Save_C_internal()
+{
+	struct Save_C_internal *savec;
+	SaveMalloc(struct Save_C_internal *, savec, sizeof(struct Save_C_internal), "static save.c struct")
+	savec->gi_written = FALSE;
+	return savec;
+}
 
 static int SaveFile_FileIO_Open(struct SaveFileHandler *sfh, const char *path, const char *mode)
 {
@@ -93,14 +103,18 @@ static int SaveFile_BufferIO_Putc(struct SaveFileHandler *sfh, int c)
 	return(c);
 }
 
-struct SaveFileHandler save_file_io = {
-		SaveFile_FileIO_Open,
-		SaveFile_FileIO_Close,
-		SaveFile_FileIO_Putc,
-		NULL
-};
+struct SaveFileHandler *Setup_SaveFileIO()
+{
+	struct SaveFileHandler *sfh;
+	SaveMalloc(struct SaveFileHandler *, sfh, sizeof(struct SaveFileHandler), "file handler")
+	sfh->open = SaveFile_FileIO_Open;
+	sfh->close = SaveFile_FileIO_Close;
+	sfh->putc = SaveFile_FileIO_Putc;
+	sfh->fh = NULL;
+}
 
-struct SaveFileHandler *init_save_buffer_io(int (*close)(struct SaveFileHandler *, U_LONG))
+
+struct SaveFileHandler *Setup_SaveBufferIO(int (*close)(struct SaveFileHandler *, U_LONG))
 {
 	struct SaveFileHandler *sfh;
 	SaveMalloc(struct SaveFileHandler *, sfh, sizeof(struct SaveFileHandler), "memory file handler")
@@ -130,22 +144,22 @@ struct SaveFileHandler *init_save_buffer_io(int (*close)(struct SaveFileHandler 
 
 static int WriteChar(struct SGFInfo *sgfc, char c, U_SHORT spc)
 {
-	save_chars_in_node++;
+	sgfc->_save_c->chars_in_node++;
 
-	if(spc && isspace(c) && (save_linelen >= MAXTEXT_LINELEN))
+	if(spc && isspace(c) && (sgfc->_save_c->linelen >= MAXTEXT_LINELEN))
 		c = '\n';
 
 	if(c != '\n')
 	{
-		save_linelen++;
+		sgfc->_save_c->linelen++;
 
 		if((*sgfc->sfh->putc)(sgfc->sfh, c) == EOF)
 			return(FALSE);
 	}
 	else
 	{
-		save_eol_in_node = 1;
-		save_linelen = 0;
+		sgfc->_save_c->eol_in_node = 1;
+		sgfc->_save_c->linelen = 0;
 
 #if EOLCHAR
 		if((*sgfc->sfh->putc)(sgfc->sfh, EOLCHAR) == EOF)
@@ -189,7 +203,7 @@ static int WritePropValue(struct SGFInfo *sgfc, const char *v, int second, U_SHO
 		if(!WriteChar(sgfc, *v, flags & PVT_SIMPLE))
 			return(FALSE);
 
-		if(fl && (save_linelen > MAXTEXT_LINELEN))		/* soft linebreak */
+		if(fl && (sgfc->_save_c->linelen > MAXTEXT_LINELEN)) /* soft linebreak */
 		{
 			if (*v == '\\' && *(v-1) != '\\')
 								 /* if we have just written a single '\' then  */
@@ -217,23 +231,21 @@ static int WritePropValue(struct SGFInfo *sgfc, const char *v, int second, U_SHO
 
 static int WriteProperty(struct SGFInfo *sgfc, struct TreeInfo *info, struct Property *prop)
 {
-	static int gi_written = FALSE;
-
 	struct PropValue *v;
 	char *p;
 	int do_tt;
 
 	if(prop->flags & TYPE_GINFO)
 	{
-		if(!gi_written)
+		if(!sgfc->_save_c->gi_written)
 		{
 			saveputc(sgfc, '\n')
 			saveputc(sgfc, '\n')
 		}
-		gi_written = TRUE;
+		sgfc->_save_c->gi_written = TRUE;
 	}
 	else
-		gi_written = FALSE;
+		sgfc->_save_c->gi_written = FALSE;
 
 
 	p = prop->idstr;			/* write property ID */
@@ -293,8 +305,8 @@ static int WriteProperty(struct SGFInfo *sgfc, struct TreeInfo *info, struct Pro
 static int WriteNode(struct SGFInfo *sgfc, struct TreeInfo *info, struct Node *n)
 {
 	struct Property *p;
-	save_chars_in_node = 0;
-	save_eol_in_node = 0;
+	sgfc->_save_c->chars_in_node = 0;
+	sgfc->_save_c->eol_in_node = 0;
 	saveputc(sgfc, ';')
 
 	p = n->prop;
@@ -311,8 +323,9 @@ static int WriteNode(struct SGFInfo *sgfc, struct TreeInfo *info, struct Node *n
 	}
 
 	if(sgfc->options->nodelinebreaks &&
-	   ((save_eol_in_node && save_linelen > 0) ||
-		(!save_eol_in_node && save_linelen > MAX_PREDICTED_LINELEN - save_chars_in_node)))
+	   ((sgfc->_save_c->eol_in_node && sgfc->_save_c->linelen > 0) ||
+		(!sgfc->_save_c->eol_in_node &&
+		  sgfc->_save_c->linelen > MAX_PREDICTED_LINELEN - sgfc->_save_c->chars_in_node)))
 		saveputc(sgfc, '\n')
 
 	return(TRUE);
@@ -357,7 +370,7 @@ static void SetRootProps(struct SGFInfo *sgfc, struct TreeInfo *info, struct Nod
 static int WriteTree(struct SGFInfo *sgfc, struct TreeInfo *info,
 					 struct Node *n, int newlines)
 {
-	if(newlines && save_linelen > 0)
+	if(newlines && sgfc->_save_c->linelen > 0)
 		saveputc(sgfc, '\n')
 
 	SetRootProps(sgfc, info, n);
@@ -432,9 +445,9 @@ void SaveSGF(struct SGFInfo *sgfc, char *base_name)
 			}
 	}
 
-	save_linelen = 0;
-	save_chars_in_node = 0;
-	save_eol_in_node = 0;
+	sgfc->_save_c->linelen = 0;
+	sgfc->_save_c->chars_in_node = 0;
+	sgfc->_save_c->eol_in_node = 0;
 
 	n = sgfc->root;
 	info = sgfc->tree;

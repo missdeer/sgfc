@@ -19,11 +19,10 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "all.h"
 #include "protos.h"
-
-static struct SGFInfo sgf;
 
 
 /**************************************************************************
@@ -32,7 +31,7 @@ static struct SGFInfo sgf;
 *** Returns:	 0 on success
 ***				 5 if there were warnings
 ***				10 if there were errors
-***				20 if a fatal error occured
+***				20 if a fatal error occurred
 **************************************************************************/
 
 #ifndef VERSION_NO_MAIN
@@ -40,59 +39,45 @@ static struct SGFInfo sgf;
 int main(int argc, char *argv[])
 {
 	int ret = 0;
+	struct SGFInfo *sgfc;
 	struct SGFCOptions *options;
 
-	memset(error_enabled, TRUE, sizeof(error_enabled));
-
 	options = ParseArgs(argc, argv);
-	if(!options)	/* help printed? */
+
+	if(!options)	/* no options given? */
+	{
+		PrintHelp(FALSE);
 		return(0);
+	}
+	if(options->help)
+	{
+		PrintHelp(options->help);
+		free(options);
+		return(0);
+	}
+
 	if(!options->infile)
 		PrintFatalError(FE_MISSING_SOURCE_FILE, NULL);
 
-	memset(&sgf, 0, sizeof(struct SGFInfo));	/* init SGFInfo structure */
-	sgf.options = options;
+	sgfc = Setup_SGFInfo(options, NULL);
 
-	LoadSGF(&sgf, options->infile);
-	ParseSGF(&sgf);
+	LoadSGF(sgfc, options->infile);
+	ParseSGF(sgfc);
 
 	if(options->outfile)
 	{
-		if(options->write_critical || !critical_count)
-		{
-			sgf.sfh = &save_file_io;
-			SaveSGF(&sgf, options->outfile);
-		}
+		if(options->write_critical || !sgfc->critical_count)
+			SaveSGF(sgfc, options->outfile);
 		else
 			PrintError(E_CRITICAL_NOT_SAVED, NULL);
 	}
 
-	fprintf(E_OUTPUT, "%s: ", options->infile);	/* print status line */
+	if(sgfc->error_count)			ret = 10;
+	else if (sgfc->warning_count)	ret = 5;
 
-	if(error_count || warning_count)			/* errors & warnings */
-	{
-		ret = 5;
-		if(error_count)
-		{
-			fprintf(E_OUTPUT, "%d error(s)  ", error_count);
-			ret = 10;
-		}
+	PrintStatusLine(sgfc);
+	FreeSGFInfo(sgfc);
 
-		if(warning_count)
-			fprintf(E_OUTPUT, "%d warning(s)  ", warning_count);
-
-		if(critical_count)						/* critical ones */
-			fprintf(E_OUTPUT, "(critical:%d)  ", critical_count);
-	}
-	else										/* file ok */
-		fprintf(E_OUTPUT, "OK  ");
-
-	if(ignored_count)
-		fprintf(E_OUTPUT, "(%d message(s) ignored)", ignored_count);
-
-	fprintf(E_OUTPUT, "\n");
-
-	FreeSGFInfo(&sgf);
 	return(ret);
 }
 #endif

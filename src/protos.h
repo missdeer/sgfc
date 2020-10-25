@@ -11,7 +11,13 @@
 
 /**** options.c ****/
 
+void PrintHelp(enum option_help format);
+void PrintStatusLine(const struct SGFInfo *sgfc);
 struct SGFCOptions *ParseArgs(int , char *[]);
+struct SGFCOptions *SGFCDefaultOptions();
+
+struct SGFInfo *Setup_SGFInfo(struct SGFCOptions *options, struct SaveFileHandler *sfh);
+void FreeSGFInfo(struct SGFInfo *);
 
 
 /**** load.c ****/
@@ -29,9 +35,11 @@ void LoadSGFFromFileBuffer(struct SGFInfo *);
 
 /**** save.c ****/
 
-extern struct SaveFileHandler save_file_io;
 int SaveFile_BufferIO_Close(struct SaveFileHandler *, U_LONG );
-struct SaveFileHandler *init_save_buffer_io(int (* )(struct SaveFileHandler *, U_LONG));
+
+struct SaveFileHandler *Setup_SaveFileIO();
+struct SaveFileHandler *Setup_SaveBufferIO(int (* )(struct SaveFileHandler *, U_LONG));
+struct Save_C_internal *Setup_Save_C_internal();
 
 void SaveSGF(struct SGFInfo * , char *);
 
@@ -90,11 +98,7 @@ int Check_GameInfo(struct SGFInfo *, struct Property *, struct PropValue *);
 
 /**** util.c ****/
 
-extern int error_count;
-extern int critical_count;
-extern int warning_count;
-extern int ignored_count;
-extern char error_enabled[MAX_ERROR_NUM];
+struct Util_C_internal *Setup_Util_C_internal();
 
 extern int (*print_error_handler)(U_LONG, struct SGFInfo *, va_list);
 extern void (*print_error_output_hook)(struct SGFCError *);
@@ -107,8 +111,6 @@ void PrintErrorOutputHook(struct SGFCError *);
 
 int  DecodePosChar(char );
 char EncodePosChar(int );
-
-void FreeSGFInfo(struct SGFInfo *);
 
 void f_AddTail(struct ListHead * , struct ListNode * );
 void f_Enqueue(struct ListHead * , struct ListNode * );

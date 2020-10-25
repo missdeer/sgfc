@@ -15,10 +15,6 @@
 #include "protos.h"
 
 
-static U_LONG path_board[MAX_BOARDSIZE*MAX_BOARDSIZE];
-static U_LONG path_num = 0;
-
-
 /**************************************************************************
 *** Function:	Make_Capture
 ***				Captures stones on marked by Recursive_Capture
@@ -29,11 +25,11 @@ static U_LONG path_num = 0;
 
 static void Make_Capture(int x, int y, struct BoardStatus *st)
 {
-	if(path_board[MXY(x,y)] != path_num)
+	if(st->path_board[MXY(x,y)] != st->path_num)
 		return;
 
 	st->board[MXY(x,y)] = EMPTY;
-	path_board[MXY(x,y)] = 0;
+	st->path_board[MXY(x,y)] = 0;
 
 	/* recursive calls */
 	if(x > 0)	Make_Capture(x-1, y, st);
@@ -61,18 +57,16 @@ static int Recursive_Capture(int color, int x, int y, struct BoardStatus *st)
 	if(st->board[MXY(x,y)] == color)
 		return(TRUE);		/* enemy found */
 
-	if(path_board[MXY(x,y)] == path_num)
+	if(st->path_board[MXY(x,y)] == st->path_num)
 		return(TRUE);
 
-	path_board[MXY(x,y)] = path_num;
+	st->path_board[MXY(x,y)] = st->path_num;
 
 	/* recursive calls */
-	if(x > 0)	if(!Recursive_Capture(color, x-1, y, st))	return(FALSE);
-	if(y > 0)	if(!Recursive_Capture(color, x, y-1, st))	return(FALSE);
-	if(x < st->bwidth-1)
-				if(!Recursive_Capture(color, x+1, y, st))	return(FALSE);
-	if(y < st->bheight-1)
-				if(!Recursive_Capture(color, x, y+1, st))	return(FALSE);
+	if(x > 0 			 && !Recursive_Capture(color, x-1, y, st))	return(FALSE);
+	if(y > 0 			 && !Recursive_Capture(color, x, y-1, st))	return(FALSE);
+	if(x < st->bwidth-1  && !Recursive_Capture(color, x+1, y, st))	return(FALSE);
+	if(y < st->bheight-1 && !Recursive_Capture(color, x, y+1, st))	return(FALSE);
 
 	return(TRUE);
 }
@@ -96,10 +90,7 @@ static void Capture_Stones(struct BoardStatus *st, int color, int x, int y)
 	if(!st->board[MXY(x,y)] || st->board[MXY(x,y)] == color)
 		return;		/* liberty or friend found */
 
-	if(!path_num)
-		memset(path_board, 0, sizeof(path_board));
-
-	path_num++;
+	st->path_num++;
 
 	if(Recursive_Capture(color, x, y, st))	/* made prisoners? */
 		Make_Capture(x, y, st);				/* ->update board position */

@@ -110,10 +110,10 @@ struct BoardStatus
 	int bwidth;				/* copy of sgf->info->bwidth */
 	int bheight;			/* copy of sgf->info->bheight */
 	unsigned char *board;
-	size_t bsize;			/* board size in bytes */
 	U_SHORT *markup;
-	size_t msize;			/* markup size in bytes */
 	char mrkp_chngd;		/* markup field changed */
+	U_LONG *path_board;		/* board for capturing stones */
+	U_LONG path_num;
 };
 
 #define MXY(x,y) ((y)*st->bwidth + (x))
@@ -175,70 +175,6 @@ struct TreeInfo
 	struct Node *root;	/* root node of this tree */
 };
 
-struct SGFCOptions
-{
-	char *infile;
-	char *outfile;
-	int linebreaks;
-	int findstart;
-	bool warnings;
-	bool keep_head;
-	bool keep_unknown_props;
-	bool keep_obsolete_props;
-	bool del_empty_nodes;
-	bool del_move_markup;
-	bool split_file;
-	bool write_critical;
-	bool interactive;
-	bool softlinebreaks;
-	bool nodelinebreaks;
-	bool expandcpl;
-	bool pass_tt;
-	bool fix_variation;
-	bool game_signature;
-	bool strict_checking;
-	bool reorder_variations;
-};
-
-/* used by save.c when using memory_io SaveFileHandler functions */
-struct SaveBuffer {
-	char *buffer;
-	size_t buffer_size;
-	char *pos;
-};
-
-/* used by save.c as hooks to writing to file or to memory */
-struct SaveFileHandler {
-	int (*open)(struct SaveFileHandler *, const char *, const char *);
-	/* close() also gets error code, so that it knows whether writing finished successfully */
-	int (*close)(struct SaveFileHandler *, U_LONG);
-	int (*putc)(struct SaveFileHandler *, int);
-	union {
-		FILE *fh;
-		struct SaveBuffer buffer;
-	};
-};
-
-struct SGFInfo
-{
-	struct Node *first;	/* node list head */
-	struct Node *tail;
-
-	struct TreeInfo *tree;	/* Info for GameTrees */
-	struct TreeInfo *last;
-	struct TreeInfo *info;	/* pointer to info for current GameTree */
-
-	struct Node *root;	/* first root node (tree) */
-
-	char *buffer;		/* file buffer */
-	char *b_end;		/* file buffer end address */
-	char *start;		/* start of SGF data within buffer */
-	char *current;		/* actual read positon (cursor) in buffer */
-
-	struct SGFCOptions *options;
-	struct SaveFileHandler *sfh;	/* used during SaveSGF() */
-};
-
 #define SGF_EOF			(sgfc->current >= sgfc->b_end)
 
 struct ListNode
@@ -254,29 +190,6 @@ struct ListHead
 	struct ListNode *last;
 };
 
-
-struct SGFToken
-{
-	char *id;
-	U_CHAR priority;
-	U_CHAR ff;		/* file format */
-	int (*CheckValue)(struct SGFInfo *, struct Property *, struct PropValue *);
-	int (*Execute_Prop)(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
-	U_INT flags;
-	U_SHORT data;	/* for Do_XXX */
-};
-
-
-struct SGFCError {
-	U_LONG error;			/* type and number of error */
-	const char *message;	/* message buffer (freed after output handler returns!) */
-	const char *buffer;		/* pointer to position in SGF buffer where error occurred or NULL */
-	int x;					/* column number in buffer or -1 if no position */
-	int y;					/* row number or -1 if no position */
-	int lib_errno;			/* copy of errno in case of file errors */
-};
-
-
 /* Defines for KillChars / TestChars */
 
 #define C_ISSPACE		0x01u
@@ -287,6 +200,17 @@ struct SGFCError {
 
 /* defines for error handling */
 
+#define E_OUTPUT	stdout				/* output channel for error messages */
+
+struct SGFCError {
+	U_LONG error;			/* type and number of error */
+	const char *message;	/* message buffer (freed after output handler returns!) */
+	const char *buffer;		/* pointer to position in SGF buffer where error occurred or NULL */
+	int x;					/* column number in buffer or -1 if no position */
+	int y;					/* row number or -1 if no position */
+	int lib_errno;			/* copy of errno in case of file errors */
+};
+
 #define E_NO_ERROR		0x00000000UL
 #define E_FATAL_ERROR	0x40000000UL
 #define E_ERROR			0x20000000UL
@@ -294,14 +218,13 @@ struct SGFCError {
 #define E_ERROR4		0x01000000UL	/* error for FF[4] / warning otherwise */
 #define E_CRITICAL		0x02000000UL
 #define E_WARNING_STRICT 0x04000000UL 	/* error if strict checking,else warning */
+#define E_ONLY_ONCE		0x08000000UL 	/* print error only once */
 #define E_VALUE			0x00010000UL
 #define E_SEARCHPOS		0x00020000UL
 #define E_ACCUMULATE	0x00040000UL
 #define E_MULTIPLE		0x00080000UL
 #define E_ERRNO			0x00100000UL
 #define E_DEL_DOUBLE	0x00200000UL
-
-#define E_OUTPUT	stdout			/* output channel for error messages */
 
 /* masks for error handling */
 #define M_ERROR_TYPE	0x70000000UL
@@ -361,8 +284,8 @@ struct SGFCError {
 #define E4_BM_TE_IN_NODE		(42UL | E_ERROR4 | E_SEARCHPOS)
 #define E_ANNOTATE_WITHOUT_MOVE (43UL | E_ERROR | E_SEARCHPOS)
 #define E4_GINFO_ALREADY_SET	(44UL | E_ERROR4 | E_SEARCHPOS)
-#define WS_ROOT_PROP_DIFFERS	(45UL | E_WARNING_STRICT | E_SEARCHPOS)
-#define FE_UNKNOWN_FILE_FORMAT	(46UL | E_FATAL_ERROR | E_SEARCHPOS)
+#define WS_FF_DIFFERS			(45UL | E_WARNING_STRICT | E_SEARCHPOS | E_ONLY_ONCE)
+#define E_UNKNOWN_FILE_FORMAT	(46UL | E_ERROR | E_CRITICAL | E_SEARCHPOS)
 #define E_SQUARE_AS_RECTANGULAR	(47UL | E_ERROR | E_SEARCHPOS)
 #define FE_MISSING_SOURCE_FILE	(48UL | E_FATAL_ERROR)
 #define FE_BAD_PARAMETER		(49UL | E_FATAL_ERROR)
@@ -370,7 +293,7 @@ struct SGFCError {
 
 #define E_VERSION_CONFLICT		(51UL | E_ERROR | E_CRITICAL | E_SEARCHPOS)
 #define E_BAD_VW_VALUES			(52UL | E_ERROR | E_SEARCHPOS)
-#define E_UNUSED_CODE			(53UL)
+#define WS_GM_DIFFERS			(53UL | E_WARNING_STRICT | E_SEARCHPOS | E_ONLY_ONCE)
 #define E_VALUES_WITHOUT_ID		(54UL | E_ERROR | E_CRITICAL | E_SEARCHPOS)
 #define W_EMPTY_NODE_DELETED	(55UL | E_WARNING | E_SEARCHPOS)
 #define W_VARLEVEL_UNCERTAIN	(56UL | E_WARNING | E_SEARCHPOS)
@@ -389,3 +312,110 @@ struct SGFCError {
 #define FE_UNKNOWN_LONG_OPTION	(68UL | E_FATAL_ERROR)
 
 #define MAX_ERROR_NUM			68
+
+
+/* command line options */
+
+enum option_help {
+	OPTION_HELP_SHORT=1,
+	OPTION_HELP_LONG
+};
+
+enum option_linebreaks {
+	OPTION_LINEBREAK_ANY=1,
+	OPTION_LINEBREAK_NOSPACE,
+	OPTION_LINEBREAK_2BRK,
+	OPTION_LINEBREAK_PRGRPH
+};
+
+enum option_findstart {
+	OPTION_FINDSTART_SEARCH=1,
+	OPTION_FINDSTART_SPEC,
+	OPTION_FINDSTART_BRACKET
+};
+
+struct SGFCOptions
+{
+	char *infile;
+	char *outfile;
+	enum option_linebreaks linebreaks;
+	enum option_findstart findstart;
+	enum option_help help;
+	bool warnings;
+	bool keep_head;
+	bool keep_unknown_props;
+	bool keep_obsolete_props;
+	bool del_empty_nodes;
+	bool del_move_markup;
+	bool split_file;
+	bool write_critical;
+	bool interactive;
+	bool softlinebreaks;
+	bool nodelinebreaks;
+	bool expandcpl;
+	bool pass_tt;
+	bool fix_variation;
+	bool game_signature;
+	bool strict_checking;
+	bool reorder_variations;
+
+	bool error_enabled[MAX_ERROR_NUM];
+};
+
+/* used by save.c when using memory_io SaveFileHandler functions */
+struct SaveBuffer {
+	char *buffer;
+	size_t buffer_size;
+	char *pos;
+};
+
+/* used by save.c as hooks to writing to file or to memory */
+struct SaveFileHandler {
+	int (*open)(struct SaveFileHandler *, const char *, const char *);
+	/* close() also gets error code, so that it knows whether writing finished successfully */
+	int (*close)(struct SaveFileHandler *, U_LONG);
+	int (*putc)(struct SaveFileHandler *, int);
+	union {
+		FILE *fh;
+		struct SaveBuffer buffer;
+	};
+};
+
+struct SGFInfo
+{
+	struct Node *first;	/* node list head */
+	struct Node *tail;
+
+	struct TreeInfo *tree;	/* Info for GameTrees */
+	struct TreeInfo *last;
+	struct TreeInfo *info;	/* pointer to info for current GameTree */
+
+	struct Node *root;	/* first root node (tree) */
+
+	char *buffer;		/* file buffer */
+	char *b_end;		/* file buffer end address */
+	char *start;		/* start of SGF data within buffer */
+	char *current;		/* actual read positon (cursor) in buffer */
+
+	struct SGFCOptions *options;
+	struct SaveFileHandler *sfh;	/* used during SaveSGF() */
+
+	int error_count;	/* message count filled during parsing */
+	int critical_count;
+	int warning_count;
+	int ignored_count;
+
+	struct Save_C_internal *_save_c;
+	struct Util_C_internal *_util_c;
+};
+
+struct SGFToken
+{
+	char *id;
+	U_CHAR priority;
+	U_CHAR ff;		/* file format */
+	int (*CheckValue)(struct SGFInfo *, struct Property *, struct PropValue *);
+	int (*Execute_Prop)(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
+	U_INT flags;
+	U_SHORT data;	/* for Do_XXX */
+};

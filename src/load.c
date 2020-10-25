@@ -706,7 +706,7 @@ static int FindStart(struct SGFInfo *sgfc, int firsttime)
 			{
 				o = c = 0;
 
-				if(sgfc->options->findstart == 1)
+				if(sgfc->options->findstart == OPTION_FINDSTART_SEARCH)
 				{		/* found a '(' but no ';' -> might be a missing ';' */
 					tmp = sgfc->current + 1;
 					while((tmp != sgfc->b_end) && *tmp != ')' && *tmp != '(')
@@ -717,7 +717,7 @@ static int FindStart(struct SGFInfo *sgfc, int firsttime)
 					}
 				}
 
-				if((sgfc->options->findstart == 3) ||
+				if((sgfc->options->findstart == OPTION_FINDSTART_BRACKET) ||
 				  ((o >= 2) && (o >= c) && (o-c <= 1)))
 				{
 					PrintError(E_MISSING_SEMICOLON, sgfc, sgfc->current);
