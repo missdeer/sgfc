@@ -130,7 +130,7 @@ struct Util_C_internal {
 *** Returns:	pointer to internal structure
 **************************************************************************/
 
-struct Util_C_internal *Setup_Util_C_internal()
+struct Util_C_internal *Setup_Util_C_internal(void)
 {
 	struct Util_C_internal *utilc;
 	SaveMalloc(struct Util_C_internal *, utilc, sizeof(struct Util_C_internal), "static util.c struct")

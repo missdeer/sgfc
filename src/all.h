@@ -363,8 +363,8 @@ struct SGFCOptions
 	bool error_enabled[MAX_ERROR_NUM];
 };
 
-/* used by save.c when using memory_io SaveFileHandler functions */
-struct SaveBuffer {
+/* used by save.c when using MemoryIO SaveFileHandler functions */
+struct MemoryIOHandle {
 	char *buffer;
 	size_t buffer_size;
 	char *pos;
@@ -377,9 +377,9 @@ struct SaveFileHandler {
 	int (*close)(struct SaveFileHandler *, U_LONG);
 	int (*putc)(struct SaveFileHandler *, int);
 	union {
-		FILE *fh;
-		struct SaveBuffer buffer;
-	};
+		FILE *file;
+		struct MemoryIOHandle memh;
+	} fh; /* fh ... "file" handle (unnamed unions != C99) */
 };
 
 /* The big singleton -- contains everything that needs to be known throughout SGFC */

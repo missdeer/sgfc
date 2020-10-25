@@ -14,7 +14,7 @@
 void PrintHelp(enum option_help format);
 void PrintStatusLine(const struct SGFInfo *sgfc);
 struct SGFCOptions *ParseArgs(int , char *[]);
-struct SGFCOptions *SGFCDefaultOptions();
+struct SGFCOptions *SGFCDefaultOptions(void);
 
 struct SGFInfo *Setup_SGFInfo(struct SGFCOptions *options, struct SaveFileHandler *sfh);
 void FreeSGFInfo(struct SGFInfo *);
@@ -37,9 +37,9 @@ void LoadSGFFromFileBuffer(struct SGFInfo *);
 
 int SaveFile_BufferIO_Close(struct SaveFileHandler *, U_LONG );
 
-struct SaveFileHandler *Setup_SaveFileIO();
+struct SaveFileHandler *Setup_SaveFileIO(void);
 struct SaveFileHandler *Setup_SaveBufferIO(int (* )(struct SaveFileHandler *, U_LONG));
-struct Save_C_internal *Setup_Save_C_internal();
+struct Save_C_internal *Setup_Save_C_internal(void);
 
 void SaveSGF(struct SGFInfo * , char *);
 
@@ -98,7 +98,7 @@ int Check_GameInfo(struct SGFInfo *, struct Property *, struct PropValue *);
 
 /**** util.c ****/
 
-struct Util_C_internal *Setup_Util_C_internal();
+struct Util_C_internal *Setup_Util_C_internal(void);
 
 extern int (*print_error_handler)(U_LONG, struct SGFInfo *, va_list);
 extern void (*print_error_output_hook)(struct SGFCError *);

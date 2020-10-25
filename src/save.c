@@ -50,7 +50,7 @@ struct Save_C_internal {
 *** Returns:	pointer to internal structure
 **************************************************************************/
 
-struct Save_C_internal *Setup_Save_C_internal()
+struct Save_C_internal *Setup_Save_C_internal(void)
 {
 	struct Save_C_internal *savec;
 	SaveMalloc(struct Save_C_internal *, savec, sizeof(struct Save_C_internal), "static save.c struct")
@@ -68,28 +68,29 @@ struct Save_C_internal *Setup_Save_C_internal()
 
 static int SaveFile_FileIO_Open(struct SaveFileHandler *sfh, const char *path, const char *mode)
 {
-	sfh->fh = fopen(path, mode);
-	return(!!sfh->fh);
+	sfh->fh.file = fopen(path, mode);
+	return(!!sfh->fh.file);
 }
 
 static int SaveFile_FileIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 {
-	return(fclose(sfh->fh));
+	return(fclose(sfh->fh.file));
 }
 
 static int SaveFile_FileIO_Putc(struct SaveFileHandler *sfh, int c)
 {
-	return(fputc(c, sfh->fh));
+	return(fputc(c, sfh->fh.file));
 }
 
-struct SaveFileHandler *Setup_SaveFileIO()
+struct SaveFileHandler *Setup_SaveFileIO(void)
 {
 	struct SaveFileHandler *sfh;
 	SaveMalloc(struct SaveFileHandler *, sfh, sizeof(struct SaveFileHandler), "file handler")
 	sfh->open = SaveFile_FileIO_Open;
 	sfh->close = SaveFile_FileIO_Close;
 	sfh->putc = SaveFile_FileIO_Putc;
-	sfh->fh = NULL;
+	sfh->fh.file = NULL;
+	return sfh;
 }
 
 
@@ -105,11 +106,11 @@ struct SaveFileHandler *Setup_SaveFileIO()
 static int SaveFile_BufferIO_Open(struct SaveFileHandler *sfh, const char *path, const char *mode)
 {
 	/* Start with ~5kb buffer which suffices in many cases */
-	sfh->buffer.buffer = (char *)malloc((size_t)5000);
-	if(!sfh->buffer.buffer)
+	sfh->fh.memh.buffer = (char *)malloc((size_t)5000);
+	if(!sfh->fh.memh.buffer)
 		return(FALSE);
-	sfh->buffer.buffer_size = 5000;
-	sfh->buffer.pos = sfh->buffer.buffer;
+	sfh->fh.memh.buffer_size = 5000;
+	sfh->fh.memh.pos = sfh->fh.memh.buffer;
 	return(TRUE);
 }
 
@@ -125,10 +126,10 @@ static int SaveFile_BufferIO_Open(struct SaveFileHandler *sfh, const char *path,
 
 int SaveFile_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 {
-	free(sfh->buffer.buffer);
-	sfh->buffer.buffer = NULL;
-	sfh->buffer.pos = NULL;
-	sfh->buffer.buffer_size = 0;
+	free(sfh->fh.memh.buffer);
+	sfh->fh.memh.buffer = NULL;
+	sfh->fh.memh.pos = NULL;
+	sfh->fh.memh.buffer_size = 0;
 	return(TRUE);
 }
 
@@ -145,20 +146,20 @@ int SaveFile_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 static int SaveFile_BufferIO_Putc(struct SaveFileHandler *sfh, int c)
 {
 	/* -1 so that we can always null-terminate buffer in close() function */
-	if (sfh->buffer.pos == sfh->buffer.buffer + sfh->buffer.buffer_size - 1)
+	if (sfh->fh.memh.pos == sfh->fh.memh.buffer + sfh->fh.memh.buffer_size - 1)
 	{
 		/* size*2 ... typical strategy used by ArrayList structures */
-		char *new_buffer = (char *)malloc(sfh->buffer.buffer_size*2);
+		char *new_buffer = (char *)malloc(sfh->fh.memh.buffer_size*2);
 		if (!new_buffer)
 			return EOF;
-		memcpy(new_buffer, sfh->buffer.buffer, sfh->buffer.buffer_size);
-		free(sfh->buffer.buffer);
-		sfh->buffer.buffer = new_buffer;
-		sfh->buffer.pos = new_buffer + sfh->buffer.buffer_size;
-		sfh->buffer.buffer_size *= 2;
+		memcpy(new_buffer, sfh->fh.memh.buffer, sfh->fh.memh.buffer_size);
+		free(sfh->fh.memh.buffer);
+		sfh->fh.memh.buffer = new_buffer;
+		sfh->fh.memh.pos = new_buffer + sfh->fh.memh.buffer_size;
+		sfh->fh.memh.buffer_size *= 2;
 	}
 
-	*sfh->buffer.pos++ = (char)c;
+	*sfh->fh.memh.pos++ = (char)c;
 	return(c);
 }
 
@@ -180,9 +181,9 @@ struct SaveFileHandler *Setup_SaveBufferIO(int (*close)(struct SaveFileHandler *
 		sfh->close = close;
 	else
 		sfh->close = SaveFile_BufferIO_Close;
-	sfh->buffer.buffer = NULL;
-	sfh->buffer.pos = NULL;
-	sfh->buffer.buffer_size = 0;
+	sfh->fh.memh.buffer = NULL;
+	sfh->fh.memh.pos = NULL;
+	sfh->fh.memh.buffer_size = 0;
 	return sfh;
 }
 

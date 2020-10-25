@@ -216,7 +216,7 @@ struct SGFCOptions *ParseArgs(int argc, char *argv[])
 *** Returns:	-
 **************************************************************************/
 
-struct SGFCOptions *SGFCDefaultOptions()
+struct SGFCOptions *SGFCDefaultOptions(void)
 {
 	struct SGFCOptions *options;
 
