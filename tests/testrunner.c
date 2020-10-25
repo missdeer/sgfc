@@ -12,12 +12,14 @@
 
 extern TCase *sgfc_tc_parse_text();
 extern TCase *sgfc_tc_check_value();
+extern TCase *sgfc_tc_trigger_errors();
 
 Suite *sgfc_suite(void)
 {
 	Suite *s = suite_create("SGFC");
 	suite_add_tcase(s, sgfc_tc_parse_text());
 	suite_add_tcase(s, sgfc_tc_check_value());
+	suite_add_tcase(s, sgfc_tc_trigger_errors());
 	return s;
 }
 
@@ -29,7 +31,7 @@ int main(void)
 	Suite *s = sgfc_suite();
 	SRunner *sr = srunner_create(s);
 	/* switch to NO_FORK for easier debugging */
-	/* srunner_set_fork_status(sr, CK_NOFORK); */
+	srunner_set_fork_status(sr, CK_NOFORK);
 	srunner_run_all(sr, CK_ENV);
 	number_failed = srunner_ntests_failed(sr);
 	srunner_free(sr);

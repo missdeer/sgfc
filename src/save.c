@@ -405,14 +405,16 @@ static void SetRootProps(struct SGFInfo *sgfc, struct TreeInfo *info, struct Nod
 		return;
 
 	New_PropValue(sgfc, r, TKN_FF, "4", NULL, TRUE);
-	New_PropValue(sgfc, r, TKN_AP, "SGFC", "1.18", TRUE);
 
-	if(info->GM == 1)			/* may be default value without property */
+	if(sgfc->options->add_sgfc_ap_property)
+		New_PropValue(sgfc, r, TKN_AP, "SGFC", "1.18", TRUE);
+
+	if(info->GM == 1)
+	{
 		New_PropValue(sgfc, r, TKN_GM, "1", NULL, TRUE);
-
-								/* may be default value without property */
-	if(info->bwidth == 19 && info->bheight == 19)
-		New_PropValue(sgfc, r, TKN_SZ, "19", NULL, TRUE);
+		if(info->bwidth == 19 && info->bheight == 19)
+			New_PropValue(sgfc, r, TKN_SZ, "19", NULL, TRUE);
+	}
 }
 
 

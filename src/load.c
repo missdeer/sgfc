@@ -621,7 +621,7 @@ static int BuildSGFTree(struct SGFInfo *sgfc, struct Node *r)
 		{
 			case ';':	if(end_tree)
 						{
-							PrintError(E_NODE_OUSIDE_VAR, sgfc, sgfc->current-1);
+							PrintError(E_NODE_OUTSIDE_VAR, sgfc, sgfc->current - 1);
 							sgfc->current--;
 							if(!BuildSGFTree(sgfc, r))
 								return(FALSE);
@@ -795,7 +795,6 @@ int LoadSGF(struct SGFInfo *sgfc, char *name)
 		goto load_error;
 
 	sgfc->b_end   = sgfc->buffer + size;
-	sgfc->current = sgfc->buffer;
 	fclose(file);
 
 	return(LoadSGFFromFileBuffer(sgfc));
@@ -818,6 +817,8 @@ load_error:
 int LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 {
 	int miss;
+
+	sgfc->current = sgfc->buffer;
 
 	miss = FindStart(sgfc, TRUE);		/* skip junk in front of '(;' */
 	if(miss == -1)

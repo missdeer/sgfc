@@ -308,7 +308,7 @@ struct SGFCError {
 #define W_MOVE_OUT_OF_SEQUENCE	(63UL | E_WARNING | E_SEARCHPOS)
 #define E_TOO_MANY_VARIATIONS	(64UL | E_ERROR | E_SEARCHPOS)
 #define E_FF4_PASS_IN_OLD_FF	(65UL | E_ERROR | E_SEARCHPOS)
-#define E_NODE_OUSIDE_VAR		(66UL | E_ERROR | E_CRITICAL | E_SEARCHPOS)
+#define E_NODE_OUTSIDE_VAR		(66UL | E_ERROR | E_CRITICAL | E_SEARCHPOS)
 #define E_MISSING_NODE_START	(67UL | E_ERROR | E_CRITICAL | E_SEARCHPOS)
 #define FE_UNKNOWN_LONG_OPTION	(68UL | E_FATAL_ERROR)
 
@@ -359,6 +359,7 @@ struct SGFCOptions
 	bool game_signature;
 	bool strict_checking;
 	bool reorder_variations;
+	bool add_sgfc_ap_property;
 
 	bool error_enabled[MAX_ERROR_NUM];
 };

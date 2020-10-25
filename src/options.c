@@ -259,6 +259,7 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 	options->game_signature = FALSE;
 	options->strict_checking = FALSE;
 	options->reorder_variations = FALSE;
+	options->add_sgfc_ap_property = TRUE;
 	options->infile = NULL;
 	options->outfile = NULL;
 	return options;
