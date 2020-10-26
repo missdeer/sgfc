@@ -25,11 +25,11 @@
 
 static void Make_Capture(int x, int y, struct BoardStatus *st)
 {
-	if(st->path_board[MXY(x,y)] != st->path_num)
+	if(st->paths->board[MXY(x,y)] != st->paths->num)
 		return;
 
 	st->board[MXY(x,y)] = EMPTY;
-	st->path_board[MXY(x,y)] = 0;
+	st->paths->board[MXY(x,y)] = 0;
 
 	/* recursive calls */
 	if(x > 0)	Make_Capture(x-1, y, st);
@@ -57,10 +57,10 @@ static int Recursive_Capture(unsigned char color, int x, int y, struct BoardStat
 	if(st->board[MXY(x,y)] == color)
 		return(TRUE);		/* enemy found */
 
-	if(st->path_board[MXY(x,y)] == st->path_num)
+	if(st->paths->board[MXY(x,y)] == st->paths->num)
 		return(TRUE);
 
-	st->path_board[MXY(x,y)] = st->path_num;
+	st->paths->board[MXY(x,y)] = st->paths->num;
 
 	/* recursive calls */
 	if(x > 0 			 && !Recursive_Capture(color, x-1, y, st))	return(FALSE);
@@ -90,7 +90,7 @@ static void Capture_Stones(struct BoardStatus *st, unsigned char color, int x, i
 	if(!st->board[MXY(x,y)] || st->board[MXY(x,y)] == color)
 		return;		/* liberty or friend found */
 
-	st->path_num++;
+	st->paths->num++;
 
 	if(Recursive_Capture(color, x, y, st))	/* made prisoners? */
 		Make_Capture(x, y, st);				/* ->update board position */

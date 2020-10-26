@@ -103,6 +103,12 @@ typedef enum {
 
 #define MAX_REORDER_VARIATIONS 100
 
+/* separate structure, so that it can be re-used when iterating the node tree */
+struct PathBoard
+{
+	U_LONG board[MAX_BOARDSIZE*MAX_BOARDSIZE];
+	U_LONG num;
+};
 
 struct BoardStatus
 {
@@ -113,8 +119,7 @@ struct BoardStatus
 	unsigned char *board;
 	U_SHORT *markup;
 	char mrkp_chngd;		/* markup field changed */
-	U_LONG *path_board;		/* board for capturing stones */
-	U_LONG path_num;
+	struct PathBoard *paths;	/* board for capturing stones */
 };
 
 #define MXY(x,y) ((y)*st->bwidth + (x))

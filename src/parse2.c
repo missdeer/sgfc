@@ -858,8 +858,8 @@ static void Check_SGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStat
 				SaveMalloc(unsigned char *, st->board, area * sizeof(char), "goban buffer")
 				memset(st->board, 0, area * sizeof(char));
 				SaveMalloc(U_SHORT *, st->markup, area * sizeof(U_SHORT), "markup buffer")
-				SaveMalloc(U_LONG *, st->path_board, area * sizeof(U_LONG), "path_board buffer")
-				memset(st->path_board, 0, area * sizeof(U_LONG));
+				SaveMalloc(struct PathBoard *, st->paths, area * sizeof(struct PathBoard), "path_board buffer")
+				memset(st->paths, 0, sizeof(struct PathBoard));
 			}
 			st->mrkp_chngd = TRUE;
 		}
@@ -892,8 +892,8 @@ static void Check_SGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStat
 			free(st->board);
 		if(!old)
 		{
-			if(st->markup)		free(st->markup);
-			if(st->path_board)	free(st->path_board);
+			if(st->markup)	free(st->markup);
+			if(st->paths)	free(st->paths);
 		}
 	}
 
