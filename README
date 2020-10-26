@@ -40,7 +40,7 @@ Appendix D: List of error codes and possible causes
 1. What is it?
 ==============
 
-SGF is the 'Smart Game Format' fileformat for storing game records.
+SGF is the 'Smart Game Format' file format for storing game records.
 It's a text only, tree based format.
 
 The specification of the SGF format can be found at:
@@ -52,7 +52,7 @@ correcting any errors. It also converts FF[1]-FF[3] files to FF[4].
 
 SGFC is THE reference implementation for the SGF FF[4] standard.
 If this tool differs from the specification then the specification is
-right and SGFC has a bug - in that case please contact me immediatly!
+right and SGFC has a bug - in that case please contact me immediately!
 
 SGFC is intended to be a tool for SGF experts, coders and maintainers of
 large SGF archives. You ought to have quite some knowledge of SGF to use
@@ -60,7 +60,7 @@ SGFC efficiently.
 
 SGFC was written primarily for Go/WeiQi/Baduk (GM[1]) files. It cannot handle
 other games yet, i.e. it does not check any game-specific properties and
-values of other games than Go. It may even save errornous game-specific
+values of other games than Go. It may even save erroneous game-specific
 properties of other games! Use SGFC for other games with care.
 
 The latest version of SGFC can be downloaded from:
@@ -131,7 +131,7 @@ these requirements then ask a local system guru to help you.
 
 Note: on some machines, you may have to specify a shell and the processor
       type in the Makefile -- in that case you have to edit the Makefile.
-      Right now it does not specify either in order to be machine independet.
+      Right now it does not specify either in order to be machine independent.
       See additional defines below too.
 
 If you are compiling SGFC manually then just compile each file to get the
@@ -164,7 +164,7 @@ this define, so that main() does not get compiled.
 
 Usage: 'sgfc [options] infile [outfile]'
 
-Option arguments have to be preceeded by a '-'.
+Option arguments have to be preceded by a '-'.
 
 If the 'outfile' is missing, SGFC just checks the 'infile'.
 Conversion to FF[4] takes place only if you specify the 'outfile'.
@@ -177,8 +177,8 @@ Conversion to FF[4] takes place only if you specify the 'outfile'.
     -h  ... print a short help message
     -bx ... Beginning of SGF data is detected by
                 1 - advanced search algorithm (default)
-                2 - first occurence of '(;'
-                3 - first occurence of '('
+                2 - first occurrence of '(;'
+                3 - first occurrence of '('
     -c  ... write file even if a critical error occurs
     -dn ... n = number : disable message number -n-
     -e  ... expand compressed point lists
@@ -187,7 +187,7 @@ Conversion to FF[4] takes place only if you specify the 'outfile'.
     -k  ... keep header in front of SGF data
     -lx ... x = 1,2,3: a hard linebreak is
                 1 - any linebreak encountered (default)
-                2 - any linebreak not preceeded by a space (MGT)
+                2 - any linebreak not preceded by a space (MGT)
                 3 - two linebreaks in a row
                 4 - paragraph style (ISHI format, MFGO)
     -L  ... try to keep linebreaks at the end of nodes
@@ -237,11 +237,11 @@ Option -b:
 ----------
 Select method for searching the beginning of SGF data.
 
-SGF files may be preceeded by plain text. In most cases this is an
+SGF files may be preceded by plain text. In most cases this is an
 email header which has not been removed.
 
 In order to find the SGF data SGFC searches for '(;' which marks the
-beginning. But some errornous files mark the beginning only with '('.
+beginning. But some erroneous files mark the beginning only with '('.
 To detect such files SGFC uses a more sophisticated search. However
 this search might go wrong (in seldom cases).
 
@@ -249,7 +249,7 @@ In that case specify
     -b2 ... the first '(;' is searched.
             Note: missing ';' at the beginning cannot be detected
     -b3 ... the first '(' is searched.
-            Note: This is the best choice if the SGF data is not preceeded
+            Note: This is the best choice if the SGF data is not preceded
             by plain text. If there's text in front of the SGF data then
             it's likely that problems will occur.
 
@@ -258,7 +258,7 @@ Option -c:
 ----------
 Write file even if a critical error occurs.
 
-Critical errors indicate that the SGF file may be severly damaged and that
+Critical errors indicate that the SGF file may be severely damaged and that
 information may be lost during the conversion.
 Treat critical warnings/errors with care!
 
@@ -289,12 +289,11 @@ Option -e:
 Expand compressed point lists
 
 FF[4] provides a compressed format to store long point lists.
-However this compressed format is TOTALLY incompatible to old applications.
-If you are concerned about compatibility to old applications you
+However this compressed format is incompatible to FF[3] only applications.
+If you are concerned about compatibility with old applications you
 should avoid the new format and specify this option.
 
-The new format only affects point lists and not single moves (e.g. like
-in B or W).
+The new format only affects point lists and not single moves (e.g. B or W).
 
 
 Option -g:
@@ -329,7 +328,7 @@ just type <return>. If you want to delete the value then type 'd'.
 Otherwise just type in the new value.
 
 Your input is checked for correctness and rejected if there are any
-syntax errors. Note: no trailing or preceeding spaces, case sensitive check.
+syntax errors. Note: no trailing or preceding spaces, case sensitive check.
 To make it a little easier for you, SGFC tries to correct your input
 and if successful provides it as default value the next time your asked.
 
@@ -344,7 +343,7 @@ Option -k:
 ----------
 Keep header in front of SGF data.
 
-SGF files may be preceeded by plain text. In most cases this is an
+SGF files may be preceded by plain text. In most cases this is an
 email header which has not been removed.
 By default SGFC removes this header as it contains no SGF relevant
 information.
@@ -363,7 +362,7 @@ SGFC offers 4 different styles for reading in text.
 Text is ALWAYS written in a FF[4] compatible way.
 During reading, a hard linebreak is
         1 - any linebreak encountered (default)
-        2 - any linebreak not preceeded by a space (MGT)
+        2 - any linebreak not preceded by a space (MGT)
         3 - two linebreaks in a row
         4 - paragraph style (ISHI format, MFGO)
 
@@ -420,7 +419,7 @@ Option -p:
 ----------
 Write pass moves as '[tt]' if possible.
 
-FF[4] allows writing pass moves as '[]'. Older appplications cannot deal with
+FF[4] allows writing pass moves as '[]'. Older applications cannot deal with
 this value. If you are concerned about compatibility to old applications
 you should avoid the new format and specify this option.
 
@@ -476,11 +475,11 @@ Option -v:
 ----------
 Correct variation level and root moves.
 
-It's bad style to have alternativ moves at different tree levels.
+It's bad style to have alternative moves at different tree levels.
 
 Some applications chose that way to represent variations as siblings
 instead of children - they added a child node, removed the latest move
-by using an AE property and put the alternativ move into the node.
+by using an AE property and put the alternative move into the node.
 
 Example: >>(;GM[1];B[aa](;W[bb])(;AE[aa]B[cc])(;AE[aa]B[dd]))<<
 Correct: >>(;GM[1](;B[aa];W[bb])(;B[cc])(;B[dd]))<<
@@ -499,7 +498,7 @@ Option -w:
 ----------
 Disable warning messages.
 
-SGFC is a rather pedenatic syntax checker. If you want to limit the number
+SGFC is a rather pedantic syntax checker. If you want to limit the number
 of messages you get specify this option.
 Use this option with care!
 
@@ -544,7 +543,7 @@ Upon finishing SGFC returns
  0 ... if everything was ok (note: ignored messages may occur)
  5 ... if there were warnings
 10 ... if there were errors
-20 ... if a fatal error occured
+20 ... if a fatal error occurred
 
 
 5.2 Status line:
@@ -676,7 +675,7 @@ V1.13b (1998-01-20/2000-01-04)
 
 - BUGFIX: game signatures of multiple games within one file were wrong
   (thanks to Guido Adam)
-- BUGFIX: if -d paramter was out of range error message was empty
+- BUGFIX: if -d parameter was out of range error message was empty
 
 
 V1.13 (1997-11-23)
@@ -687,7 +686,7 @@ V1.13 (1997-11-23)
 - new property recognized: KI (integer komi) - this property is private to
   SGB - it gets converted to the regular komi property KM
 - bug fix: trailing '0' in float values get removed again
-- beautified output: game-info entries are written on seperate lines
+- beautified output: game-info entries are written on separate lines
   and are sorted according to a suggestion of Jan van der Steen
 
 
@@ -950,7 +949,7 @@ Classes:
 23:E    "property <%s> expects compose type value (value deleted): "
         Example: >>(;LB[aa][bb][cc])<<
 
-24:W    "move in root node found (splitted node into two)"
+24:W    "move in root node found (split node into two)"
         Example: >>(;GM[1]B[dd])<<
 
 25:E    "illegal <%s> corrected; new value: [%s:%s], old value: "
@@ -1084,4 +1083,3 @@ Classes:
 
 68:FE   "unknown command line option '%s' (-h for help)"
         Example: 'sgfc --versi'
-

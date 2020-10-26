@@ -54,7 +54,7 @@ static const char *error_mesg[] =
 	"illegal variation start found (ignored)\n",
 	"$00 byte deleted - binary file?\n",
 	"property <%s> expects compose type value (value deleted): ",
-	"move in root node found (splitted node into two)\n",
+	"move in root node found (split node into two)\n",
 	"illegal <%s> value corrected; new value: [%s:%s], old value: ",
 /* 25 */
 	"could not open destination file '%s' - ",
