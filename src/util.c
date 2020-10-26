@@ -242,6 +242,13 @@ int PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 		else								type |= E_WARNING;
 	}
 
+	if(type & E_ONLY_ONCE)
+	{
+		if(sgfc->_util_c->error_seen[(type & M_ERROR_NUM)-1])
+			return(FALSE);
+		sgfc->_util_c->error_seen[(type & M_ERROR_NUM)-1] = TRUE;
+	}
+
 	if((!sgfc->options->error_enabled[(type & M_ERROR_NUM)-1] && !(type & E_FATAL_ERROR)
 		 && type != E_NO_ERROR) || (!sgfc->options->warnings && (type & E_WARNING)))
 	{								/* error message enabled? */
@@ -310,7 +317,7 @@ int PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 
 	if(type & E_ERROR)
 		sgfc->error_count++;
-	if(type & E_WARNING)
+	else if(type & E_WARNING)
 		sgfc->warning_count++;
 	if(type & E_CRITICAL)
 		sgfc->critical_count++;
@@ -370,9 +377,7 @@ int PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 		error.lib_errno = errno;
 
 	error.error = type;
-	if(!(type & E_ONLY_ONCE) || !sgfc->_util_c->error_seen[(type & M_ERROR_NUM)-1])
-		(*print_error_output_hook)(&error);		/* call output hook function */
-	sgfc->_util_c->error_seen[(type & M_ERROR_NUM)-1] = TRUE;
+	(*print_error_output_hook)(&error);		/* call output hook function */
 	free(error_msg_buffer);
 	return(TRUE);
 }
