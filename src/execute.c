@@ -391,6 +391,7 @@ int Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct
 		PrintError(E4_BM_TE_IN_NODE, sgfc, p->buffer, "BM-TE", "DO");
 		hlp = FindProperty(n, TKN_BM);
 		hlp->id = TKN_DO;
+		hlp->idstr = sgf_token[TKN_DO].id;
 		hlp->value->value[0] = 0;
 		return(FALSE);
 	}
@@ -400,6 +401,7 @@ int Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct
 		PrintError(E4_BM_TE_IN_NODE, sgfc, p->buffer, "TE-BM", "IT");
 		hlp = FindProperty(n, TKN_TE);
 		hlp->id = TKN_IT;
+		hlp->idstr = sgf_token[TKN_IT].id;
 		hlp->value->value[0] = 0;
 		return(FALSE);
 	}

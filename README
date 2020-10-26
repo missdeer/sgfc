@@ -1012,7 +1012,7 @@ Classes:
 44:E4   "game info entry <%s> outside game-info node (line:%d col:%d) (deleted)"
         Example: >>(;GN[test];HA[4])<<
 
-45:W    "different %s stored in one file (may cause troubles with some applications)"
+45:W    "different file formats stored in one file (may cause troubles with some applications)"
         Example: >>(;GN[1])  (;FF[3]GN[2])<<
 
 46:FE   "unknown file format (only able to handle files up to FF[4])"
@@ -1036,8 +1036,8 @@ Classes:
 52:E    "<VW> property: %s (%s)" (various error cases for FF[3],FF[4]) (action)
         Example: >>(;VW[][aa])<< or >>(;FF[3]VW[aj][ak][al][am])<<
 
-53:FE   "destination file name too long (max. length: 480 chars)"
-        Example: type in more than 480 chars :-)
+53:FE   "different game types stored in one file (may cause troubles with some applications)"
+        Example: >>(;GM[1])(;GM[2])<<
 
 54:E-C  "values without property id found (deleted)"
         Example: >>(;[ab][ac])<<

@@ -10,7 +10,7 @@
 #include "test-common.h"
 
 static U_LONG expected_error;
-static U_LONG allowed_errors[3];	/* additional errors that might occur */
+static U_LONG allowed_error;	/* additional error that might occur */
 static bool expected_error_occurred;
 
 
@@ -18,10 +18,7 @@ static int mock_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglist
 {
 	if(type == expected_error)
 		expected_error_occurred = TRUE;
-	else if(type != E_NO_ERROR
-			&& type != allowed_errors[0]
-			&& type != allowed_errors[1]
-			&& type != allowed_errors[2])
+	else if(type != E_NO_ERROR && type != allowed_error)
 	{
 		ck_assert_msg(type == expected_error, "expected error: %d (%lx); received: %d (%lx)",
 					  expected_error & M_ERROR_NUM, expected_error, type & M_ERROR_NUM, type);
@@ -35,7 +32,7 @@ static void setup(void)
 	common_setup();
 	print_error_handler = mock_error_handler;
 	expected_error_occurred = FALSE;
-	memset(allowed_errors, E_NO_ERROR, 3*sizeof(U_LONG));
+	allowed_error = E_NO_ERROR;
 }
 
 
@@ -201,8 +198,8 @@ END_TEST
 
 START_TEST (test_E_DOUBLE_PROP)
 	trigger_error(E_DOUBLE_PROP,
-				  "(;FF[4]LB[aa:1]LB[bb:2];W[aa]W[bb])",
-				  "(;FF[4]GM[1]SZ[19]LB[aa:1][bb:2];W[aa])\n");
+				  "(;FF[4]LB[aa:1]C[x]LB[bb:2]C[y];W[aa]W[bb])",
+				  "(;FF[4]GM[1]SZ[19]LB[aa:1][bb:2]C[x\n\ny];W[aa])\n");
 END_TEST
 
 
@@ -218,12 +215,12 @@ START_TEST (test_E4_MOVE_SETUP_MIXED)
 	trigger_error(E4_MOVE_SETUP_MIXED,
 				  "(;;B[cc]AW[dd]) (;;B[cc]PL[B])",
 				  "(;FF[4]GM[1]SZ[19];AW[dd];B[cc])\n"
-				  "(;FF[4]GM[1]SZ[19];PL[B];B[cc])\n");
+				  "(;FF[4]GM[1]SZ[19];B[cc])\n"); /* single PL gets deleted */
 END_TEST
 
 
 START_TEST (test_WS_LONG_PROPID)
-	allowed_errors[0] = WS_UNKNOWN_PROPERTY;
+	allowed_error = WS_UNKNOWN_PROPERTY;
 	trigger_error(WS_LONG_PROPID,
 				  "(;PIW[])",
 				  "(;FF[4]GM[1]SZ[19]PIW[])\n");
@@ -287,6 +284,181 @@ START_TEST (test_WS_PROPERTY_NOT_IN_FF)
 END_TEST
 
 
+START_TEST (test_E_ANNOTATE_NOT_UNIQUE)
+	trigger_error(E_ANNOTATE_NOT_UNIQUE,
+				  "(;FF[4];GB[2]GW[1])",
+				  "(;FF[4]GM[1]SZ[19];GB[2])\n");
+END_TEST
+
+
+START_TEST (test_E4_BM_TE_IN_NODE)
+	trigger_error(E4_BM_TE_IN_NODE,
+				  "(;B[cc]TE[1]BM[1];W[dd]BM[1]TE[1])",
+				  "(;FF[4]GM[1]SZ[19]B[cc]IT[];W[dd]DO[])\n");
+END_TEST
+
+
+START_TEST (test_E_ANNOTATE_WITHOUT_MOVE)
+	trigger_error(E_ANNOTATE_WITHOUT_MOVE,
+				  "(;TE[2])",
+				  "(;FF[4]GM[1]SZ[19])\n");
+END_TEST
+
+
+START_TEST (test_E4_GINFO_ALREADY_SET)
+	trigger_error(E4_GINFO_ALREADY_SET,
+				  "(;GN[test];HA[4])",
+				  "(;FF[4]GM[1]SZ[19]\n\nGN[test]\n\n;)\n");
+END_TEST
+
+
+START_TEST (test_WS_FF_DIFFERS)
+	trigger_error(WS_FF_DIFFERS,
+				  "(;GN[1]) (;FF[3]GN[2])",
+				  "(;FF[4]GM[1]SZ[19]\n\nGN[1]\n\n)\n"
+	  			  "(;FF[4]GM[1]SZ[19]\n\nGN[2]\n\n)\n");
+END_TEST
+
+
+START_TEST (test_E_SQUARE_AS_RECTANGULAR)
+	trigger_error(E_SQUARE_AS_RECTANGULAR,
+				  "(;FF[4]SZ[13:13])",
+				  "(;FF[4]GM[1]SZ[13])\n");
+END_TEST
+
+
+START_TEST (test_E_BOARD_TOO_BIG)
+	trigger_error(E_BOARD_TOO_BIG,
+				  "(;FF[4]SZ[1000]) (;FF[4]SZ[10:53])",
+				  "(;FF[4]GM[1]SZ[52])\n(;FF[4]GM[1]SZ[10:52])\n");
+END_TEST
+
+
+START_TEST (test_E_VERSION_CONFLICT)
+	trigger_error(E_VERSION_CONFLICT,
+				  "(;FF[3]SZ[13:9];AB[aa:ee])",
+				  "(;FF[4]GM[1]SZ[13:9];AB[aa:ee])\n");
+END_TEST
+
+
+START_TEST (test_E_BAD_VW_VALUES)
+	trigger_error(E_BAD_VW_VALUES,
+				  "(;FF[3]VW[aj][ak][al][am])",
+				  "(;FF[4]GM[1]SZ[19]VW[aj:am])\n");
+END_TEST
+
+
+START_TEST (test_WS_GM_DIFFERS)
+	allowed_error = WCS_GAME_NOT_GO;
+	trigger_error(WS_GM_DIFFERS,
+				  "(;GM[1])(;GM[2])",
+				  "(;FF[4]GM[1]SZ[19])\n(;FF[4]GM[2])\n");
+END_TEST
+
+
+START_TEST (test_E_VALUES_WITHOUT_ID)
+	trigger_error(E_VALUES_WITHOUT_ID,
+				  "(;[ab][ac])",
+				  "(;FF[4]GM[1]SZ[19])\n");
+END_TEST
+
+
+START_TEST (test_W_EMPTY_NODE_DELETED)
+	sgfc->options->del_empty_nodes = TRUE;
+	trigger_error(W_EMPTY_NODE_DELETED,
+				  "(;;;C[empty])",
+				  "(;FF[4]GM[1]SZ[19]C[empty])\n");
+END_TEST
+
+
+START_TEST (test_W_VARLEVEL_UNCERTAIN)
+	sgfc->options->fix_variation = TRUE;
+	trigger_error(W_VARLEVEL_UNCERTAIN,
+				  "(;;B[dd];W[aa](;B[bb])(;AE[aa];W[ba])(;AE[dd][aa];B[ef]))",
+				  "(;FF[4]GM[1]SZ[19];B[dd];W[aa]\n"
+	  			  "(;B[bb])\n(;AE[aa];W[ba])\n(;AE[aa][dd];B[ef]))\n");
+END_TEST
+
+
+START_TEST (test_W_VARLEVEL_CORRECTED)
+	sgfc->options->fix_variation = TRUE;
+	trigger_error(W_VARLEVEL_CORRECTED,
+				  "(;GM[1];W[aa](;B[bb])(;AE[aa];W[ba])(;AE[aa];W[ef]))",
+				  "(;FF[4]GM[1]SZ[19]\n(;W[aa];B[bb])\n(;W[ba])\n(;W[ef]))\n");
+END_TEST
+
+
+START_TEST (test_WS_ILLEGAL_MOVE)
+	trigger_error(WS_ILLEGAL_MOVE,
+				  "(;GM[1];B[aa];W[aa])",
+				  "(;FF[4]GM[1]SZ[19];B[aa];W[aa])\n");
+END_TEST
+
+
+START_TEST (test_W_INT_KOMI_FOUND)
+	trigger_error(W_INT_KOMI_FOUND,
+				  "(;KI[11])(;KM[3.5]KI[8])",
+				  "(;FF[4]GM[1]SZ[19]\n\nKM[5.5]\n\n)\n"
+	  			  "(;FF[4]GM[1]SZ[19]\n\nKM[3.5]\n\n)\n");
+END_TEST
+
+
+START_TEST (test_E_MORE_THAN_ONE_TREE)
+	sgfc->options->strict_checking = TRUE;
+	trigger_error(E_MORE_THAN_ONE_TREE,
+				  "(;GM[1])(;GM[1])",
+				  "(;FF[4]GM[1]SZ[19])\n"
+				  "(;FF[4]GM[1]SZ[19])\n");
+END_TEST
+
+
+START_TEST (test_W_HANDICAP_NOT_SETUP)
+	sgfc->options->strict_checking = TRUE;
+	allowed_error = E_MORE_THAN_ONE_TREE;
+	trigger_error(W_HANDICAP_NOT_SETUP,
+				  "(;GM[1]AB[aa][bb])(;GM[1]HA[3];B[bb])",
+				  "(;FF[4]GM[1]SZ[19]AB[aa][bb])\n"
+	  			  "(;FF[4]GM[1]SZ[19]\n\nHA[3]\n\n;B[bb])\n");
+END_TEST
+
+
+START_TEST (test_W_SETUP_AFTER_ROOT)
+	sgfc->options->strict_checking = TRUE;
+	trigger_error(W_SETUP_AFTER_ROOT,
+				  "(;GM[1];W[cc];AB[aa]AE[cc])",
+				  "(;FF[4]GM[1]SZ[19];W[cc];AB[aa]AE[cc])\n");
+END_TEST
+
+
+START_TEST (test_W_MOVE_OUT_OF_SEQUENCE)
+	sgfc->options->strict_checking = TRUE;
+	trigger_error(W_MOVE_OUT_OF_SEQUENCE,
+				  "(;GM[1];B[dd];W[cc];W[ee])",
+				  "(;FF[4]GM[1]SZ[19];B[dd];W[cc];W[ee])\n");
+END_TEST
+
+
+START_TEST (test_E_FF4_PASS_IN_OLD_FF)
+	trigger_error(E_FF4_PASS_IN_OLD_FF,
+				  "(;GM[1]FF[3];B[])",
+				  "(;FF[4]GM[1]SZ[19];B[])\n");
+END_TEST
+
+
+START_TEST (test_E_NODE_OUTSIDE_VAR)
+	trigger_error(E_NODE_OUTSIDE_VAR,
+				  "(;FF[4](;C[var 1]);C[var 2]))",
+				  "(;FF[4]GM[1]SZ[19]\n(;C[var 1])\n(;C[var 2]))\n");
+END_TEST
+
+
+START_TEST (test_E_MISSING_NODE_START)
+	trigger_error(E_MISSING_NODE_START,
+				  "(;FF[4](;C[var 1]) ( C[var 2]))",
+				  "(;FF[4]GM[1]SZ[19]\n(;C[var 1])\n(;C[var 2]))\n");
+END_TEST
+
+
 TCase *sgfc_tc_trigger_errors()
 {
 	TCase *tc;
@@ -321,7 +493,7 @@ TCase *sgfc_tc_trigger_errors()
 	/* errors 26+27 missing */
 	tcase_add_test(tc, test_E_DOUBLE_PROP);
 	tcase_add_test(tc, test_W_PROPERTY_DELETED);
-	//tcase_add_test(tc, test_E4_MOVE_SETUP_MIXED);
+	tcase_add_test(tc, test_E4_MOVE_SETUP_MIXED);
 
 	tcase_add_test(tc, test_WS_LONG_PROPID);
 	tcase_add_test(tc, test_E_ROOTP_NOT_IN_ROOTN);
@@ -333,6 +505,36 @@ TCase *sgfc_tc_trigger_errors()
 	tcase_add_test(tc, test_E_POSITION_NOT_UNIQUE);
 	tcase_add_test(tc, test_WS_ADDSTONE_REDUNDANT);
 	tcase_add_test(tc, test_WS_PROPERTY_NOT_IN_FF);
+
+	tcase_add_test(tc, test_E_ANNOTATE_NOT_UNIQUE);
+	tcase_add_test(tc, test_E4_BM_TE_IN_NODE);
+	tcase_add_test(tc, test_E_ANNOTATE_WITHOUT_MOVE);
+	tcase_add_test(tc, test_E4_GINFO_ALREADY_SET);
+	tcase_add_test(tc, test_WS_FF_DIFFERS);
+	/* error 46 missing */
+	tcase_add_test(tc, test_E_SQUARE_AS_RECTANGULAR);
+	/* errors 48+49 missing */
+	tcase_add_test(tc, test_E_BOARD_TOO_BIG);
+
+	tcase_add_test(tc, test_E_VERSION_CONFLICT);
+	tcase_add_test(tc, test_E_BAD_VW_VALUES);
+	tcase_add_test(tc, test_WS_GM_DIFFERS);
+	tcase_add_test(tc, test_E_VALUES_WITHOUT_ID);
+	tcase_add_test(tc, test_W_EMPTY_NODE_DELETED);
+	tcase_add_test(tc, test_W_VARLEVEL_UNCERTAIN);
+	tcase_add_test(tc, test_W_VARLEVEL_CORRECTED);
+	tcase_add_test(tc, test_WS_ILLEGAL_MOVE);
+	tcase_add_test(tc, test_W_INT_KOMI_FOUND);
+	tcase_add_test(tc, test_E_MORE_THAN_ONE_TREE);
+
+	tcase_add_test(tc, test_W_HANDICAP_NOT_SETUP);
+	tcase_add_test(tc, test_W_SETUP_AFTER_ROOT);
+	tcase_add_test(tc, test_W_MOVE_OUT_OF_SEQUENCE);
+	/* error 64 missing */
+	tcase_add_test(tc, test_E_FF4_PASS_IN_OLD_FF);
+	tcase_add_test(tc, test_E_NODE_OUTSIDE_VAR);
+	tcase_add_test(tc, test_E_MISSING_NODE_START);
+	/* error 68 missing */
 
 	return tc;
 }
