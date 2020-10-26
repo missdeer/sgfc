@@ -61,20 +61,20 @@ struct SGFToken sgf_token[] =
 	/* TKN_UNKNOWN */
 	{ "\0",	0,	FF1234,	Check_Text,	NULL,	PVT_LIST|PVT_EMPTY, 0 },
 
-	{ "B",	60, FF1234,	Check_Move,	Do_Move,	TYPE_MOVE|PVT_CHECK_EMPTY, BLACK },
-	{ "W",	60, FF1234,	Check_Move,	Do_Move,	TYPE_MOVE|PVT_CHECK_EMPTY, WHITE },
+	{ "B",	60, FF1234,	Check_Move,   Do_Move,		TYPE_MOVE|PVT_CHECK_EMPTY,           BLACK },
+	{ "W",	60, FF1234,	Check_Move,   Do_Move,		TYPE_MOVE|PVT_CHECK_EMPTY,			 WHITE },
 
-	{ "AB",	62, FF1234,	Check_Pos,	Do_Addstones,	TYPE_SETUP|CP_LIST|DOUBLE_MERGE, BLACK },
-	{ "AW",	62, FF1234,	Check_Pos,	Do_Addstones,	TYPE_SETUP|CP_LIST|DOUBLE_MERGE, WHITE },
-	{ "AE",	61, FF1234,	Check_Pos,	Do_Addstones,	TYPE_SETUP|CP_LIST|DOUBLE_MERGE, EMPTY },
+	{ "AB",	62, FF1234,	Check_Pos,    Do_AddStones, TYPE_SETUP | CP_LIST | DOUBLE_MERGE, BLACK },
+	{ "AW",	62, FF1234,	Check_Pos,    Do_AddStones, TYPE_SETUP | CP_LIST | DOUBLE_MERGE, WHITE },
+	{ "AE",	61, FF1234,	Check_Pos,    Do_AddStones, TYPE_SETUP | CP_LIST | DOUBLE_MERGE, EMPTY },
 
-	{ "N",	40, FF1234,	Check_Text,	NULL,	PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "C",	40, FF1234,	Check_Text,	NULL,	PVT_DEL_EMPTY|DOUBLE_MERGE|SPLIT_SAVE, 0 },
+	{ "N",	40, FF1234,	Check_Text,		NULL, PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
+	{ "C",	40, FF1234,	Check_Text,		NULL, PVT_DEL_EMPTY|DOUBLE_MERGE|SPLIT_SAVE, 0 },
 
-	{ "BL",	31, FF1234,	Check_Float,	NULL,	TYPE_MOVE, 0 },
-	{ "WL",	31, FF1234,	Check_Float,	NULL,	TYPE_MOVE, 0 },
-	{ "OB",	30, FF34,	Check_Number,	NULL,	TYPE_MOVE, 0 },
-	{ "OW",	30, FF34,	Check_Number,	NULL,	TYPE_MOVE, 0 },
+	{ "BL",	31, FF1234,	Check_Float,	NULL, TYPE_MOVE, 0 },
+	{ "WL",	31, FF1234,	Check_Float,	NULL, TYPE_MOVE, 0 },
+	{ "OB",	30, FF34,	Check_Number,	NULL, TYPE_MOVE, 0 },
+	{ "OW",	30, FF34,	Check_Number,	NULL, TYPE_MOVE, 0 },
 
 	{ "FF",	96, FF1234,	Check_Number,	Do_Root,	TYPE_ROOT, 0 },
 	{ "GM",	95, FF1234,	Check_Number,	Do_Root,	TYPE_ROOT, 0 },

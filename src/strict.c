@@ -16,25 +16,25 @@
 
 
 /**************************************************************************
-*** Function:	Crosscheck_Handicap
+*** Function:	CheckHandicap
 ***				Check if HA[] value matches number of setup stones (AB[])
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				root ... root node of gametree
 *** Returns:	-
 **************************************************************************/
 
-static void Crosscheck_Handicap(struct SGFInfo *sgfc, struct Node *root)
+static void CheckHandicap(struct SGFInfo *sgfc, struct Node *root)
 {
 	int setup_stones = 0;
 	struct Property *prop;
 	char *buff = NULL;
 	
-	if((prop = Find_Property(root, TKN_AB))) /* handicap means black stones */
+	if((prop = FindProperty(root, TKN_AB))) /* handicap means black stones */
 	{
 		buff = prop->buffer;
 		/* if there's an AB but no AW than it is likely to be
 		 * a handicap game, otherwise it's a position setup */
-		if(!Find_Property(root, TKN_AW))
+		if(!FindProperty(root, TKN_AW))
 		{
 			struct PropValue *val = prop->value;
 			/* count number of handicap stones */
@@ -46,7 +46,7 @@ static void Crosscheck_Handicap(struct SGFInfo *sgfc, struct Node *root)
 		}
 	}
 
-	if((prop = Find_Property(root, TKN_HA))) /* handicap game info */
+	if((prop = FindProperty(root, TKN_HA))) /* handicap game info */
 	{
 		if(atoi(prop->value->value) != setup_stones)
 			PrintError(W_HANDICAP_NOT_SETUP, sgfc, prop->buffer);
@@ -57,7 +57,7 @@ static void Crosscheck_Handicap(struct SGFInfo *sgfc, struct Node *root)
 
 
 /**************************************************************************
-*** Function:	Check_Move_Order
+*** Function:	CheckMoveOrder
 ***				Check that there are no two successive moves of the
 ***				same color; check that there are no setup stones (AB/AW/AE)
 ***				outside the root node
@@ -67,7 +67,7 @@ static void Crosscheck_Handicap(struct SGFInfo *sgfc, struct Node *root)
 *** Returns:	-
 **************************************************************************/
 
-static void Check_Move_Order(struct SGFInfo *sgfc, struct Node *node, int check_setup)
+static void CheckMoveOrder(struct SGFInfo *sgfc, struct Node *node, int check_setup)
 {
 	int old_col = 0;
 
@@ -75,8 +75,8 @@ static void Check_Move_Order(struct SGFInfo *sgfc, struct Node *node, int check_
 		return;
 	while(node)
 	{
-		if(Find_Property(node, TKN_AB) || Find_Property(node, TKN_AW)
-		|| Find_Property(node, TKN_AE))
+		if(FindProperty(node, TKN_AB) || FindProperty(node, TKN_AW)
+		   || FindProperty(node, TKN_AE))
 		{
 			if(check_setup)
 				PrintError(W_SETUP_AFTER_ROOT, sgfc, node->buffer);
@@ -84,33 +84,33 @@ static void Check_Move_Order(struct SGFInfo *sgfc, struct Node *node, int check_
 				old_col = 0;
 		}
 
-		if(Find_Property(node, TKN_B))
+		if(FindProperty(node, TKN_B))
 		{
 			if(old_col && old_col != TKN_W)
 				PrintError(W_MOVE_OUT_OF_SEQUENCE, sgfc, node->buffer);
 			old_col = TKN_B;
 		}
-		if(Find_Property(node, TKN_W))
+		if(FindProperty(node, TKN_W))
 		{
 			if(old_col && old_col != TKN_B)
 				PrintError(W_MOVE_OUT_OF_SEQUENCE, sgfc, node->buffer);
 			old_col = TKN_W;
 		}
 		if (node->sibling)
-			Check_Move_Order(sgfc, node->sibling, FALSE);
+			CheckMoveOrder(sgfc, node->sibling, FALSE);
 		node = node->child;
 	}
 }
 
 
 /**************************************************************************
-*** Function:	Strict_Checking
+*** Function:	StrictChecking
 ***				Perform various checks on the SGF file
 *** Parameters: sgfc ... SGFInfo structure
 *** Returns:	-
 **************************************************************************/
 
-void Strict_Checking(struct SGFInfo *sgfc)
+void StrictChecking(struct SGFInfo *sgfc)
 {
 	struct TreeInfo *tree;
 
@@ -122,8 +122,8 @@ void Strict_Checking(struct SGFInfo *sgfc)
 	{
 		if(tree->GM == 1)
 		{
-			Crosscheck_Handicap(sgfc, tree->root);
-			Check_Move_Order(sgfc, tree->root->child, TRUE);
+			CheckHandicap(sgfc, tree->root);
+			CheckMoveOrder(sgfc, tree->root->child, TRUE);
 		}
 		tree = tree->next;
 	}

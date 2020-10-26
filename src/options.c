@@ -119,10 +119,10 @@ int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 						case 'u':	options->keep_unknown_props = FALSE;	break;
 						case 'o':	options->keep_obsolete_props = FALSE;	break;
 						case 'c':	options->write_critical = TRUE;			break;
-						case 'e':	options->expandcpl = TRUE;				break;
+						case 'e':	options->expand_cpl = TRUE;				break;
 						case 'k':	options->keep_head = TRUE;				break;
-						case 't':	options->softlinebreaks = FALSE;		break;
-						case 'L':	options->nodelinebreaks = TRUE;			break;
+						case 't':	options->soft_linebreaks = FALSE;		break;
+						case 'L':	options->node_linebreaks = TRUE;			break;
 						case 'p':	options->pass_tt = TRUE;				break;
 						case 's':	options->split_file = TRUE;				break;
 						case 'n':	options->del_empty_nodes = TRUE;		break;
@@ -162,7 +162,7 @@ int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 								PrintError(FE_BAD_PARAMETER, sgfc, c);
 								return(FALSE);
 							}
-							options->findstart = n;
+							options->find_start = n;
 							break;
 						case 'y':
 							c++;
@@ -250,12 +250,12 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 	options->write_critical = FALSE;
 	options->interactive = FALSE;
 	options->linebreaks = OPTION_LINEBREAK_ANY;
-	options->softlinebreaks = TRUE;
-	options->nodelinebreaks = FALSE;
-	options->expandcpl = FALSE;
+	options->soft_linebreaks = TRUE;
+	options->node_linebreaks = FALSE;
+	options->expand_cpl = FALSE;
 	options->pass_tt = FALSE;
 	options->fix_variation = FALSE;
-	options->findstart = OPTION_FINDSTART_SEARCH;
+	options->find_start = OPTION_FINDSTART_SEARCH;
 	options->game_signature = FALSE;
 	options->strict_checking = FALSE;
 	options->reorder_variations = FALSE;
@@ -267,16 +267,16 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 
 
 /**************************************************************************
-*** Function:	Setup_SGFInfo
+*** Function:	SetupSGFInfo
 ***				Allocates SGFInfo structure and initializes it with
 ***             default values for ->options, ->sfh, and internal structures.
 *** Parameters: options ... pointer to SGFCOptions;
 ***							if NULL filled with SGFCDefaultOptions()
-***				sfh     ... SaveFileHandler; if NULL filled with Setup_SaveFileIO()
+***				sfh     ... SaveFileHandler; if NULL filled with SetupSaveFileIO()
 *** Returns:	pointer to SGFInfo structure ready for use in LoadSGF etc.
 **************************************************************************/
 
-struct SGFInfo *Setup_SGFInfo(struct SGFCOptions *options, struct SaveFileHandler *sfh)
+struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options, struct SaveFileHandler *sfh)
 {
 	struct SGFInfo *sgfc;
 	SaveMalloc(struct SGFInfo *, sgfc, sizeof(struct SGFInfo), "SGFInfo structure")
@@ -286,10 +286,10 @@ struct SGFInfo *Setup_SGFInfo(struct SGFCOptions *options, struct SaveFileHandle
 	else			sgfc->options = SGFCDefaultOptions();
 
 	if(sfh)			sgfc->sfh = sfh;
-	else			sgfc->sfh = Setup_SaveFileIO();
+	else			sgfc->sfh = SetupSaveFileIO();
 
-	sgfc->_save_c = Setup_Save_C_internal();
-	sgfc->_util_c = Setup_Util_C_internal();
+	sgfc->_save_c = SetupSaveC_internal();
+	sgfc->_util_c = SetupUtilC_internal();
 	return sgfc;
 }
 
@@ -325,7 +325,7 @@ void FreeSGFInfo(struct SGFInfo *sgf)
 		m = n->next;
 		p = n->prop;
 		while(p)
-			p = Del_Property(n, p);		/* and properties */
+			p = DelProperty(n, p);		/* and properties */
 		free(n);
 		n = m;
 	}

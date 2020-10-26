@@ -113,7 +113,7 @@ static const char *error_mesg[] =
 
 /* internal data for util.c functions (currently only for PrintErrorHandler) */
 /* Used instead of local static variables */
-struct Util_C_internal {
+struct UtilC_internal {
 	char *last_pos;
 	char *illegal;
 	int ill_count;
@@ -124,17 +124,17 @@ struct Util_C_internal {
 
 
 /**************************************************************************
-*** Function:	Setup_Util_C_internal
+*** Function:	SetupUtilC_internal
 ***				Allocate and initialize internal data structure local to util.c
 *** Parameters: -
 *** Returns:	pointer to internal structure
 **************************************************************************/
 
-struct Util_C_internal *Setup_Util_C_internal(void)
+struct UtilC_internal *SetupUtilC_internal(void)
 {
-	struct Util_C_internal *utilc;
-	SaveMalloc(struct Util_C_internal *, utilc, sizeof(struct Util_C_internal), "static util.c struct")
-	memset(utilc, 0, sizeof(struct Util_C_internal));
+	struct UtilC_internal *utilc;
+	SaveMalloc(struct UtilC_internal *, utilc, sizeof(struct UtilC_internal), "static util.c struct")
+	memset(utilc, 0, sizeof(struct UtilC_internal));
 	utilc->ill_type = E_NO_ERROR;
 	return(utilc);
 }
@@ -200,13 +200,13 @@ int PrintError(U_LONG type, struct SGFInfo *sgfc, ...) {
 
 
 /**************************************************************************
-*** Function:	PrintOOMError
+*** Function:	ExitWithOOMError
 ***				Special error printer in case when memory runs out
 ***				Panics: does not return; does not free up resources; just dies
 ***				Might be called, when SGFInfo is not properly set up yet.
 **************************************************************************/
 
-int __attribute__((noreturn)) PrintOOMError(char *detail)
+int __attribute__((noreturn)) ExitWithOOMError(char *detail)
 {
 	int err_num = FE_OUT_OF_MEMORY & M_ERROR_NUM;
 	fprintf(E_OUTPUT, "Fatal error %d: ", err_num);
@@ -565,7 +565,7 @@ int strnccmp(char *a, char *b, size_t len)
 
 
 /**************************************************************************
-*** Function:	Kill_Chars
+*** Function:	KillChars
 ***				Deletes selected char-set out of a given string
 *** Parameters: value ... string
 ***				kill ... type of chars to be removed
@@ -575,7 +575,7 @@ int strnccmp(char *a, char *b, size_t len)
 *** Returns:	number of chars removed from string
 **************************************************************************/
 
-U_LONG Kill_Chars(char *value, U_SHORT kill, char *cset)
+U_LONG KillChars(char *value, U_SHORT kill, char *cset)
 {
 	U_LONG faulty = 0, err = 0;
 	char *c, *d;
@@ -610,7 +610,7 @@ U_LONG Kill_Chars(char *value, U_SHORT kill, char *cset)
 
 
 /**************************************************************************
-*** Function:	Test_Chars
+*** Function:	TestChars
 ***				Tests if string contains specified char-set
 ***				Spaces are ignored (can't be tested)
 *** Parameters: value ... string
@@ -620,7 +620,7 @@ U_LONG Kill_Chars(char *value, U_SHORT kill, char *cset)
 *** Returns:	number of selected chars found in value
 **************************************************************************/
 
-U_LONG Test_Chars(char *value, U_SHORT test, char *cset)
+U_LONG TestChars(char *value, U_SHORT test, char *cset)
 {
 	U_LONG faulty = 0;
 	char *c;
@@ -649,14 +649,14 @@ U_LONG Test_Chars(char *value, U_SHORT test, char *cset)
 
 
 /**************************************************************************
-*** Function:	Find_Property
+*** Function:	FindProperty
 ***				Searches property within a node
 *** Parameters: n ... node to be searched
 ***				id ... property id
 *** Returns:	pointer to property or NULL
 **************************************************************************/
 
-struct Property *Find_Property(struct Node *n, token id)
+struct Property *FindProperty(struct Node *n, token id)
 {
 	struct Property *p;
 
@@ -669,14 +669,14 @@ struct Property *Find_Property(struct Node *n, token id)
 
 
 /**************************************************************************
-*** Function:	Del_PropValue
+*** Function:	DelPropValue
 ***				Deletes a value of a property
 *** Parameters: p ... property to which value belongs
 ***				v ... value to be deleted
 *** Returns:	v->next
 **************************************************************************/
 
-struct PropValue *Del_PropValue(struct Property *p, struct PropValue *v)
+struct PropValue *DelPropValue(struct Property *p, struct PropValue *v)
 {
 	struct PropValue *next;
 
@@ -695,21 +695,21 @@ struct PropValue *Del_PropValue(struct Property *p, struct PropValue *v)
 
 
 /**************************************************************************
-*** Function:	Del_Property
+*** Function:	DelProperty
 ***				Deletes a property
 *** Parameters: n ... node which contains property
 ***				p ... property to be deleted
 *** Returns:	p->next
 **************************************************************************/
 
-struct Property *Del_Property(struct Node *n, struct Property *p)
+struct Property *DelProperty(struct Node *n, struct Property *p)
 {
 	struct Property *next;
 	struct PropValue *v;
 
 	v = p->value;		/* del property values */
 	while(v)
-		v = Del_PropValue(p, v);
+		v = DelPropValue(p, v);
 
 	next = p->next;		/* remove property from node */
 
@@ -725,7 +725,7 @@ struct Property *Del_Property(struct Node *n, struct Property *p)
 
 
 /**************************************************************************
-*** Function:	Del_Node
+*** Function:	DelNode
 ***				Deletes empty node if
 ***				- node has no siblings
 ***				- has siblings (or is root) but has max. one child
@@ -735,7 +735,7 @@ struct Property *Del_Property(struct Node *n, struct Property *p)
 *** Returns:	n->next
 **************************************************************************/
 
-struct Node *Del_Node(struct SGFInfo *sgfc, struct Node *n, U_LONG error_code)
+struct Node *DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error_code)
 {
 	struct Node *p, *h;
 	struct Property *i;
@@ -756,7 +756,7 @@ struct Node *Del_Node(struct SGFInfo *sgfc, struct Node *n, U_LONG error_code)
 	{
 		i = n->prop;
 		while(i)
-			i = Del_Property(n, i);
+			i = DelProperty(n, i);
 	}
 
 	if(!p)							/* n is a root node */
@@ -828,7 +828,7 @@ struct Node *Del_Node(struct SGFInfo *sgfc, struct Node *n, U_LONG error_code)
 
 
 /**************************************************************************
-*** Function:	New_PropValue
+*** Function:	NewPropValue
 ***				Adds (or sets) a new property value
 ***				(adds property to node if necessary)
 *** Parameters: sgfc	... pointer to SGFInfo structure
@@ -840,25 +840,25 @@ struct Node *Del_Node(struct SGFInfo *sgfc, struct Node *n, U_LONG error_code)
 *** Returns:	pointer to property
 **************************************************************************/
 
-struct Property *New_PropValue(struct SGFInfo *sgfc, struct Node *n, token id,
-							   const char *value, const char *value2, int unique)
+struct Property *NewPropValue(struct SGFInfo *sgfc, struct Node *n, token id,
+							  const char *value, const char *value2, int unique)
 {
 	struct Property *p;
 	struct PropValue *v;
 	size_t size1, size2;
 
-	p = Find_Property(n, id);
+	p = FindProperty(n, id);
 	if(p)
 	{
 		if(unique)
-			for(v = p->value; v; v = Del_PropValue(p, v));
+			for(v = p->value; v; v = DelPropValue(p, v));
 	}
 	else
-		p = Add_Property(n, id, NULL, NULL);
+		p = AddProperty(n, id, NULL, NULL);
 
 	size1 = strlen(value);
 	size2 = value2 ? strlen(value2) : 0;
-	Add_PropValue(sgfc, p, NULL, value, size1, value2, size2);
+	AddPropValue(sgfc, p, NULL, value, size1, value2, size2);
 
 	return(p);
 }

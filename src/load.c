@@ -217,7 +217,7 @@ void CopyValue(struct SGFInfo *sgfc, char *d, const char *s, size_t size, int pr
 
 
 /**************************************************************************
-*** Function:	Add_PropValue
+*** Function:	AddPropValue
 ***				Adds a value to the property (inits structure etc.)
 *** Parameters: sgfc	... pointer to SGFInfo structure
 ***				p		... pointer to property
@@ -230,10 +230,10 @@ void CopyValue(struct SGFInfo *sgfc, char *d, const char *s, size_t size, int pr
 ***				(exits on fatal error)
 **************************************************************************/
 
-struct PropValue *Add_PropValue(struct SGFInfo *sgfc,
-								struct Property *p, char *buffer,
-								const char *value, size_t size,
-								const char *value2, size_t size2)
+struct PropValue *AddPropValue(struct SGFInfo *sgfc,
+							   struct Property *p, char *buffer,
+							   const char *value, size_t size,
+							   const char *value2, size_t size2)
 {
 	struct PropValue *newv;
 
@@ -290,22 +290,22 @@ static int NewValue(struct SGFInfo *sgfc, struct Property *p, U_SHORT flags)
 		if(!t)
 		{
 			if(flags & PVT_WEAKCOMPOSE)	/* no compose -> parse as normal */
-				Add_PropValue(sgfc, p, buffer, s, sgfc->current - s - 1, NULL, 0);
+				AddPropValue(sgfc, p, buffer, s, sgfc->current - s - 1, NULL, 0);
 			else						/* not weak -> error */
 				PrintError(E_COMPOSE_EXPECTED, sgfc, s-1, p->idstr);
 		}
 		else	/* composed value */
-			Add_PropValue(sgfc, p, buffer, s, t - s, t+1, sgfc->current - t - 2);
+			AddPropValue(sgfc, p, buffer, s, t - s, t + 1, sgfc->current - t - 2);
 	}
 	else
-		Add_PropValue(sgfc, p, buffer, s, sgfc->current - s - 1, NULL, 0);
+		AddPropValue(sgfc, p, buffer, s, sgfc->current - s - 1, NULL, 0);
 
 	return(TRUE);
 }
 
 
 /**************************************************************************
-*** Function:	Add_Property
+*** Function:	AddProperty
 ***				Creates new property structure and adds it to the node
 *** Parameters: sgfc	... pointer to SGFInfo structure
 ***				n		... node to which property belongs to
@@ -316,7 +316,7 @@ static int NewValue(struct SGFInfo *sgfc, struct Property *p, U_SHORT flags)
 ***				(exits on fatal error)
 **************************************************************************/
 
-struct Property *Add_Property(struct Node *n, token id, char *id_buf, char *idstr)
+struct Property *AddProperty(struct Node *n, token id, char *id_buf, char *id_str)
 {
 	struct Property *newp;
 	char *str;
@@ -327,8 +327,8 @@ struct Property *Add_Property(struct Node *n, token id, char *id_buf, char *idst
 
 	if(id == TKN_UNKNOWN)
 	{
-		SaveMalloc(char *, str, strlen(idstr)+2, "ID string")
-		strcpy(str, idstr);
+		SaveMalloc(char *, str, strlen(id_str)+2, "ID string")
+		strcpy(str, id_str);
 		newp->idstr = str;
 	}
 	else
@@ -366,7 +366,7 @@ static int NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id_
 
 	if(!n)	return(TRUE);
 
-	newp = Add_Property(n, id, id_buf, idstr);
+	newp = AddProperty(n, id, id_buf, idstr);
 
 	while(TRUE)
 	{
@@ -390,7 +390,7 @@ static int NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id_
 					too_many = sgfc->current;
 				if (!newp->value || !strlen(newp->value->value))	/* if previous value is empty, */
 				{									/* then use the later value */
-					Del_PropValue(newp, newp->value);
+					DelPropValue(newp, newp->value);
 					continue;
 				}
 				SkipValues(sgfc, FALSE);
@@ -405,7 +405,7 @@ static int NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id_
 		PrintError(E_TOO_MANY_VALUES, sgfc, too_many, idstr);
 
 	if(!newp->value)				/* property has values? */
-		Del_Property(n, newp);		/* no -> delete it */
+		DelProperty(n, newp);		/* no -> delete it */
 
 	return(ret);
 }
@@ -717,7 +717,7 @@ static int FindStart(struct SGFInfo *sgfc, int first_time)
 			{
 				o = c = 0;
 
-				if(sgfc->options->findstart == OPTION_FINDSTART_SEARCH)
+				if(sgfc->options->find_start == OPTION_FINDSTART_SEARCH)
 				{		/* found a '(' but no ';' -> might be a missing ';' */
 					tmp = sgfc->current + 1;
 					while((tmp != sgfc->b_end) && *tmp != ')' && *tmp != '(')
@@ -728,8 +728,8 @@ static int FindStart(struct SGFInfo *sgfc, int first_time)
 					}
 				}
 
-				if((sgfc->options->findstart == OPTION_FINDSTART_BRACKET) ||
-				  ((o >= 2) && (o >= c) && (o-c <= 1)))
+				if((sgfc->options->find_start == OPTION_FINDSTART_BRACKET) ||
+				   ((o >= 2) && (o >= c) && (o-c <= 1)))
 				{
 					PrintError(E_MISSING_SEMICOLON, sgfc, sgfc->current);
 					*sgfc->current = ';';

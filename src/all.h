@@ -345,7 +345,7 @@ struct SGFCOptions
 	char *infile;
 	char *outfile;
 	enum option_linebreaks linebreaks;
-	enum option_findstart findstart;
+	enum option_findstart find_start;
 	enum option_help help;
 	bool warnings;
 	bool keep_head;
@@ -356,9 +356,9 @@ struct SGFCOptions
 	bool split_file;
 	bool write_critical;
 	bool interactive;
-	bool softlinebreaks;
-	bool nodelinebreaks;
-	bool expandcpl;
+	bool soft_linebreaks;
+	bool node_linebreaks;
+	bool expand_cpl;
 	bool pass_tt;
 	bool fix_variation;
 	bool game_signature;
@@ -403,7 +403,7 @@ struct SGFInfo
 	char *buffer;		/* file buffer */
 	char *b_end;		/* file buffer end address */
 	char *start;		/* start of SGF data within buffer */
-	char *current;		/* actual read positon (cursor) in buffer */
+	char *current;		/* actual read position (cursor) in buffer */
 
 	struct SGFCOptions *options;
 	struct SaveFileHandler *sfh;	/* used during SaveSGF() */
@@ -413,8 +413,8 @@ struct SGFInfo
 	int warning_count;
 	int ignored_count;
 
-	struct Save_C_internal *_save_c;
-	struct Util_C_internal *_util_c;
+	struct SaveC_internal *_save_c;
+	struct UtilC_internal *_util_c;
 };
 
 /* for defining properties (see sgf_token[] in properties.c) */

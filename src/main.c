@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 		return(0);
 	}
 
-	sgfc = Setup_SGFInfo(NULL, NULL);
+	sgfc = SetupSGFInfo(NULL, NULL);
 
 	if(!ParseArgs(sgfc, argc, argv))
 		goto fatal_error;

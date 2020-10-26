@@ -30,7 +30,7 @@ int Parse_Number(char *value, ...)
 	int ret = 1;
 	char *d;
 
-	if(Kill_Chars(value, C_NOTinSET, "+-0123456789"))
+	if(KillChars(value, C_NOTinSET, "+-0123456789"))
 		ret = -1;
 
 	if(strlen(value))					/* empty? */
@@ -232,12 +232,12 @@ int Parse_Move(char *value, ...)
 
 	/* At first only delete space so that we can distinguish
 	 * FF4 pass move from erroneous property values */
-	if(Kill_Chars(value, C_ISSPACE, NULL))
+	if(KillChars(value, C_ISSPACE, NULL))
 		ret = -1;
 	if(!strlen(value))
 		emptyOrSpace = TRUE;
 
-	if(Kill_Chars(value, C_NOT_ISALPHA, NULL))
+	if(KillChars(value, C_NOT_ISALPHA, NULL))
 		ret = -1;
 
 	if(!strlen(value))				/* empty value? */
@@ -310,7 +310,7 @@ int Parse_Float(char *value, ...)
 	va_end(arglist);
 	allowed = (flags & TYPE_GINFO) ? "0123456789.," : "0123456789+-.,";
 
-	if(Kill_Chars(value, C_NOTinSET, allowed))
+	if(KillChars(value, C_NOTinSET, allowed))
 		ret = -1;
 
 	s = d = value;
@@ -412,7 +412,7 @@ int Parse_Color(char *value, ...)
 {
 	int ret = 1;
 
-	if(Kill_Chars(value, C_NOTinSET, "BbWw"))
+	if(KillChars(value, C_NOTinSET, "BbWw"))
 		ret = -1;
 
 	switch(*value)
@@ -449,7 +449,7 @@ int Parse_Triple(char *value, ...)
 {
 	int ret = 1;
 
-	if(Kill_Chars(value, C_NOTinSET, "12"))
+	if(KillChars(value, C_NOTinSET, "12"))
 		ret = -1;
 
 	if(!strlen(value))
@@ -722,12 +722,12 @@ static void Check_PropValues(struct SGFInfo *sgfc, struct Property *p)
 			if(sgf_token[p->id].flags & PVT_DEL_EMPTY)
 			{
 				PrintError(W_EMPTY_VALUE_DELETED, sgfc, v->buffer, p->idstr, "found");
-				v = Del_PropValue(p, v);
+				v = DelPropValue(p, v);
 			}
 			else if(!(p->flags & PVT_EMPTY))
 			{
 				PrintError(E_EMPTY_VALUE_DELETED, sgfc, v->buffer, p->idstr, "not allowed");
-				v = Del_PropValue(p, v);
+				v = DelPropValue(p, v);
 			}
 			else
 				v = v->next;
@@ -738,7 +738,7 @@ static void Check_PropValues(struct SGFInfo *sgfc, struct Property *p)
 				if((*sgf_token[p->id].CheckValue)(sgfc, p, v))
 					v = v->next;
 				else
-					v = Del_PropValue(p, v);
+					v = DelPropValue(p, v);
 			}
 			else
 				v = v->next;
@@ -798,7 +798,7 @@ void Check_Properties(struct SGFInfo *sgfc, struct Node *n, struct BoardStatus *
 		   !(sgf_token[p->id].data & ST_OBSOLETE))
 		{
 			PrintError(W_PROPERTY_DELETED, sgfc, p->buffer, "obsolete ", p->idstr);
-			p = Del_Property(n, p);
+			p = DelProperty(n, p);
 			continue;
 		}
 
@@ -809,7 +809,7 @@ void Check_Properties(struct SGFInfo *sgfc, struct Node *n, struct BoardStatus *
 		Check_PropValues(sgfc, p);
 
 		if(!p->value)				/* all values of property deleted? */
-			p = Del_Property(n, p);	/* -> del property */
+			p = DelProperty(n, p);	/* -> del property */
 		else
 		{
 			hlp = p->next;
@@ -817,7 +817,7 @@ void Check_Properties(struct SGFInfo *sgfc, struct Node *n, struct BoardStatus *
 			if(sgf_token[p->id].Execute_Prop)
 			{
 				if(!(*sgf_token[p->id].Execute_Prop)(sgfc, n, p, st) || !p->value)
-					Del_Property(n, p);
+					DelProperty(n, p);
 			}
 
 			p = hlp;

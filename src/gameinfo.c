@@ -17,13 +17,13 @@
 
 
 /**************************************************************************
-*** Function:	Get_Fraction
+*** Function:	GetFraction
 ***				Checks for written out fractions and small numbers
 *** Parameters: val ... pointer to string
 *** Returns:	0 .. nothing found / fraction value (*4)
 **************************************************************************/
 
-static int Get_Fraction(char *val)
+static int GetFraction(char *val)
 {
 	int frac = 0;
 	char *t;
@@ -59,7 +59,7 @@ static int Parse_Komi(char *val, ...)
 	int frac, ret;
 	double points = 0.0;
 
-	frac = Get_Fraction(val);
+	frac = GetFraction(val);
 
 	if((frac == 4) && strstr(val, "none"))
 		frac = -1;
@@ -97,7 +97,7 @@ static int Parse_Time(char *val, ...)
 	double time;
 	char *s;
 
-	if(Kill_Chars(val, C_ISSPACE, NULL))
+	if(KillChars(val, C_ISSPACE, NULL))
 		ret = -1;
 
 	if(!(*val))		/* only empty value left -> error */
@@ -105,10 +105,10 @@ static int Parse_Time(char *val, ...)
 
 	/* ":/;+" indicate that there's byo-yomi time given too */
 	/* &val[1] because of possible leading '+' */
-	if(strlen(val) > 1 && Test_Chars(&val[1], C_inSET, ":/;+"))
+	if(strlen(val) > 1 && TestChars(&val[1], C_inSET, ":/;+"))
 		return(0);
 
-	if(Test_Chars(val, C_ISALPHA, NULL))
+	if(TestChars(val, C_ISALPHA, NULL))
 	{
 		ret = -1;
 
@@ -158,7 +158,7 @@ static int Parse_Result(char *val, ...)
 	unsigned int type = 0;
 	double points = 0.0;
 
-	if(Kill_Chars(val, C_ISSPACE, NULL))
+	if(KillChars(val, C_ISSPACE, NULL))
 		err = -1;
 
 	switch(val[0])
@@ -196,7 +196,7 @@ static int Parse_Result(char *val, ...)
 		case 'w':	err = -1;
 					val[0] = toupper(val[0]);
 		case 'B':
-		case 'W':	charpoints = Get_Fraction(val);
+		case 'W':	charpoints = GetFraction(val);
 
 					if(val[1] != '+')	/* some text between 'B/W' and '+' */
 					{
@@ -331,13 +331,13 @@ static int Parse_Result(char *val, ...)
 
 
 /**************************************************************************
-*** Function:	Correct_Date
+*** Function:	CorrectDate
 ***				Tries to fix date value
 *** Parameters: value ... pointer to date string
 *** Returns:	-1/0: corrected error / error
 **************************************************************************/
 
-static int Correct_Date(char *value)
+static int CorrectDate(char *value)
 {
 	int year = -1, month = -1, day = -1, day2 = -1;
 	int i, charmonth = FALSE;
@@ -349,7 +349,7 @@ static int Correct_Date(char *value)
 								"Oct", "oct", "Nov", "nov", "Dec", "dec",
 								"Okt", "okt" };
 
-	Kill_Chars(value, C_inSET, "\n");
+	KillChars(value, C_inSET, "\n");
 
 	for(i = 0; i < 26; i++)
 	{
@@ -438,8 +438,8 @@ static int Parse_Date(char *value, ...)
 	*/
 
 	/* bad chars? -> pass on to CorrectDate */
-	if(Test_Chars(value, C_NOTinSET, "0123456789-,"))
-		return(Correct_Date(value));
+	if(TestChars(value, C_NOTinSET, "0123456789-,"))
+		return(CorrectDate(value));
 
 	c = d = value;
 	while(*c)				/* remove spaces, and unnecessary '-', ',' */
@@ -558,7 +558,7 @@ static int Parse_Date(char *value, ...)
 	}
 
 	if(!ret)		/* date has got tough errors -> pass on to CorrectDate */
-		ret = Correct_Date(value);
+		ret = CorrectDate(value);
 
 	return(ret);
 }

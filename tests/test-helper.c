@@ -18,13 +18,13 @@ int Test_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 	*sfh->fh.memh.pos = 0;
 	if(expected_output)
 		ck_assert_str_eq(sfh->fh.memh.buffer, expected_output);
-	return(SaveFile_BufferIO_Close(sfh, E_NO_ERROR));
+	return(SaveBufferIO_close(sfh, E_NO_ERROR));
 }
 
 void common_setup(void)
 {
-	struct SaveFileHandler *sfh = Setup_SaveBufferIO(Test_BufferIO_Close);
-	sgfc = Setup_SGFInfo(NULL, sfh);
+	struct SaveFileHandler *sfh = SetupSaveBufferIO(Test_BufferIO_Close);
+	sgfc = SetupSGFInfo(NULL, sfh);
 	sgfc->options->add_sgfc_ap_property = FALSE;
 
 	/* run tests without PrintError (makes setup easier) */

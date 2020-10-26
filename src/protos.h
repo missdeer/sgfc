@@ -16,16 +16,16 @@ void PrintStatusLine(const struct SGFInfo *sgfc);
 int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[]);
 struct SGFCOptions *SGFCDefaultOptions(void);
 
-struct SGFInfo *Setup_SGFInfo(struct SGFCOptions *options, struct SaveFileHandler *sfh);
+struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options, struct SaveFileHandler *sfh);
 void FreeSGFInfo(struct SGFInfo *);
 
 
 /**** load.c ****/
 
 void CopyValue(struct SGFInfo *, char *, const char *, size_t , int );
-struct PropValue *Add_PropValue(struct SGFInfo *, struct Property *, char *,
-								const char *, size_t, const char *, size_t);
-struct Property *Add_Property(struct Node *, token, char *, char *);
+struct PropValue *AddPropValue(struct SGFInfo *sgfc, struct Property *p, char *buffer,
+							   const char *value, size_t size, const char *value2, size_t size2);
+struct Property *AddProperty(struct Node *n, token id, char *id_buf, char *idstr);
 struct Node *NewNode(struct SGFInfo *, struct Node * , int);
 
 char *SkipText(struct SGFInfo *, char *, const char *, char , unsigned int );
@@ -35,11 +35,11 @@ int LoadSGFFromFileBuffer(struct SGFInfo *);
 
 /**** save.c ****/
 
-int SaveFile_BufferIO_Close(struct SaveFileHandler *, U_LONG );
+int SaveBufferIO_close(struct SaveFileHandler *sfh, U_LONG error);
 
-struct SaveFileHandler *Setup_SaveFileIO(void);
-struct SaveFileHandler *Setup_SaveBufferIO(int (* )(struct SaveFileHandler *, U_LONG));
-struct Save_C_internal *Setup_Save_C_internal(void);
+struct SaveFileHandler *SetupSaveFileIO(void);
+struct SaveFileHandler *SetupSaveBufferIO(int (*close)(struct SaveFileHandler *, U_LONG));
+struct SaveC_internal *SetupSaveC_internal(void);
 
 int SaveSGF(struct SGFInfo * , char *);
 
@@ -74,14 +74,14 @@ void Check_Properties(struct SGFInfo *, struct Node *, struct BoardStatus *);
 int ExpandPointList(struct SGFInfo *, struct Property *, struct PropValue *, int );
 void CompressPointList(struct SGFInfo *, struct Property * );
 
-void Split_Node(struct SGFInfo *, struct Node *, U_SHORT, token, int);
+void SplitNode(struct SGFInfo *sgfc, struct Node *n, U_SHORT flags, token id, int move);
 void ParseSGF(struct SGFInfo * );
 
 
 /**** execute.c ****/
 
 int Do_Move(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
-int Do_Addstones(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
+int Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st);
 int Do_Letter(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
 int Do_Mark(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
 int Do_Markup(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
@@ -98,14 +98,14 @@ int Check_GameInfo(struct SGFInfo *, struct Property *, struct PropValue *);
 
 /**** util.c ****/
 
-struct Util_C_internal *Setup_Util_C_internal(void);
+struct UtilC_internal *SetupUtilC_internal(void);
 
 extern int (*print_error_handler)(U_LONG, struct SGFInfo *, va_list);
 extern void (*print_error_output_hook)(struct SGFCError *);
 
 void SearchPos(const char * , struct SGFInfo * , int * , int * );
 int PrintError(U_LONG, struct SGFInfo *, ... );
-int  __attribute__((noreturn)) PrintOOMError(char *);
+int __attribute__((noreturn)) ExitWithOOMError(char *);
 int PrintErrorHandler(U_LONG, struct SGFInfo *, va_list);
 void PrintErrorOutputHook(struct SGFCError *);
 
@@ -117,21 +117,21 @@ void f_Enqueue(struct ListHead * , struct ListNode * );
 void f_Delete(struct ListHead * , struct ListNode * );
 
 int strnccmp(char * , char * , size_t);
-U_LONG Kill_Chars(char * , U_SHORT , char * );
-U_LONG Test_Chars(char * , U_SHORT , char * );
+U_LONG KillChars(char *value, U_SHORT kill, char *cset);
+U_LONG TestChars(char *value, U_SHORT test, char *cset);
 
-struct Property *Find_Property(struct Node *, token );
+struct Property *FindProperty(struct Node *n, token id);
 
-struct PropValue *Del_PropValue(struct Property *, struct PropValue *);
-struct Property *Del_Property(struct Node *, struct Property *);
-struct Node *Del_Node(struct SGFInfo *, struct Node *, U_LONG);
+struct PropValue *DelPropValue(struct Property *p, struct PropValue *v);
+struct Property *DelProperty(struct Node *n, struct Property *p);
+struct Node *DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error_code);
 
-struct Property *New_PropValue(struct SGFInfo *, struct Node *, token, const char *, const char *, int);
+struct Property *NewPropValue(struct SGFInfo *sgfc, struct Node *n, token id, const char *value, const char *value2, int unique);
 
 
 /**** strict.c ****/
 
-void Strict_Checking(struct SGFInfo *sgf);
+void StrictChecking(struct SGFInfo *sgfc);
 
 
 /**** protos.h ****/
@@ -140,4 +140,4 @@ void Strict_Checking(struct SGFInfo *sgf);
 #define Enqueue(h,n) f_Enqueue((struct ListHead *)(h), (struct ListNode *)(n))
 #define Delete(h,n) f_Delete((struct ListHead *)(h), (struct ListNode *)(n))
 
-#define SaveMalloc(type, v, sz, err)	{ v = (type)malloc((size_t)(sz)); if(!(v)) PrintOOMError(err); }
+#define SaveMalloc(type, v, sz, err)	{ v = (type)malloc((size_t)(sz)); if(!(v)) ExitWithOOMError(err); }

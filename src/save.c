@@ -19,7 +19,7 @@
 #define MAX_LINELEN		58
 #define MAXTEXT_LINELEN 70
 
-/* This is used when options->nodelinebreaks is set, so we are
+/* This is used when options->node_linebreaks is set, so we are
  * attempting to put linebreaks at the end of nodes.  A value near
  * MAX_LINELEN is desirable so that we don't make lines much shorter
  * or longer than we get without this option.  A value of 60 works out
@@ -35,7 +35,7 @@
 
 /* internal data for save.c functions. */
 /* Used instead of local static variables */
-struct Save_C_internal {
+struct SaveC_internal {
 	int linelen;	/* used for line breaking algorithm */
 	int chars_in_node;
 	int eol_in_node;
@@ -44,58 +44,58 @@ struct Save_C_internal {
 
 
 /**************************************************************************
-*** Function:	Setup_Save_C_internal
+*** Function:	SetupSaveC_internal
 ***				Allocate and initialize internal data structure local to save.c
 *** Parameters: -
 *** Returns:	pointer to internal structure
 **************************************************************************/
 
-struct Save_C_internal *Setup_Save_C_internal(void)
+struct SaveC_internal *SetupSaveC_internal(void)
 {
-	struct Save_C_internal *savec;
-	SaveMalloc(struct Save_C_internal *, savec, sizeof(struct Save_C_internal), "static save.c struct")
+	struct SaveC_internal *savec;
+	SaveMalloc(struct SaveC_internal *, savec, sizeof(struct SaveC_internal), "static save.c struct")
 	savec->gi_written = FALSE;
 	return savec;
 }
 
 
 /**************************************************************************
-*** Function:	Setup_SaveFileIO
+*** Function:	SetupSaveFileIO
 ***				Allocate and initialize SaveFileHandler for regular file access
 *** Parameters: -
 *** Returns:	pointer to SafeFileHandler
 **************************************************************************/
 
-static int SaveFile_FileIO_Open(struct SaveFileHandler *sfh, const char *path, const char *mode)
+static int SaveFileIO_open(struct SaveFileHandler *sfh, const char *path, const char *mode)
 {
 	sfh->fh.file = fopen(path, mode);
 	return(!!sfh->fh.file);
 }
 
-static int SaveFile_FileIO_Close(struct SaveFileHandler *sfh, U_LONG error)
+static int SaveFileIO_close(struct SaveFileHandler *sfh, U_LONG error)
 {
 	return(fclose(sfh->fh.file));
 }
 
-static int SaveFile_FileIO_Putc(struct SaveFileHandler *sfh, int c)
+static int SaveFileIO_putc(struct SaveFileHandler *sfh, int c)
 {
 	return(fputc(c, sfh->fh.file));
 }
 
-struct SaveFileHandler *Setup_SaveFileIO(void)
+struct SaveFileHandler *SetupSaveFileIO(void)
 {
 	struct SaveFileHandler *sfh;
 	SaveMalloc(struct SaveFileHandler *, sfh, sizeof(struct SaveFileHandler), "file handler")
-	sfh->open = SaveFile_FileIO_Open;
-	sfh->close = SaveFile_FileIO_Close;
-	sfh->putc = SaveFile_FileIO_Putc;
+	sfh->open = SaveFileIO_open;
+	sfh->close = SaveFileIO_close;
+	sfh->putc = SaveFileIO_putc;
 	sfh->fh.file = NULL;
 	return sfh;
 }
 
 
 /**************************************************************************
-*** Function:	SaveFile_BufferIO_Open
+*** Function:	SaveBufferIO_open
 ***				Initializes SaveBuffer structure for saving to memory
 ***             Allocates 5000 bytes as initial value
 *** Parameters: sfh ... pointer to SaveFileHandler
@@ -103,7 +103,7 @@ struct SaveFileHandler *Setup_SaveFileIO(void)
 *** Returns:	TRUE on success, FALSE on error (out of memory)
 **************************************************************************/
 
-static int SaveFile_BufferIO_Open(struct SaveFileHandler *sfh, const char *path, const char *mode)
+static int SaveBufferIO_open(struct SaveFileHandler *sfh, const char *path, const char *mode)
 {
 	/* Start with ~5kb buffer which suffices in many cases */
 	sfh->fh.memh.buffer = (char *)malloc((size_t)5000);
@@ -116,7 +116,7 @@ static int SaveFile_BufferIO_Open(struct SaveFileHandler *sfh, const char *path,
 
 
 /**************************************************************************
-*** Function:	SaveFile_BufferIO_Close
+*** Function:	SaveBufferIO_close
 ***				Frees buffer inside SaveBuffer structure
 *** Parameters: sfh ... pointer to SaveFileHandler
 ***				error ... SGFC error code or E_NO_ERROR
@@ -124,7 +124,7 @@ static int SaveFile_BufferIO_Open(struct SaveFileHandler *sfh, const char *path,
 *** Returns:	TRUE
 **************************************************************************/
 
-int SaveFile_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
+int SaveBufferIO_close(struct SaveFileHandler *sfh, U_LONG error)
 {
 	free(sfh->fh.memh.buffer);
 	sfh->fh.memh.buffer = NULL;
@@ -135,7 +135,7 @@ int SaveFile_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 
 
 /**************************************************************************
-*** Function:	SaveFile_BufferIO_Putc
+*** Function:	SaveBufferIO_putc
 ***				Writes char to buffer, allocates more memory if current
 ***				buffer is too small to hold next char.
 *** Parameters: sfh ... pointer to SaveFileHandler
@@ -143,7 +143,7 @@ int SaveFile_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 *** Returns:	char written or EOF in case of error
 **************************************************************************/
 
-static int SaveFile_BufferIO_Putc(struct SaveFileHandler *sfh, int c)
+static int SaveBufferIO_putc(struct SaveFileHandler *sfh, int c)
 {
 	/* -1 so that we can always null-terminate buffer in close() function */
 	if (sfh->fh.memh.pos == sfh->fh.memh.buffer + sfh->fh.memh.buffer_size - 1)
@@ -165,22 +165,22 @@ static int SaveFile_BufferIO_Putc(struct SaveFileHandler *sfh, int c)
 
 
 /**************************************************************************
-*** Function:	Setup_SaveBufferIO
+*** Function:	SetupSaveBufferIO
 ***				Allocates and initializes SaveFileHandler for BufferIO
 *** Parameters: close ... custom close() function or NULL
 *** Returns:	pointer to SaveFileHandler
 **************************************************************************/
 
-struct SaveFileHandler *Setup_SaveBufferIO(int (*close)(struct SaveFileHandler *, U_LONG))
+struct SaveFileHandler *SetupSaveBufferIO(int (*close)(struct SaveFileHandler *, U_LONG))
 {
 	struct SaveFileHandler *sfh;
 	SaveMalloc(struct SaveFileHandler *, sfh, sizeof(struct SaveFileHandler), "memory file handler")
-	sfh->open = SaveFile_BufferIO_Open;
-	sfh->putc = SaveFile_BufferIO_Putc;
+	sfh->open = SaveBufferIO_open;
+	sfh->putc = SaveBufferIO_putc;
 	if(close)
 		sfh->close = close;
 	else
-		sfh->close = SaveFile_BufferIO_Close;
+		sfh->close = SaveBufferIO_close;
 	sfh->fh.memh.buffer = NULL;
 	sfh->fh.memh.pos = NULL;
 	sfh->fh.memh.buffer_size = 0;
@@ -253,7 +253,7 @@ static int WritePropValue(struct SGFInfo *sgfc, const char *v, int second, U_SHO
 	if(second)
 		saveputc(sgfc, ':')
 
-	fl = sgfc->options->softlinebreaks && (flags & SPLIT_SAVE);
+	fl = sgfc->options->soft_linebreaks && (flags & SPLIT_SAVE);
 
 	while(*v)
 	{
@@ -370,7 +370,7 @@ static int WriteNode(struct SGFInfo *sgfc, struct TreeInfo *info, struct Node *n
 	p = n->prop;
 	while(p)
 	{
-		if((sgf_token[p->id].flags & PVT_CPLIST) && !sgfc->options->expandcpl &&
+		if((sgf_token[p->id].flags & PVT_CPLIST) && !sgfc->options->expand_cpl &&
 		   (info->GM == 1))
 			CompressPointList(sgfc, p);
 
@@ -380,7 +380,7 @@ static int WriteNode(struct SGFInfo *sgfc, struct TreeInfo *info, struct Node *n
 		p = p->next;
 	}
 
-	if(sgfc->options->nodelinebreaks &&
+	if(sgfc->options->node_linebreaks &&
 	   ((sgfc->_save_c->eol_in_node && sgfc->_save_c->linelen > 0) ||
 		(!sgfc->_save_c->eol_in_node &&
 		  sgfc->_save_c->linelen > MAX_PREDICTED_LINELEN - sgfc->_save_c->chars_in_node)))
@@ -404,16 +404,16 @@ static void SetRootProps(struct SGFInfo *sgfc, struct TreeInfo *info, struct Nod
 	if(r->parent)	/* isn't REAL root node */
 		return;
 
-	New_PropValue(sgfc, r, TKN_FF, "4", NULL, TRUE);
+	NewPropValue(sgfc, r, TKN_FF, "4", NULL, TRUE);
 
 	if(sgfc->options->add_sgfc_ap_property)
-		New_PropValue(sgfc, r, TKN_AP, "SGFC", "1.18", TRUE);
+		NewPropValue(sgfc, r, TKN_AP, "SGFC", "1.18", TRUE);
 
 	if(info->GM == 1)
 	{
-		New_PropValue(sgfc, r, TKN_GM, "1", NULL, TRUE);
+		NewPropValue(sgfc, r, TKN_GM, "1", NULL, TRUE);
 		if(info->bwidth == 19 && info->bheight == 19)
-			New_PropValue(sgfc, r, TKN_SZ, "19", NULL, TRUE);
+			NewPropValue(sgfc, r, TKN_SZ, "19", NULL, TRUE);
 	}
 }
 

@@ -16,14 +16,14 @@
 
 
 /**************************************************************************
-*** Function:	Make_Capture
-***				Captures stones on marked by Recursive_Capture
+*** Function:	MakeCapture
+***				Captures stones on marked by RecursiveCapture
 *** Parameters: x ... x position
 ***				y ... y position
 *** Returns:	-
 **************************************************************************/
 
-static void Make_Capture(int x, int y, struct BoardStatus *st)
+static void MakeCapture(int x, int y, struct BoardStatus *st)
 {
 	if(st->paths->board[MXY(x,y)] != st->paths->num)
 		return;
@@ -32,15 +32,15 @@ static void Make_Capture(int x, int y, struct BoardStatus *st)
 	st->paths->board[MXY(x,y)] = 0;
 
 	/* recursive calls */
-	if(x > 0)	Make_Capture(x-1, y, st);
-	if(y > 0)	Make_Capture(x, y-1, st);
-	if(x < st->bwidth-1)	Make_Capture(x+1, y, st);
-	if(y < st->bheight-1)	Make_Capture(x, y+1, st);
+	if(x > 0) MakeCapture(x - 1, y, st);
+	if(y > 0) MakeCapture(x, y - 1, st);
+	if(x < st->bwidth-1) MakeCapture(x + 1, y, st);
+	if(y < st->bheight-1) MakeCapture(x, y + 1, st);
 }
 
 
 /**************************************************************************
-*** Function:	Recursive_Capture
+*** Function:	RecursiveCapture
 ***				Checks for capturing stones
 ***				marks its path on path_board with path_num
 *** Parameters: color ... enemy color
@@ -49,7 +49,7 @@ static void Make_Capture(int x, int y, struct BoardStatus *st)
 *** Returns:	TRUE if capture / FALSE if liberty found
 **************************************************************************/
 
-static int Recursive_Capture(unsigned char color, int x, int y, struct BoardStatus *st)
+static int RecursiveCapture(unsigned char color, int x, int y, struct BoardStatus *st)
 {
 	if(!st->board[MXY(x,y)])
 		return(FALSE);		/* liberty found */
@@ -63,18 +63,18 @@ static int Recursive_Capture(unsigned char color, int x, int y, struct BoardStat
 	st->paths->board[MXY(x,y)] = st->paths->num;
 
 	/* recursive calls */
-	if(x > 0 			 && !Recursive_Capture(color, x-1, y, st))	return(FALSE);
-	if(y > 0 			 && !Recursive_Capture(color, x, y-1, st))	return(FALSE);
-	if(x < st->bwidth-1  && !Recursive_Capture(color, x+1, y, st))	return(FALSE);
-	if(y < st->bheight-1 && !Recursive_Capture(color, x, y+1, st))	return(FALSE);
+	if(x > 0 			 && !RecursiveCapture(color, x - 1, y, st))	return(FALSE);
+	if(y > 0 			 && !RecursiveCapture(color, x, y - 1, st))	return(FALSE);
+	if(x < st->bwidth-1  && !RecursiveCapture(color, x + 1, y, st))	return(FALSE);
+	if(y < st->bheight-1 && !RecursiveCapture(color, x, y + 1, st))	return(FALSE);
 
 	return(TRUE);
 }
 
 
 /**************************************************************************
-*** Function:	Capture_Stones
-***				Calls Recursive_Capture and does capture if necessary
+*** Function:	CaptureStones
+***				Calls RecursiveCapture and does capture if necessary
 *** Parameters: st	  ... board status
 ***				color ... color of enemy stones
 ***				x	  ... column
@@ -82,7 +82,7 @@ static int Recursive_Capture(unsigned char color, int x, int y, struct BoardStat
 *** Returns:	-
 **************************************************************************/
 
-static void Capture_Stones(struct BoardStatus *st, unsigned char color, int x, int y)
+static void CaptureStones(struct BoardStatus *st, unsigned char color, int x, int y)
 {
 	if(x < 0 || y < 0 || x >= st->bwidth || y >= st->bheight)
 		return;		/* not on board */
@@ -92,8 +92,8 @@ static void Capture_Stones(struct BoardStatus *st, unsigned char color, int x, i
 
 	st->paths->num++;
 
-	if(Recursive_Capture(color, x, y, st))	/* made prisoners? */
-		Make_Capture(x, y, st);				/* ->update board position */
+	if(RecursiveCapture(color, x, y, st))	/* made prisoners? */
+		MakeCapture(x, y, st);				/* ->update board position */
 }
 
 
@@ -119,7 +119,7 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 	if(st->annotate & ST_MOVE)	/* there's a move already? */
 	{
 		PrintError(E_TWO_MOVES_IN_NODE, sgfc, p->buffer);
-		Split_Node(sgfc, n, 0, p->id, TRUE);
+		SplitNode(sgfc, n, 0, p->id, TRUE);
 		return(TRUE);
 	}
 
@@ -136,11 +136,11 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 		PrintError(WS_ILLEGAL_MOVE, sgfc, p->buffer);
 
 	st->board[MXY(x,y)] = color;
-	Capture_Stones(st, color, x-1, y);		/* check for prisoners */
-	Capture_Stones(st, color, x+1, y);
-	Capture_Stones(st, color, x, y-1);
-	Capture_Stones(st, color, x, y+1);
-	Capture_Stones(st, ~color, x, y);		/* check for suicide */
+	CaptureStones(st, color, x - 1, y);		/* check for prisoners */
+	CaptureStones(st, color, x + 1, y);
+	CaptureStones(st, color, x, y - 1);
+	CaptureStones(st, color, x, y + 1);
+	CaptureStones(st, ~color, x, y);		/* check for suicide */
 
 	if(sgfc->options->del_move_markup)		/* if del move markup, then */
 	{										/* mark move position as markup */
@@ -162,7 +162,7 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 *** Returns:	TRUE: ok / FALSE: delete property
 **************************************************************************/
 
-int Do_Addstones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
+int Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	int x, y;
 	unsigned char color;
@@ -182,7 +182,7 @@ int Do_Addstones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 		if(st->markup[MXY(x,y)] & ST_ADDSTONE)
 		{
 			PrintError(E_POSITION_NOT_UNIQUE, sgfc, v->buffer, "AddStone", p->idstr);
-			v = Del_PropValue(p, v);
+			v = DelPropValue(p, v);
 			continue;
 		}
 
@@ -192,7 +192,7 @@ int Do_Addstones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 		if(st->board[MXY(x,y)] == color)		/* Add property is redundant */
 		{
 			PrintError(WS_ADDSTONE_REDUNDANT, sgfc, v->buffer, p->idstr);
-			v = Del_PropValue(p, v);
+			v = DelPropValue(p, v);
 			continue;
 		}
 
@@ -237,7 +237,7 @@ int Do_Letter(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 		{
 			st->markup[MXY(x,y)] |= ST_LABEL;
 			st->mrkp_chngd = TRUE;
-			New_PropValue(sgfc, n, TKN_LB, v->value, letter, FALSE);
+			NewPropValue(sgfc, n, TKN_LB, v->value, letter, FALSE);
 			letter[0]++;
 		}
 
@@ -282,9 +282,9 @@ int Do_Mark(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 			st->mrkp_chngd = TRUE;
 
 			if(st->board[MXY(x,y)])
-				New_PropValue(sgfc, n, TKN_TR, v->value, NULL, FALSE);
+				NewPropValue(sgfc, n, TKN_TR, v->value, NULL, FALSE);
 			else
-				New_PropValue(sgfc, n, TKN_MA, v->value, NULL, FALSE);
+				NewPropValue(sgfc, n, TKN_MA, v->value, NULL, FALSE);
 		}
 		v = v->next;
 	}
@@ -325,7 +325,7 @@ int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 			if(empty)	/* if we already have an empty value */
 			{
 				PrintError(E_EMPTY_VALUE_DELETED, sgfc, v->buffer, "Markup", p->idstr);
-				v = Del_PropValue(p, v);
+				v = DelPropValue(p, v);
 				continue;
 			}
 			empty = TRUE;
@@ -341,7 +341,7 @@ int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 		if(st->markup[MXY(x,y)] & flag)
 		{
 			PrintError(E_POSITION_NOT_UNIQUE, sgfc, v->buffer, "Markup", p->idstr);
-			v = Del_PropValue(p, v);
+			v = DelPropValue(p, v);
 			continue;
 		}
 
@@ -357,7 +357,7 @@ int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 			if(!strlen(v->value))
 			{
 				PrintError(E_EMPTY_VALUE_DELETED, sgfc, v->buffer, "Markup", p->idstr);
-				v = Del_PropValue(p, v);
+				v = DelPropValue(p, v);
 				continue;
 			}
 			else
@@ -389,7 +389,7 @@ int Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct
 	if((st->annotate & ST_ANN_BM) && p->id == TKN_TE) /* DO (doubtful) */
 	{
 		PrintError(E4_BM_TE_IN_NODE, sgfc, p->buffer, "BM-TE", "DO");
-		hlp = Find_Property(n, TKN_BM);
+		hlp = FindProperty(n, TKN_BM);
 		hlp->id = TKN_DO;
 		hlp->value->value[0] = 0;
 		return(FALSE);
@@ -398,7 +398,7 @@ int Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct
 	if(st->annotate & ST_ANN_TE && p->id == TKN_BM)	/* IT (interesting) */
 	{
 		PrintError(E4_BM_TE_IN_NODE, sgfc, p->buffer, "TE-BM", "IT");
-		hlp = Find_Property(n, TKN_TE);
+		hlp = FindProperty(n, TKN_TE);
 		hlp->id = TKN_IT;
 		hlp->value->value[0] = 0;
 		return(FALSE);
@@ -470,7 +470,7 @@ int Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 	if(p->id != TKN_KI)
 		return(TRUE);
 
-	if(Find_Property(n, TKN_KM))
+	if(FindProperty(n, TKN_KM))
 		PrintError(W_INT_KOMI_FOUND, sgfc, p->buffer, "deleted (<KM> property found)");
 	else
 	{
@@ -480,7 +480,7 @@ int Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 		SaveMalloc(char *, new_km, strlen(p->value->value)+3, "new KM number value")
 		if(ki % 2)	sprintf(new_km, "%ld.5", ki/2);
 		else		sprintf(new_km, "%ld", ki/2);
-		New_PropValue(sgfc, n, TKN_KM, new_km, NULL, FALSE);
+		NewPropValue(sgfc, n, TKN_KM, new_km, NULL, FALSE);
 		free(new_km);
 	}
 	return(FALSE);
@@ -511,7 +511,7 @@ int Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 			PrintError(E_BAD_VW_VALUES, sgfc, p->buffer, "values after '[]' value found", "deleted");
 			v = v->next;
 			while(v)
-				v = Del_PropValue(p, v);
+				v = DelPropValue(p, v);
 		}
 
 		return(TRUE);
@@ -522,7 +522,7 @@ int Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 		if(!strlen(v->value))	/* '[]' within other values */
 		{
 			PrintError(E_BAD_VW_VALUES, sgfc, v->buffer, "empty value found in list", "deleted");
-			v = Del_PropValue(p, v);
+			v = DelPropValue(p, v);
 		}
 		else
 		{
@@ -541,7 +541,7 @@ int Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 			v = p->value;
 			v->value2 = v->next->value;
 			v->next->value = NULL;
-			Del_PropValue(p, v->next);
+			DelPropValue(p, v->next);
 		
 			if(!ExpandPointList(sgfc, p, v, FALSE))
 			{
@@ -549,7 +549,7 @@ int Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 				return(FALSE);
 			}
 
-			Del_PropValue(p, v);
+			DelPropValue(p, v);
 		}
 		else		/* looks like FF4 definition (wrong FF set?) */
 			PrintError(E_BAD_VW_VALUES, sgfc, p->buffer, "FF[4] definition in older FF found", "parsing done anyway");
