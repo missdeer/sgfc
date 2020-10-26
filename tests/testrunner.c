@@ -33,7 +33,7 @@ int main(void)
 	Suite *s = sgfc_suite();
 	SRunner *sr = srunner_create(s);
 	/* switch to NO_FORK for easier debugging */
-	srunner_set_fork_status(sr, CK_NOFORK);
+	/*srunner_set_fork_status(sr, CK_NOFORK);*/
 	srunner_run_all(sr, CK_ENV);
 	number_failed = srunner_ntests_failed(sr);
 	srunner_free(sr);

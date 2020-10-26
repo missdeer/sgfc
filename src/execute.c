@@ -162,18 +162,14 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 *** Returns:	TRUE: ok / FALSE: delete property
 **************************************************************************/
 
-int Do_Addstones(struct SGFInfo *sgf, struct Node *n, struct Property *p, struct BoardStatus *st)
+int Do_Addstones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	int x, y;
 	unsigned char color;
-	struct PropValue *v, *w;
-	struct Property h;
+	struct PropValue *v;
 
-	if(sgf->info->GM != 1)		/* game != Go? */
+	if(sgfc->info->GM != 1)		/* game != Go? */
 		return(TRUE);
-
-	h.value = NULL;
-	h.valend = NULL;
 
 	color = (unsigned char)sgf_token[p->id].data;
 
@@ -185,7 +181,7 @@ int Do_Addstones(struct SGFInfo *sgf, struct Node *n, struct Property *p, struct
 	
 		if(st->markup[MXY(x,y)] & ST_ADDSTONE)
 		{
-			PrintError(E_POSITION_NOT_UNIQUE, sgf, v->buffer, "AddStone", p->idstr);
+			PrintError(E_POSITION_NOT_UNIQUE, sgfc, v->buffer, "AddStone", p->idstr);
 			v = Del_PropValue(p, v);
 			continue;
 		}
@@ -195,30 +191,13 @@ int Do_Addstones(struct SGFInfo *sgf, struct Node *n, struct Property *p, struct
 
 		if(st->board[MXY(x,y)] == color)		/* Add property is redundant */
 		{
-			w = v->next;
-			Delete(&p->value, v);
-			AddTail(&h.value, v);
-			v = w;
+			PrintError(WS_ADDSTONE_REDUNDANT, sgfc, v->buffer, p->idstr);
+			v = Del_PropValue(p, v);
 			continue;
 		}
 
 		st->board[MXY(x,y)] = color;
 		v = v->next;
-	}
-
-	if(h.value)
-	{
-		x = PrintError(WS_ADDSTONE_REDUNDANT, sgf, p->buffer, p->idstr);
-
-		v = h.value;
-		while(v)
-		{
-			if(x)	fprintf(E_OUTPUT, "[%s]", v->value);
-			v = Del_PropValue(&h, v);
-		}
-
-		if(x)
-			fprintf(E_OUTPUT, "\n");
 	}
 
 	return(TRUE);
