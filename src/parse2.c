@@ -858,7 +858,7 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatu
 				SaveMalloc(unsigned char *, st->board, area * sizeof(char), "goban buffer")
 				memset(st->board, 0, area * sizeof(char));
 				SaveMalloc(U_SHORT *, st->markup, area * sizeof(U_SHORT), "markup buffer")
-				SaveMalloc(struct PathBoard *, st->paths, area * sizeof(struct PathBoard), "path_board buffer")
+				SaveMalloc(struct PathBoard *, st->paths, sizeof(struct PathBoard), "path_board buffer")
 				memset(st->paths, 0, sizeof(struct PathBoard));
 			}
 			st->mrkp_chngd = TRUE;
