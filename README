@@ -7,7 +7,6 @@ SGFC is open source software and is published under the terms of the
 BSD License. Read 'COPYING' for more information.
 
 
-
 Contents:
 =========
 
@@ -18,22 +17,21 @@ Contents:
 3 ... Installing / Building
 
 4 ... Invoking SGFC
-      4.1 ... Option summary (alphabetical)
-      4.2 ... Examples
-      4.3 ... Detailed description
+      4.1 ... A note on character encodings
+      4.2 ... Option summary (alphabetical)
+      4.3 ... Examples
+      4.4 ... Detailed description
 
 5 ... Output
       5.1 ... Exit codes
       5.2 ... Status line
       5.3 ... Error messages
 
-Appendix A: The supplied test file: test.sgf
+Appendix A: History / Release notes
 
-Appendix B: History
+Appendix B: Known properties
 
-Appendix C: Known properties
-
-Appendix D: List of error codes and possible causes
+Appendix C: List of error codes and possible causes
 
 
 
@@ -83,8 +81,9 @@ Please include:
 The root directory contains the following files:
 
 CMakeLists.txt  CMake file as used on my machine
-README          this file
 COPYING         the BSD License
+Makefile        Makefile as used for gcc on my machine
+README          this file
 
 The program source files are located in the src/ subdirectory:
 
@@ -109,17 +108,14 @@ execute.c       contains routines that actually execute the properties,
                 necessary transformations
 strict.c        contains the functions for restrictive checking (option -r)
 util.c          misc. functions; error messages
-test.sgf        a SGF file to test all messages of SGFC
-Makefile        Makefile as used for gcc on my machine
+test-files/     subdirectory with some test files, see README.test-files
+tests/          subdirectory with some unit tests, see README.tests
+
 
 I use tab size of 4 (instead the usual 8) in my sources.
 You've to set the tab size of your editor accordingly to get a
 readable source with reasonable indentations.
 
-A (small number) of unit test cases are located in tests/. They are using
-the Check unit test framework (https://libcheck.github.io/check/). If you'd
-like to run the tests, you need to install this library (and its dependencies)
-first.
 
 
 3. Installing / Building:
@@ -140,20 +136,16 @@ library).
 
 There are various defines in all.h to customize SGFC:
 
-
 EOLCHAR:
 --------
-
 You can define the character used to indicate the end of line. This is only
 used when SGFC writes a file, because SGFC automatically detects any kind
 of linebreak during reading. 
 This define is useful if you want SGFC to write SGF files using the
 linebreak-code specific to your machine (e.g. Mac or MsDos).
 
-
 VERSION_NO_MAIN:
 ----------------
-
 In case you've written a new main() function, e.g. a nice GUI, you can use
 this define, so that main() does not get compiled.
 
@@ -171,7 +163,33 @@ Conversion to FF[4] takes place only if you specify the 'outfile'.
 'outfile' may be the same as 'infile'.
 
 
-4.1 Option summary (alphabetical):
+4.1 A note on character encodings
+---------------------------------
+
+SGFC and the SGF specification have their origins in the past century,
+when Unicode was just 2 years old, and almost no operating system or
+framework supported it. Hence, the SGF specification took a very
+conservative stance and defined the ASCII compatible ISO-8859-1 encoding
+as default encoding. It even went so far defining that *if* other
+encodings were to be used, they are only valid *inside* property values,
+not outside it.
+
+Hence, a conforming SGF parser would first use ISO-8859-1 in order to
+parse the structure (skeleton) of the SGF tree (nodes, properties, and
+property value boundaries), including(!) escaping with '\', before parsing
+the text inside the property values according to the supplied encoding.
+
+Some 30 years later this approach looks arcane. SGFC is not aware of any
+charset, so unless the SGF file is encoded in an ASCII-safe encoding,
+parsing may fail for unspecified reasons. Thankfully, Unicode UTF-8 is
+ASCII-safe, but e.g. Unicode UTF-16, GB 18030, or Shift JIS are not.
+
+SGFC assumes an ASCII-safe encoding! If you have a file in a non-ASCII-safe
+encoding, then you should *not* use SGFC to parse it. Change the encoding
+to Unicode UTF-8 first, then you can run SGFC on it.
+
+
+4.2 Option summary (alphabetical):
 ----------------------------------
 
     -h  ... print a short help message
@@ -207,7 +225,8 @@ Conversion to FF[4] takes place only if you specify the 'outfile'.
     --help ... print a short help message (same as -h)
     --version ... print version number
 
-4.2 Examples:
+
+4.3 Examples:
 -------------
 
     'sgfc -h' ... prints help message
@@ -228,9 +247,7 @@ Conversion to FF[4] takes place only if you specify the 'outfile'.
     'sgfc game.sgf game.sgf' ... check and overwrite 'game.sgf'
 
 
-
-
-4.3 Detailed description:
+4.4 Detailed description:
 -------------------------
 
 Option -b:
@@ -527,7 +544,6 @@ MAX_REORDER_VARIATIONS in all.h to a higher value and recompile SGFC.
 
 
 
-
 5. Output:
 ==========
 
@@ -578,48 +594,7 @@ Examples:
 
 
 
-Appendix A: The supplied test file: test.sgf
-============================================
-
-test.sgf compromises almost all errors known to SGFC.
-Invoking SGFC without any parameters and input file test.sgf should yield:
-50 errors and 18 warnings - 11 messages are critical.
-Invoking SGFC with 'sgfc -oun test.sgf' should yield 12 warnings more.
-
-Following errors cannot be tested from within the test file:
-
-Fatal error 1: error in commandline: e.g. 'sgfc in.sgf out.sgf foo'
-Fatal error 2: error in commandline: e.g. 'sgfc -x in.sgf'
-Fatal error 3: could not open source file
-Fatal error 4: could not read source file 
-Fatal error 5: not enough memory
-Fatal error 7: no SGF data found: e.g. 'sgfc COPYING'
-Error 9: variation nesting incomplete: add ']' to the end of test.sgf
-Fatal error 26: could not open destination file
-Fatal error 27: could not write destination file
-Warning 29: invoke sgfc with -o option; warning 29 on line 40 (SC property)
-Error 34: critical file not saved: e.g. 'sgfc test.sgf out.sgf'
-Fatal error 46: unknown file format: create a file consisting of "(;FF[5])"
-Fatal error 48: no source file specified: e.g. 'sgfc -u'
-Fatal error 49: error in commandline: e.g. 'sgfc -ld'
-Error 53: (currently unused)
-Warning 55: invoke sgfc with -n option; warning 55 on line 55
-
-Every line yields one or more errors/warnings.
-test.sgf is compiled in a way that error/warning x occurs in line x, e.g.
-error 12 occurs in line 12.
-
-Exceptions from this rule:
-- error 10 occurs at end of file
-- line 19 yields warning 19 & 45
-- line 31 yields error 31 & 35
-
-If you want to test how robust your own application is, then try
-to read in this file :-)
-
-
-
-Appendix B: History
+Appendix A: History
 ===================
 
 V1.18 (2018-06-23)
@@ -772,7 +747,7 @@ first public release (early beta version)
 
 
 
-Appendix C: Known properties
+Appendix B: Known properties
 ============================
 
 ID  Fileformat  Type             Value
@@ -865,7 +840,7 @@ WT     --34     game-info        text
 
 
 
-Appendix D: List of error codes and possible causes
+Appendix C: List of error codes and possible causes
 ===================================================
 
 Classes:
@@ -1076,10 +1051,10 @@ Classes:
         Example: >>(;GM[1]FF[3];B[])(;GM[1];B[])<<
 
 66:E-C  "node outside variation found. Missing '(' assumed."
-        Example: >>(;FF[4];C[var 1]) ;C[var 2]))<<
+        Example: >>(;FF[4](;C[var 1]) ;C[var 2]))<<
 
 67:E-C  "illegal chars after variation start '(' found. Missing ';' assumed."
-        Example: >>(;FF[4];C[var 1]) (C[var 2]))<<
+        Example: >>(;FF[4](;C[var 1]) (C[var 2]))<<
 
 68:FE   "unknown command line option '%s' (-h for help)"
         Example: 'sgfc --versi'

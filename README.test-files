@@ -1,0 +1,89 @@
+SGF Syntax Checker & Converter: SGFC V1.18
+==========================================
+
+SGFC Copyright (C) 1996-2020 by Arno Hollosi <ahollosi@xmp.net>
+
+SGFC is open source software and is published under the terms of the
+BSD License. Read 'COPYING' for more information.
+
+
+Test files
+==========
+
+tests/test.sgf
+--------------
+
+test.sgf compromises almost all errors known to SGFC.
+
+Invoking SGFC without any parameters and input file test.sgf should yield:
+54 errors and 18 warnings - 13 messages are critical.
+
+Invoking SGFC with 'sgfc -roun test.sgf' should yield:
+68 error and  11 warnings - 13 messages are critical.
+
+Following errors cannot be tested from within the test file:
+
+Fatal error 1: error in commandline: e.g. 'sgfc in.sgf out.sgf foo'
+Fatal error 2: error in commandline: e.g. 'sgfc -x in.sgf'
+Fatal error 3: could not open source file
+Fatal error 4: could not read source file
+Fatal error 5: not enough memory
+Fatal error 7: no SGF data found: e.g. 'sgfc COPYING'
+Error 9: variation nesting incomplete: add ']' to the end of test.sgf
+Fatal error 26: could not open destination file
+Fatal error 27: could not write destination file
+Error 34: file not saved due to critical errors: e.g. 'sgfc test.sgf out.sgf'
+Fatal error 46: unknown file format: create a file consisting of "(;FF[5])"
+Fatal error 48: no source file specified: e.g. 'sgfc -u'
+Fatal error 49: error in commandline: e.g. 'sgfc -ld'
+Fatal error 68: error in commandline: e.g. 'sgfc -ld'
+
+Every line yields one or more errors/warnings.
+test.sgf is compiled in a way that error/warning x occurs in line x, e.g.
+error 12 occurs in line 12.
+
+Exceptions from this rule:
+- error 10 occurs at end of file (line 69)
+- line 19 yields warning 19 & 53
+- line 31 yields error 31 & 35
+- line 40 yields warning 29 & 40
+
+If you want to test how robust your own application is, then try
+to read in this file :-)
+
+
+test-files/strict.sgf
+---------------------
+
+File to check/verify restrictive checking with SGFC.
+Just calling 'sgfc strict.sgf' should yield no warnings or errors.
+Calling with 'sgfc -r strict.sgf' should yield:
+1 error and 9 warnings.
+
+
+test-files/reorder.sgf
+----------------------
+
+File to check/verify reordering of variations with SGFC.
+Calling with 'sgfc -v reorder.sgf reorder-result.sgf' results
+in the variation levels of the first game tree being corrected,
+but the second game tree cannot be corrected.
+
+Calling with 'sgfc -v -z reorder.sgf reorder-result-z.sgf' results
+in the same level correction as before, but in addition the
+ordering of variations is reversed.
+
+
+test-files/*-result.sgf, test-files/*-output.txt
+------------------------------------------------
+
+These are captures of the console output of SGFC (*-output.txt)
+and the resulting SGF files (*-result.sgf).
+
+Call to SGFC            Console output          Resulting SGF
+---------------------   ----------------------  ---------------------
+sgfc test.sgf           test-output.txt         test-result.sgf
+sgfc -roun test.sgf     test-roun-output.txt    test-roun-result.sgf
+sgfc -r strict.sgf      strict-output.txt       strict-result.sgf
+sgfc -v reorder.sgf     reorder-output.txt      reorder-result.sgf
+sgfc -vz reorder.sgf    reorder-z-output.txt    reorder-z-result.sgf
