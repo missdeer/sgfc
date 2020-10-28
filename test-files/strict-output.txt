@@ -1,0 +1,11 @@
+Error 60: file contains more than one game tree
+Line:1 Col:8 - Warning 61: value of HA property differs from number of setup stones
+Line:3 Col:8 - Warning 61: value of HA property differs from number of setup stones
+Line:4 Col:8 - Warning 61: value of HA property differs from number of setup stones
+Line:5 Col:8 - Warning 61: value of HA property differs from number of setup stones
+Line:9 Col:36 - Warning 63: two successive moves have the same color
+Line:10 Col:36 - Warning 62: setup stones in main line found (outside root node)
+Line:11 Col:21 - Warning 62: setup stones in main line found (outside root node)
+Line:12 Col:34 - Warning 62: setup stones in main line found (outside root node)
+Line:12 Col:41 - Warning 63: two successive moves have the same color
+test-files/strict.sgf: 1 error(s)  9 warning(s)  

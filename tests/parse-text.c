@@ -103,7 +103,7 @@ START_TEST (test_composed_simpletext_linebreaks)
 END_TEST
 
 
-TCase *sgfc_tc_parse_text()
+TCase *sgfc_tc_parse_text(void)
 {
 	TCase *tc;
 

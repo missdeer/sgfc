@@ -44,7 +44,7 @@ START_TEST (test_add_effect_across_variations)
 END_TEST
 
 
-TCase *sgfc_tc_position()
+TCase *sgfc_tc_position(void)
 {
 	TCase *tc;
 

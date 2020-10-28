@@ -1,0 +1,74 @@
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]C[variation nesting incomplete: add '\]'\
+ to end of file];C[unexpected end of file -> see end of file]
+;W[ce];N[keep];B[cc]DM[1]BL[34]OB[1]KO[];PL[W];
+
+KM[5.5]
+DT[1994-03-12,13]
+RE[B+5.75]
+TM[32400]
+
+;W[aa];PL[W])
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18])
+(;FF[4]GM[12]AP[SGFC:1.18])
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18];N[ illegal ascii code];N[keep]
+)
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]B[aa];AR[aa:cr];LB[ff:text];C[Error 26: \
+couldn't open destination file
+   Error 27: couldn't write destination file];C[text1
+
+text2];MA[jj][kk];W[ff]
+(;N[main])
+(;AB[rs:ss];B[fg])
+(;N[keep];
+
+DT[a sunny afternoon last summer]
+RE[john wins]
+
+C[Error 34: file not saved because of critical errors]))
+(;FF[4]GM[1]SZ[12]AP[SGFC:1.18];B[aa];W[ab];MA[aa:ba][ab];TR[aa]
+;N[keep];LB[aa:a]MA[dd];GB[2];B[cd]DO[];W[dc]IT[];N[keep];
+
+GN[game info node]
+
+;N[keep])
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18])
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]C[unknown file format e.g. FF[5\] - woul\
+d cause fatal error];C[Error 48: no source file specified
+  Error 49: error in commandline: e.g. 'sgfc -lb file])
+(;FF[4]GM[1]SZ[52]AP[SGFC:1.18])
+(;FF[4]GM[1]SZ[10:52]AP[SGFC:1.18])
+(;FF[4]GM[1]SZ[19:25]AP[SGFC:1.18];VW[];VW[aa][bb][cc][dd]C[different g\
+ame types; occurs in line 19];N[keep]
+(;W[aa]
+(;B[bb])
+(;AE[aa];W[ba])
+(;AW[eg]AE[aa];B[ef]))
+(;B[dd];W[aa]
+(;B[bb])
+(;AE[aa];W[ba])
+(;AE[aa][dd];B[ef]))
+(;B[aa];W[aa])
+(;
+
+KM[5.5]
+
+;C[file contains more than one game tree; occurs on line xxx]
+))
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]AB[aa][bb])
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]
+
+HA[3]
+
+;B[bb])
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18];W[cc];AB[aa]AE[cc];B[dd];W[ee]
+;W[ff];C[too many variations])
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18];B[])
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18];B[])
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]
+(;C[var 1])
+(;C[var 2]))
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]
+(;C[var 1])
+(;C[var 2]))
+(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]C[unknown command line option]
+;N[keep])

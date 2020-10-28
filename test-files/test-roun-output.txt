@@ -1,0 +1,80 @@
+Line:6 Col:1 - Warning 6 (critical): possible SGF data found in front of game-tree (before '(;')
+Line:8 Col:4 - Error 8 (critical): illegal char(s) found: "illegal_chars"
+Line:11 Col:1 - Error 11 (critical): property identifier too long - more than 100 chars (deleted)
+Line:12 Col:2 - Error 12: empty variation found (ignored)
+Line:13 Col:8 - Error 13 (critical): property <W> may have only ONE value (other values deleted)
+Line:20 Col:15 - Error 20 (critical): property <AB> without any values found (ignored)
+Line:21 Col:2 - Error 21 (critical): illegal variation start found (ignored)
+Line:22 Col:3 - Warning 22: $00 byte deleted - binary file?
+Line:23 Col:4 - Error 23: property <LB> expects compose type value (value deleted): [aa]
+Line:23 Col:8 - Error 23: property <LB> expects compose type value (value deleted): [bb]
+Line:31 Col:8 - Error 31: property identifier consists of more than 2 uppercase letters: <LONGID>
+Line:31 Col:2 - Error 35: unknown property <LONGID> deleted
+Line:35 Col:1 - Error 35: unknown property <XX> deleted
+Line:36 Col:1 - Error 36 (critical): missing semicolon at start of game-tree (detection might be wrong [use -b2 in that case])
+Line:54 Col:2 - Error 54 (critical): values without property id found (deleted)
+Line:66 Col:20 - Error 66 (critical): node outside variation found. Missing '(' assumed.
+Line:67 Col:21 - Error 67 (critical): illegal chars after variation start '(' found. Missing ';' assumed.
+Line:69 Col:33 - Error 10 (critical): unexpected end of file
+Line:14 Col:3 - Error 14: illegal <WL> value deleted: [not much time left]
+Line:14 Col:25 - Error 14: illegal <B> value deleted: [90]
+Line:15 Col:3 - Error 15: illegal <B> value corrected; new value: [cc], old value: [c   c]
+Line:15 Col:30 - Error 15: illegal <DM> value corrected; new value: [1], old value: []
+Line:15 Col:13 - Error 15: illegal <BL> value corrected; new value: [34], old value: [34.]
+Line:15 Col:21 - Error 15: illegal <OB> value corrected; new value: [1], old value: [1 kk]
+Line:15 Col:36 - Error 15: illegal <KO> value corrected; new value: [], old value: [xxxx]
+Line:15 Col:47 - Error 15: illegal <PL> value corrected; new value: [W], old value: [w 123]
+Line:15 Col:85 - Error 15: illegal <KM> value corrected; new value: [5.5], old value: [5 1/2]
+Line:15 Col:58 - Error 15: illegal <DT> value corrected; new value: [1994-03-12,13], old value: [12th and 13th march 94]
+Line:15 Col:108 - Error 15: illegal <RE> value corrected; new value: [B+5.75], old value: [black wins by 5 3/4 points]
+Line:15 Col:95 - Error 15: illegal <TM> value corrected; new value: [32400], old value: [9 hours]
+Line:16 Col:2 - Error 16: lowercase char not allowed in property identifier
+Line:17 Col:4 - Error 17: empty <AW> value not allowed (deleted)
+Line:17 Col:9 - Warning 17: empty <C> value found (deleted)
+Line:17 Col:16 - Warning 17: empty <N> value found (deleted)
+Line:18 Col:10 - Error 18: illegal root property <GM> found (assuming GM[1])
+Line:18 Col:24 - Error 18: illegal root property <SZ> found (assuming 19x19)
+Line:19 Col:3 - Error 19 (critical): game stored in tree 3 is not Go. Cannot check move & position type -> errors will not get corrected!
+Line:19 Col:3 - Error 53: different game types stored in one file (may cause troubles with some applications)
+Line:25 Col:3 - Error 25: illegal <AR> value corrected; new value: [aa:cr], old value: [a a: c r]
+Line:25 Col:16 - Error 25: illegal <LB> value corrected; new value: [ff:text], old value: [f f:text]
+Line:28 Col:11 - Error 28: property <C> already exists (values merged)
+Line:28 Col:27 - Error 28: property <MA> already exists (values merged)
+Line:28 Col:40 - Error 28: property <W> already exists (deleted)
+Line:30 Col:19 - Error 30: setup and move properties mixed within a node (split into two nodes)
+Line:32 Col:2 - Error 32: root property <SZ> outside root node (deleted)
+Line:33 Col:17 - Error 33: gameinfo property <DT> has illegal format (NOT CORRECTED!) - value: [a sunny afternoon last summer]
+Line:33 Col:3 - Error 33: gameinfo property <RE> has illegal format (NOT CORRECTED!) - value: [john wins]
+Line:37 Col:9 - Error 37: black and white move within a node (split into two nodes)
+Line:38 Col:16 - Error 38: Markup <MA> position not unique ([partially] deleted) - value(s): [aa]
+Line:38 Col:30 - Error 38: Markup <MA> position not unique ([partially] deleted) - value(s): [aa]
+Line:39 Col:4 - Error 39: AddStone <AB> has no effect ([partially] deleted) - value(s): [aa]
+Line:39 Col:11 - Error 39: AddStone <AW> has no effect ([partially] deleted) - value(s): [ab]
+Line:39 Col:18 - Error 39: AddStone <AE> has no effect ([partially] deleted) - value(s): [ac]
+Line:40 Col:2 - Error 40: property <L> is not defined in FF[4] (converted)
+Line:40 Col:7 - Error 40: property <M> is not defined in FF[4] (converted)
+Line:41 Col:6 - Error 41: annotation property <GW> contradicts previous property (deleted)
+Line:40 Col:13 - Error 40: property <SC> is not defined in FF[4] (parsing done anyway)
+Line:40 Col:13 - Warning 29: obsolete property <SC> deleted
+Line:42 Col:11 - Error 42: combination of <BM-TE> found (converted to <DO>)
+Line:42 Col:27 - Error 42: combination of <TE-BM> found (converted to <IT>)
+Line:43 Col:2 - Error 43: move annotation <TE> without a move in node (deleted)
+Line:44 Col:22 - Error 44: game info entry <GC> outside game-info node (line:44 col:2) (deleted)
+Line:45 Col:3 - Error 45: different file formats stored in one file (may cause troubles with some applications)
+Line:47 Col:1 - Error 47: square board size in rectangular definition (corrected)
+Line:50 Col:8 - Error 50: board size too big (corrected to 52x52)
+Line:50 Col:23 - Error 50: board size too big (corrected to 10x52)
+Line:51 Col:8 - Error 51 (critical): used feature is not defined in FF[1] (parsing done anyway)
+Line:52 Col:2 - Error 52: <VW> property: values after '[]' value found (deleted)
+Line:52 Col:11 - Error 52: <VW> property: FF[4] definition in older FF found (parsing done anyway)
+Line:58 Col:9 - Error 58: forbidden move found (played on a point occupied by another stone)
+Line:59 Col:3 - Warning 59: obsolete <KI> property found: converted to <KM>
+Line:65 Col:15 - Error 65: FF4 style pass value '[]' in older format found (corrected)
+Line:65 Col:27 - Error 65: FF4 style pass value '[]' in older format found (corrected)
+Line:55 Col:2 - Warning 55: empty node deleted
+Error 60: file contains more than one game tree
+Line:61 Col:3 - Warning 61: value of HA property differs from number of setup stones
+Line:61 Col:21 - Warning 61: value of HA property differs from number of setup stones
+Line:62 Col:15 - Warning 62: setup stones in main line found (outside root node)
+Line:63 Col:14 - Warning 63: two successive moves have the same color
+test-files/test.sgf: 68 error(s)  11 warning(s)  (critical:13)  

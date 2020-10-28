@@ -54,7 +54,7 @@ START_TEST (test_composed_value_removed)
 END_TEST
 
 
-TCase *sgfc_tc_check_value()
+TCase *sgfc_tc_check_value(void)
 {
 	TCase *tc;
 

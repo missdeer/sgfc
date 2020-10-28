@@ -10,10 +10,10 @@
 #include <stdlib.h>
 #include <check.h>
 
-extern TCase *sgfc_tc_parse_text();
-extern TCase *sgfc_tc_check_value();
-extern TCase *sgfc_tc_trigger_errors();
-extern TCase *sgfc_tc_position();
+TCase *sgfc_tc_parse_text(void);
+TCase *sgfc_tc_check_value(void);
+TCase *sgfc_tc_trigger_errors(void);
+TCase *sgfc_tc_position(void);
 
 Suite *sgfc_suite(void)
 {

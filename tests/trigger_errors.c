@@ -459,7 +459,7 @@ START_TEST (test_E_MISSING_NODE_START)
 END_TEST
 
 
-TCase *sgfc_tc_trigger_errors()
+TCase *sgfc_tc_trigger_errors(void)
 {
 	TCase *tc;
 

@@ -1,0 +1,9 @@
+(;GM[1]W[aa](;B[bb])
+            (;AE[aa];W[ba])
+            (;AE[aa][dd]AW[eg]
+             ;B[ef]))
+
+(;GM[1];B[dd];W[aa](;B[bb])
+                   (;AE[aa];W[ba])
+                   (;AE[aa][dd]AW[eg]C[AE removes 2 stones!]
+                    ;B[ef]))

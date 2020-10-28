@@ -1,0 +1,5 @@
+Line:3 Col:21 - Warning 39: AddStone <AE> has no effect ([partially] deleted) - value(s): [dd]
+Line:1 Col:3 - Warning 24: move in root node found (split node into two)
+Line:1 Col:15 - Warning 57: variation level corrected
+Line:6 Col:22 - Warning 56: possible incorrect variation level cannot be corrected
+test-files/reorder.sgf: 4 warning(s)  
