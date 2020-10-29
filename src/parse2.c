@@ -423,69 +423,6 @@ static void DelEmptyNodes(struct SGFInfo *sgf, struct Node *n)
 
 
 /**************************************************************************
-*** Function:	CalcGameSig
-***				Calculates and prints game signature as proposed
-***				by Dave Dyer
-*** Parameters: r ... first root node
-***				ti .. first tree info structure
-*** Returns:	-
-**************************************************************************/
-
-static void CalcGameSig(struct Node *r, struct TreeInfo *ti)
-{
-	char id[14];
-	int i;
-	struct Property *b, *w;
-	struct Node *n;
-
-	while(r)
-	{
-		if(ti->GM == 1)
-		{
-			strcpy(id, "------ ------");
-			n = r;
-			i = 0;
-			while(n && i < 71)
-			{
-				b = FindProperty(n, TKN_B);
-				w = FindProperty(n, TKN_W);
-				if(b || w)
-				{
-					i++;
-					if(w)
-						b = w;
-
-					switch(i)
-					{
-						case 20:
-						case 40:
-						case 60:	id[i/10-2] = b->value->value[0];
-									id[i/10-1] = b->value->value[1];
-									break;
-						case 31:
-						case 51:
-						case 71:	id[i/10+4] = b->value->value[0];
-									id[i/10+5] = b->value->value[1];
-									break;
-						default:	break;
-					}
-				}
-				n = n->child;
-			}
-
-			printf("Game signature - tree %d: '%s'\n", ti->num, id);
-		}
-		else
-			printf("Game signature - tree %d: contains GM[%d] "
-				   "- can't calculate signature\n", ti->num, ti->GM);
-
-		r = r->sibling;
-		ti = ti->next;
-	}
-}
-
-
-/**************************************************************************
 *** Function:	SplitNode
 ***				Splits one node into two and moves selected properties
 ***				into the second node
@@ -920,9 +857,6 @@ void ParseSGF(struct SGFInfo *sgfc)
 
 	if(sgfc->options->reorder_variations)
 		ReorderVariations(sgfc, sgfc->root);
-
-	if(sgfc->options->game_signature)
-		CalcGameSig(sgfc->root, sgfc->tree);
 
 	if(sgfc->options->strict_checking)
 		StrictChecking(sgfc);

@@ -70,6 +70,9 @@ int main(int argc, char *argv[])
 
 	ParseSGF(sgfc);
 
+	if(sgfc->options->game_signature)
+		PrintGameSignatures(sgfc);
+
 	if(sgfc->options->outfile)
 	{
 		if(sgfc->options->write_critical || !sgfc->critical_count)

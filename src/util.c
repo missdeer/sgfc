@@ -862,3 +862,52 @@ struct Property *NewPropValue(struct SGFInfo *sgfc, struct Node *n, token id,
 
 	return(p);
 }
+
+
+/**************************************************************************
+*** Function:	CalcGameSig
+***				Calculates game signature as proposed by Dave Dyer
+*** Parameters: ti 		... first tree info structure
+*** 			buffer	... buffer to write game signature into; at least 14 bytes!
+*** Returns:	TRUE ... signature calculated // FALSE ... could not calc signature
+**************************************************************************/
+
+int CalcGameSig(struct TreeInfo *ti, char *buffer)
+{
+	int i;
+	struct Node *n;
+	struct Property *p;
+
+	if(ti->GM != 1)
+		return(FALSE);
+
+	strcpy(buffer, "------ ------");
+	i = 0;
+	n = ti->root;
+
+	while(n && i < 71)
+	{
+		p = FindProperty(n, TKN_B);
+		if(!p)
+			p = FindProperty(n, TKN_W);
+		n = n->child;
+		if(!p)
+			continue;
+		i++;
+		switch(i)
+		{
+			case 20:
+			case 40:
+			case 60:	buffer[i/10-2] = p->value->value[0];
+						buffer[i/10-1] = p->value->value[1];
+						break;
+			case 31:
+			case 51:
+			case 71:	buffer[i/10+4] = p->value->value[0];
+						buffer[i/10+5] = p->value->value[1];
+						break;
+			default:	break;
+		}
+	}
+	return(TRUE);
+}

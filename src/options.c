@@ -90,6 +90,31 @@ void PrintStatusLine(const struct SGFInfo *sgfc) {
 
 
 /**************************************************************************
+*** Function:	PrintGameSignatures
+***				Prints game signatures of all game trees to stdout.
+*** Parameters: sgfc ... pointer to SGFInfo structure
+*** Returns:	TRUE for success / FALSE in case of argument error
+**************************************************************************/
+
+void PrintGameSignatures(struct SGFInfo *sgfc)
+{
+	struct TreeInfo *ti;
+	char signature[14];
+
+	ti = sgfc->tree;
+	while(ti)
+	{
+		if(CalcGameSig(ti, signature))
+			printf("Game signature - tree %d: '%s'\n", ti->num, signature);
+		else
+			printf("Game signature - tree %d: contains GM[%d] "
+				   "- can't calculate signature\n", ti->num, ti->GM);
+		ti = ti->next;
+	}
+}
+
+
+/**************************************************************************
 *** Function:	ParseArgs
 ***				Parses commandline options
 ***				Options are represented by one char and are preceded with

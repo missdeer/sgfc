@@ -11,21 +11,22 @@
 
 /**** options.c ****/
 
-void PrintHelp(enum option_help format);
-void PrintStatusLine(const struct SGFInfo *sgfc);
-int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[]);
+void PrintHelp(enum option_help );
+void PrintStatusLine(const struct SGFInfo *);
+void PrintGameSignatures(struct SGFInfo *);
+int ParseArgs(struct SGFInfo *, int , char *[]);
 struct SGFCOptions *SGFCDefaultOptions(void);
 
-struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options, struct SaveFileHandler *sfh);
+struct SGFInfo *SetupSGFInfo(struct SGFCOptions *, struct SaveFileHandler *);
 void FreeSGFInfo(struct SGFInfo *);
 
 
 /**** load.c ****/
 
 void CopyValue(struct SGFInfo *, char *, const char *, size_t , int );
-struct PropValue *AddPropValue(struct SGFInfo *sgfc, struct Property *p, char *buffer,
-							   const char *value, size_t size, const char *value2, size_t size2);
-struct Property *AddProperty(struct Node *n, token id, char *id_buf, char *idstr);
+struct PropValue *AddPropValue(struct SGFInfo *, struct Property *, char *,
+							   const char *, size_t , const char *, size_t );
+struct Property *AddProperty(struct Node *, token , char *, char *);
 struct Node *NewNode(struct SGFInfo *, struct Node * , int);
 
 char *SkipText(struct SGFInfo *, char *, const char *, char , unsigned int );
@@ -35,10 +36,10 @@ int LoadSGFFromFileBuffer(struct SGFInfo *);
 
 /**** save.c ****/
 
-int SaveBufferIO_close(struct SaveFileHandler *sfh, U_LONG error);
+int SaveBufferIO_close(struct SaveFileHandler *, U_LONG );
 
 struct SaveFileHandler *SetupSaveFileIO(void);
-struct SaveFileHandler *SetupSaveBufferIO(int (*close)(struct SaveFileHandler *, U_LONG));
+struct SaveFileHandler *SetupSaveBufferIO(int (*)(struct SaveFileHandler *, U_LONG));
 struct SaveC_internal *SetupSaveC_internal(void);
 
 int SaveSGF(struct SGFInfo * , char *);
@@ -74,14 +75,14 @@ void Check_Properties(struct SGFInfo *, struct Node *, struct BoardStatus *);
 int ExpandPointList(struct SGFInfo *, struct Property *, struct PropValue *, int );
 void CompressPointList(struct SGFInfo *, struct Property * );
 
-void SplitNode(struct SGFInfo *sgfc, struct Node *n, U_SHORT flags, token id, int move);
+void SplitNode(struct SGFInfo *, struct Node *, U_SHORT , token , int );
 void ParseSGF(struct SGFInfo * );
 
 
 /**** execute.c ****/
 
 int Do_Move(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
-int Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st);
+int Do_AddStones(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
 int Do_Letter(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
 int Do_Mark(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
 int Do_Markup(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
@@ -117,21 +118,22 @@ void f_Enqueue(struct ListHead * , struct ListNode * );
 void f_Delete(struct ListHead * , struct ListNode * );
 
 int strnccmp(char * , char * , size_t);
-U_LONG KillChars(char *value, U_SHORT kill, char *cset);
-U_LONG TestChars(char *value, U_SHORT test, char *cset);
+U_LONG KillChars(char *, U_SHORT , char *);
+U_LONG TestChars(char *, U_SHORT , char *);
 
-struct Property *FindProperty(struct Node *n, token id);
+struct Property *FindProperty(struct Node *, token );
 
-struct PropValue *DelPropValue(struct Property *p, struct PropValue *v);
-struct Property *DelProperty(struct Node *n, struct Property *p);
-struct Node *DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error_code);
+struct Property *NewPropValue(struct SGFInfo *, struct Node *, token , const char *, const char *, int );
+struct PropValue *DelPropValue(struct Property *, struct PropValue *);
+struct Property *DelProperty(struct Node *, struct Property *);
+struct Node *DelNode(struct SGFInfo *, struct Node *, U_LONG );
 
-struct Property *NewPropValue(struct SGFInfo *sgfc, struct Node *n, token id, const char *value, const char *value2, int unique);
+int CalcGameSig(struct TreeInfo *, char *);
 
 
 /**** strict.c ****/
 
-void StrictChecking(struct SGFInfo *sgfc);
+void StrictChecking(struct SGFInfo *);
 
 
 /**** protos.h ****/
