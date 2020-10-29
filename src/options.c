@@ -66,26 +66,26 @@ void PrintHelp(enum option_help format)
 **************************************************************************/
 
 void PrintStatusLine(const struct SGFInfo *sgfc) {
-	fprintf(E_OUTPUT, "%s: ", sgfc->options->infile);
+	printf("%s: ", sgfc->options->infile);
 
 	if(sgfc->error_count || sgfc->warning_count)	/* errors & warnings */
 	{
 		if(sgfc->error_count)
-			fprintf(E_OUTPUT, "%d error(s)  ", sgfc->error_count);
+			printf("%d error(s)  ", sgfc->error_count);
 
 		if(sgfc->warning_count)
-			fprintf(E_OUTPUT, "%d warning(s)  ", sgfc->warning_count);
+			printf("%d warning(s)  ", sgfc->warning_count);
 
 		if(sgfc->critical_count)
-			fprintf(E_OUTPUT, "(critical:%d)  ", sgfc->critical_count);
+			printf("(critical:%d)  ", sgfc->critical_count);
 	}
 	else								/* file ok */
-		fprintf(E_OUTPUT, "OK  ");
+		printf("OK  ");
 
 	if(sgfc->ignored_count)
-		fprintf(E_OUTPUT, "(%d message(s) ignored)", sgfc->ignored_count);
+		printf("(%d message(s) ignored)", sgfc->ignored_count);
 
-	fprintf(E_OUTPUT, "\n");
+	printf("\n");
 }
 
 
