@@ -215,7 +215,7 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 							else
 							{
 								c += n-1;
-								sgf_token[m].flags |= DELETE_PROP;
+								options->delete_property[m] = true;
 							}
 							break;
 						case '-':	/* long options */
@@ -272,6 +272,7 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 
 	SaveMalloc(struct SGFCOptions *, options, sizeof(struct SGFCOptions), "SGFC options")
 	memset(options->error_enabled, true, sizeof(options->error_enabled));
+	memset(options->delete_property, false, sizeof(options->delete_property));
 	options->help = false;
 	options->warnings = true;
 	options->keep_head = false;

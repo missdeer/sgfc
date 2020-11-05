@@ -68,7 +68,6 @@ typedef enum {
 #define PVT_CHECK_EMPTY 0x0080u	/* empty values are checked by Check_xxx */
 #define SPLIT_SAVE		0x0100u	/* splitting with '\' (only text values) */
 #define DOUBLE_MERGE	0x0200u
-#define DELETE_PROP		0x0400u	/* used by -y option */
 #define TYPE_MOVE		0x1000u
 #define TYPE_SETUP		0x2000u
 #define TYPE_ROOT		0x4000u
@@ -310,7 +309,11 @@ struct SGFCError {
 #define E_MISSING_NODE_START	(67UL | E_ERROR | E_CRITICAL | E_SEARCHPOS)
 #define FE_UNKNOWN_LONG_OPTION	(68UL | E_FATAL_ERROR)
 
-#define MAX_ERROR_NUM			68
+#define MAX_ERROR_NUM	68
+
+
+/* known tokens (properties.c) */
+#define NUM_SGF_TOKENS	87
 
 
 /* command line options */
@@ -360,6 +363,7 @@ struct SGFCOptions
 	bool add_sgfc_ap_property;
 
 	bool error_enabled[MAX_ERROR_NUM];
+	bool delete_property[NUM_SGF_TOKENS];
 };
 
 /* used by save.c when using MemoryIO SaveFileHandler functions */

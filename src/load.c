@@ -494,7 +494,7 @@ static bool MakeProperties(struct SGFInfo *sgfc, struct Node *n)
 								}
 							}
 
-							if(sgf_token[i].flags & DELETE_PROP)
+							if(sgfc->options->delete_property[i])
 							{
 								PrintError(W_PROPERTY_DELETED, sgfc, id, "", propid);
 								if(!SkipValues(sgfc, true))

@@ -47,7 +47,7 @@ bool SaveSGF(struct SGFInfo *, char *);
 
 /**** properties.c ****/
 
-extern struct SGFToken sgf_token[];
+extern const struct SGFToken sgf_token[];
 
 
 /**** parse.c ****/
