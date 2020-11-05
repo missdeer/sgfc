@@ -111,7 +111,7 @@ struct BoardStatus
 	int bheight;			/* copy of sgf->info->bheight */
 	unsigned char *board;
 	U_SHORT *markup;
-	char mrkp_chngd;		/* markup field changed */
+	bool markup_changed;	/* markup field changed */
 	struct PathBoard *paths;	/* board for capturing stones */
 };
 
@@ -416,8 +416,8 @@ struct SGFToken
 	char *id;
 	U_CHAR priority;
 	U_CHAR ff;		/* file format */
-	int (*CheckValue)(struct SGFInfo *, struct Property *, struct PropValue *);
-	int (*Execute_Prop)(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
+	bool (*CheckValue)(struct SGFInfo *, struct Property *, struct PropValue *);
+	bool (*Execute_Prop)(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
 	U_INT flags;
 	U_SHORT data;	/* for Do_XXX */
 };

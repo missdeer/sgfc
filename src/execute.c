@@ -48,7 +48,7 @@ static void MakeCapture(int x, int y, struct BoardStatus *st)
 *** Returns:	true if capture / false if liberty found
 **************************************************************************/
 
-static int RecursiveCapture(unsigned char color, int x, int y, struct BoardStatus *st)
+static bool RecursiveCapture(unsigned char color, int x, int y, struct BoardStatus *st)
 {
 	if(!st->board[MXY(x,y)])
 		return false;		/* liberty found */
@@ -107,7 +107,7 @@ static void CaptureStones(struct BoardStatus *st, unsigned char color, int x, in
 *** Returns:	true: ok / false: delete property
 **************************************************************************/
 
-int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
+bool Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	int x, y;
 	unsigned char color;
@@ -144,7 +144,7 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 	if(sgfc->options->del_move_markup)		/* if del move markup, then */
 	{										/* mark move position as markup */
 		st->markup[MXY(x,y)] |= ST_MARKUP;	/* -> other markup at this */
-		st->mrkp_chngd = true;				/* position will be deleted */
+		st->markup_changed = true;			/* position will be deleted */
 	}
 
 	return true;
@@ -161,7 +161,7 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 *** Returns:	true: ok / false: delete property
 **************************************************************************/
 
-int Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
+bool Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	int x, y;
 	unsigned char color;
@@ -186,7 +186,7 @@ int Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 		}
 
 		st->markup[MXY(x,y)] |= ST_ADDSTONE;
-		st->mrkp_chngd = true;
+		st->markup_changed = true;
 
 		if(st->board[MXY(x,y)] == color)		/* Add property is redundant */
 		{
@@ -213,7 +213,7 @@ int Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 *** Returns:	true: ok / false: delete property
 **************************************************************************/
 
-int Do_Letter(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
+bool Do_Letter(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	int x, y;
 	struct PropValue *v;
@@ -235,7 +235,7 @@ int Do_Letter(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 		else
 		{
 			st->markup[MXY(x,y)] |= ST_LABEL;
-			st->mrkp_chngd = true;
+			st->markup_changed = true;
 			NewPropValue(sgfc, n, TKN_LB, v->value, letter, false);
 			letter[0]++;
 		}
@@ -257,7 +257,7 @@ int Do_Letter(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 *** Returns:	true: ok / false: delete property
 **************************************************************************/
 
-int Do_Mark(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
+bool Do_Mark(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	int x, y;
 	struct PropValue *v;
@@ -278,7 +278,7 @@ int Do_Mark(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 		else
 		{
 			st->markup[MXY(x,y)] |= ST_MARKUP;
-			st->mrkp_chngd = true;
+			st->markup_changed = true;
 
 			if(st->board[MXY(x,y)])
 				NewPropValue(sgfc, n, TKN_TR, v->value, NULL, false);
@@ -302,12 +302,12 @@ int Do_Mark(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 *** Returns:	true: ok / false: delete property
 **************************************************************************/
 
-int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
+bool Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	int x, y;
 	struct PropValue *v;
 	U_SHORT flag;
-	int empty, not_empty;
+	bool empty, not_empty;
 
 	if(sgfc->info->GM != 1)		/* game != Go? */
 		return true;
@@ -345,7 +345,7 @@ int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 		}
 
 		st->markup[MXY(x,y)] |= flag;
-		st->mrkp_chngd = true;
+		st->markup_changed = true;
 		v = v->next;
 	}
 
@@ -378,7 +378,7 @@ int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 *** Returns:	true: ok / false: delete property
 **************************************************************************/
 
-int Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
+bool Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	struct Property *hlp;
 	U_SHORT flag;
@@ -432,7 +432,7 @@ int Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct
 *** Returns:	true: ok / false: delete property
 **************************************************************************/
 
-int Do_Root(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
+bool Do_Root(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	if(n->parent)
 	{
@@ -454,7 +454,7 @@ int Do_Root(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 *** Returns:	true: ok / false: delete property
 **************************************************************************/
 
-int Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
+bool Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	int x, y;
 	long ki;
@@ -498,7 +498,7 @@ int Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 *** Returns:	true: ok / false: delete property
 **************************************************************************/
 
-int Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
+bool Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	struct PropValue *v;
 	int i = 0;

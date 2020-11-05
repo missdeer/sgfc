@@ -216,7 +216,8 @@ int Parse_Text(char *value, ...)
 
 int Parse_Move(char *value, ...)
 {
-	int ret = 1, emptyOrSpace = false, c;
+	int ret = 1, c;
+	bool emptyOrSpace = false;
 	struct SGFInfo *sgfc;
 	U_SHORT flags;
 
@@ -482,9 +483,9 @@ int Parse_Triple(char *value, ...)
 *** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
-static int Check_Single_Value(struct SGFInfo *sgfc, struct Property *p,
-							  char *value, char *buffer, U_SHORT flags,
-							  int (*Parse_Value)(char *, ...))
+static bool Check_Single_Value(struct SGFInfo *sgfc, struct Property *p,
+							   char *value, char *buffer, U_SHORT flags,
+							   int (*Parse_Value)(char *, ...))
 {
 	switch((*Parse_Value)(value, flags, sgfc))
 	{
@@ -501,8 +502,8 @@ static int Check_Single_Value(struct SGFInfo *sgfc, struct Property *p,
 	return true;
 }
 
-int Check_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
-				U_SHORT flags, int (*Parse_Value)(char *, ...))
+bool Check_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
+				 U_SHORT flags, int (*Parse_Value)(char *, ...))
 {
 	if (!Check_Single_Value(sgfc, p, v->value, v->buffer, flags, Parse_Value))
 		return false;
@@ -524,7 +525,7 @@ int Check_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
 *** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
-int Check_Text(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
+bool Check_Text(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	int value_len, value2_len = 0;
 
@@ -552,7 +553,7 @@ int Check_Text(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 *** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
-int Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
+bool Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	if(!Check_Value(sgfc, p, v, PARSE_POS, Parse_Move))
 		return false;
@@ -590,7 +591,7 @@ int Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 *** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
-int Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
+bool Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	int error = 0;
 
@@ -628,7 +629,7 @@ int Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 *** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
-int Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
+bool Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	int error = 0;
 
@@ -668,7 +669,7 @@ int Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 *** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
-int Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
+bool Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	if(!v->value2)	/* no compose type */
 	{

@@ -66,7 +66,7 @@ static void CheckHandicap(struct SGFInfo *sgfc, struct Node *root)
 *** Returns:	-
 **************************************************************************/
 
-static void CheckMoveOrder(struct SGFInfo *sgfc, struct Node *node, int check_setup)
+static void CheckMoveOrder(struct SGFInfo *sgfc, struct Node *node, bool check_setup)
 {
 	int old_col = 0;
 

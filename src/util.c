@@ -18,7 +18,7 @@
 
 
 /* Error reporting hooks */
-int (*print_error_handler)(U_LONG, struct SGFInfo *, va_list) = PrintErrorHandler;
+bool (*print_error_handler)(U_LONG, struct SGFInfo *, va_list) = PrintErrorHandler;
 void (*print_error_output_hook)(struct SGFCError *) = PrintErrorOutputHook;
 
 
@@ -224,7 +224,7 @@ int __attribute__((noreturn)) ExitWithOOMError(char *detail)
 ***				false: error disabled
 **************************************************************************/
 
-int PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
+bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 	int print_c = 0;
 	char *pos = NULL;
 	struct SGFCError error = {0, NULL, NULL, 0, 0, 0};
@@ -541,7 +541,7 @@ void f_Delete(struct ListHead *h, struct ListNode *n)
 *** Returns:	true=strings not equal, false= equal
 **************************************************************************/
 
-int strnccmp(char *a, char *b, size_t len)
+bool strnccmp(char *a, char *b, size_t len)
 {
 	if(!len)
 		len = strlen(a) + 1;
@@ -727,13 +727,13 @@ struct Property *DelProperty(struct Node *n, struct Property *p)
 ***				Deletes empty node if
 ***				- node has no siblings
 ***				- has siblings (or is root) but has max. one child
-*** Parameters: sgfc ... pointer to SGFInfo
-***				n	 ... node that should be deleted
-***				error_code ... error code to report (while deleting) or E_NO_ERROR
+*** Parameters: sgfc  ... pointer to SGFInfo
+***				n	  ... node that should be deleted
+***				error ... error code to report (while deleting) or E_NO_ERROR
 *** Returns:	n->next
 **************************************************************************/
 
-struct Node *DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error_code)
+struct Node *DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error)
 {
 	struct Node *p, *h;
 	struct Property *i;
@@ -747,8 +747,8 @@ struct Node *DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error_code)
 				return n->next;
 	}
 
-	if(error_code != E_NO_ERROR)
-		PrintError(error_code, sgfc, n->buffer);
+	if(error != E_NO_ERROR)
+		PrintError(error, sgfc, n->buffer);
 
 	if(n->prop)						/* delete properties */
 	{
@@ -839,7 +839,7 @@ struct Node *DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error_code)
 **************************************************************************/
 
 struct Property *NewPropValue(struct SGFInfo *sgfc, struct Node *n, token id,
-							  const char *value, const char *value2, int unique)
+							  const char *value, const char *value2, bool unique)
 {
 	struct Property *p;
 	struct PropValue *v;
@@ -870,7 +870,7 @@ struct Property *NewPropValue(struct SGFInfo *sgfc, struct Node *n, token id,
 *** Returns:	true ... signature calculated // false ... could not calc signature
 **************************************************************************/
 
-int CalcGameSig(struct TreeInfo *ti, char *buffer)
+bool CalcGameSig(struct TreeInfo *ti, char *buffer)
 {
 	int i;
 	struct Node *n;

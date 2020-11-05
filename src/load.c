@@ -36,7 +36,7 @@
 *** Returns:	true or false
 **************************************************************************/
 
-static int SkipSGFText(struct SGFInfo *sgfc, char brk, unsigned int mode)
+static bool SkipSGFText(struct SGFInfo *sgfc, char brk, unsigned int mode)
 {
 	char *pos = SkipText(sgfc, sgfc->current, sgfc->b_end, brk, mode);
 	if (!pos)
@@ -108,11 +108,11 @@ char *SkipText(struct SGFInfo *sgfc, char *s, const char *e, char end, unsigned 
 ***				 	(leading lowercase possible)
 *** Parameters: sgfc		... pointer to SGFInfo structure
 ***				print_error ... print error message
-***				errc		... error code for printing on failure (or E_NO_ERROR)
+***				error		... error code for printing on failure (or E_NO_ERROR)
 *** Returns:	true or false
 **************************************************************************/
 
-static int GetNextChar(struct SGFInfo *sgfc, int print_error, U_LONG errc)
+static bool GetNextChar(struct SGFInfo *sgfc, bool print_error, U_LONG error)
 {
 	int lc = 0;
 
@@ -152,8 +152,8 @@ static int GetNextChar(struct SGFInfo *sgfc, int print_error, U_LONG errc)
 		}
 	}
 
-	if(errc != E_NO_ERROR)
-		PrintError(errc, sgfc, sgfc->current);
+	if(error != E_NO_ERROR)
+		PrintError(error, sgfc, sgfc->current);
 	return false;
 }
 
@@ -167,7 +167,7 @@ static int GetNextChar(struct SGFInfo *sgfc, int print_error, U_LONG errc)
 *** Returns:	true or false
 **************************************************************************/
 
-static int SkipValues(struct SGFInfo *sgfc, int print_error)
+static bool SkipValues(struct SGFInfo *sgfc, bool print_error)
 {
 	if(!SkipSGFText(sgfc, '[', OUTSIDE|P_ERROR))	/* search start of first value */
 		return false;
@@ -197,17 +197,17 @@ static int SkipValues(struct SGFInfo *sgfc, int print_error)
 ***				d		... destination buffer
 ***				s		... source buffer
 ***				size	... number of bytes to copy
-***				printerror ... to print or not to print
+***				print_error ... to print or not to print
 *** Returns:	-
 **************************************************************************/
 
-void CopyValue(struct SGFInfo *sgfc, char *d, const char *s, size_t size, int printerror)
+void CopyValue(struct SGFInfo *sgfc, char *d, const char *s, size_t size, bool print_error)
 {
 	while(size--)
 	{
 		if(*s)
 			*d++ = *s;
-		else if(printerror)
+		else if(print_error)
 			PrintError(W_CTRL_BYTE_DELETED, sgfc, s);
 		s++;
 	}
@@ -271,7 +271,7 @@ struct PropValue *AddPropValue(struct SGFInfo *sgfc,
 *** Returns:	true or false
 **************************************************************************/
 
-static int NewValue(struct SGFInfo *sgfc, struct Property *p, U_SHORT flags)
+static bool NewValue(struct SGFInfo *sgfc, struct Property *p, U_SHORT flags)
 {
 	char *s, *t, *buffer;
 
@@ -357,10 +357,10 @@ struct Property *AddProperty(struct Node *n, token id, char *id_buf, char *id_st
 *** Returns:	true or false
 **************************************************************************/
 
-static int NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id_buf, char *idstr)
+static bool NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id_buf, char *idstr)
 {
 	struct Property *newp;
-	int ret = true;
+	bool ret = true;
 	char *too_many = NULL;
 
 	if(!n)	return true;
@@ -400,7 +400,7 @@ static int NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id_
 			break;
 	}
 
-	if (too_many)
+	if(too_many)
 		PrintError(E_TOO_MANY_VALUES, sgfc, too_many, idstr);
 
 	if(!newp->value)				/* property has values? */
@@ -418,7 +418,7 @@ static int NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id_
 *** Returns:	true or false
 **************************************************************************/
 
-static int MakeProperties(struct SGFInfo *sgfc, struct Node *n)
+static bool MakeProperties(struct SGFInfo *sgfc, struct Node *n)
 {
 	char *id, propid[100];
 	int i;
@@ -530,15 +530,15 @@ static int MakeProperties(struct SGFInfo *sgfc, struct Node *n)
 /**************************************************************************
 *** Function:	NewNode
 ***				Inserts a new node into the current SGF tree
-*** Parameters: sgfc	 ... pointer to SGFInfo structure
-***				parent	 ... parent node
-***				newchild ... create a new child for parent node
-***							 (insert an empty node into the tree)
+*** Parameters: sgfc	  ... pointer to SGFInfo structure
+***				parent	  ... parent node
+***				new_child ... create a new child for parent node
+***							  (insert an empty node into the tree)
 *** Returns:	pointer to node or NULL (success / error)
 ***				(exits on fatal error)
 **************************************************************************/
 
-struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, int newchild)
+struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, bool new_child)
 {
 	struct Node *newn, *hlp;
 
@@ -555,7 +555,7 @@ struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, int newchild)
 
 	if(parent)						/* no parent -> root node */
 	{
-		if(newchild)				/* insert node as new child of parent */
+		if(new_child)				/* insert node as new child of parent */
 		{
 			newn->child = parent->child;
 			parent->child = newn;
@@ -593,7 +593,7 @@ struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, int newchild)
 		}
 	}
 
-	if(!newchild)
+	if(!new_child)
 		if(!MakeProperties(sgfc, newn))
 			return NULL;
 
@@ -609,7 +609,7 @@ struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, int newchild)
 *** Returns:	true or false on success/error
 **************************************************************************/
 
-static int BuildSGFTree(struct SGFInfo *sgfc, struct Node *r)
+static bool BuildSGFTree(struct SGFInfo *sgfc, struct Node *r)
 {
 	int end_tree = 0, empty = 1;
 
@@ -671,11 +671,11 @@ static int BuildSGFTree(struct SGFInfo *sgfc, struct Node *r)
 ***				sets sgfc->current to '(' of start mark '(;'
 *** Parameters: sgfc	   ... pointer to SGFInfo structure
 ***				first_time ... search for the first time?
-***							  (true -> if search fails -> fatal error)
+***							   (true -> if search fails -> fatal error)
 *** Returns:	0 ... ok / 1 ... missing ';'  / -1 ... fatal error
 **************************************************************************/
 
-static int FindStart(struct SGFInfo *sgfc, int first_time)
+static int FindStart(struct SGFInfo *sgfc, bool first_time)
 {
 	int warn = 0, o, c;
 	char *tmp;
@@ -762,7 +762,7 @@ static int FindStart(struct SGFInfo *sgfc, int first_time)
 *** Returns:	true on success, false on fatal error
 **************************************************************************/
 
-int LoadSGF(struct SGFInfo *sgfc, char *name)
+bool LoadSGF(struct SGFInfo *sgfc, char *name)
 {
 	long size;
 	FILE *file;
@@ -813,7 +813,7 @@ load_error:
 *** Returns:	true on success, false on fatal error
 **************************************************************************/
 
-int LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
+bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 {
 	int miss;
 

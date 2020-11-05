@@ -339,7 +339,8 @@ static int Parse_Result(char *val, ...)
 static int CorrectDate(char *value)
 {
 	int year = -1, month = -1, day = -1, day2 = -1;
-	int i, charmonth = false;
+	int i;
+	bool char_month = false;
 	long n;
 	char *s;
 	const char months[26][4] = { "Jan", "jan", "Feb", "feb", "Mar", "mar",
@@ -355,12 +356,12 @@ static int CorrectDate(char *value)
 		s = strstr(value, months[i]);
 		if(s)
 		{
-			if(charmonth)		/* found TWO month names */
+			if(char_month)		/* found TWO month names */
 				return 0;
 			else
 			{
 				month = i/2 + 1;
-				charmonth = true;
+				char_month = true;
 			}
 		}
 	}
@@ -378,7 +379,7 @@ static int CorrectDate(char *value)
 				if(year < 0)	year = n;
 				else			return 0;	/* two values >31 */
 			else
-			if(n > 12 || charmonth)
+			if(n > 12 || char_month)
 				if(day < 0)		day = n;
 				else
 				if(day2 < 0)	day2 = n;
@@ -424,7 +425,8 @@ static int CorrectDate(char *value)
 
 static int Parse_Date(char *value, ...)
 {
-	int ret = 1, allowed, type, hasgoty, turn, oldtype;
+	int ret = 1, allowed, type, turn, oldtype;
+	bool has_year;
 	char *c, *d;
 	long num;
 	/* type:	0 YYYY
@@ -484,7 +486,8 @@ static int Parse_Date(char *value, ...)
 
 	c = value;
 	allowed = 0x07;
-	oldtype = type = hasgoty = 0;
+	oldtype = type = 0;
+	has_year = false;
 	turn = 1;
 
 	while(ret && *c)			/* parse the nasty bastard */
@@ -503,7 +506,7 @@ static int Parse_Date(char *value, ...)
 		}
 
 		if((c-d) == 4)			/* date has year */
-			hasgoty = true;
+			has_year = true;
 
 		switch(*c)
 		{
@@ -519,15 +522,15 @@ static int Parse_Date(char *value, ...)
 
 			case 0:		switch(turn)	/* date has got which type? */
 						{
-							case 1: if(hasgoty)	type = 0;
+							case 1: if(has_year) type = 0;
 									else
 										if(oldtype == 1 || oldtype == 4)
 											type = 4;
 										else
 											type = 5;
 									break;
-							case 2: if(hasgoty)	type = 1;
-									else		type = 3;
+							case 2: if(has_year) type = 1;
+									else		 type = 3;
 									break;
 							case 3:	type = 2;
 									break;
@@ -550,7 +553,7 @@ static int Parse_Date(char *value, ...)
 						}
 
 						turn = 1;		/* new date to parse */
-						hasgoty = false;
+						has_year = false;
 						oldtype = type;
 						break;
 		}
@@ -662,7 +665,7 @@ static int PromptGameInfo(struct SGFInfo * sgfc, struct Property *p,
 *** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
-int Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
+bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	char *val;
 	size_t size;

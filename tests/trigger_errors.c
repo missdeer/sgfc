@@ -14,7 +14,7 @@ static U_LONG allowed_error;	/* additional error that might occur */
 static bool expected_error_occurred;
 
 
-static int mock_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglist)
+static bool mock_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglist)
 {
 	if(type == expected_error)
 		expected_error_occurred = true;

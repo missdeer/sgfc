@@ -35,10 +35,10 @@
 /* internal data for save.c functions. */
 /* Used instead of local static variables */
 struct SaveC_internal {
-	int linelen;	/* used for line breaking algorithm */
+	int linelen;		/* used for line breaking algorithm */
 	int chars_in_node;
 	int eol_in_node;
-	int gi_written; /* used by WriteProperty for newlines after gameinfo properties */
+	bool gi_written;	/* used by WriteProperty for newlines after gameinfo properties */
 };
 
 
@@ -243,7 +243,7 @@ static int WriteChar(struct SGFInfo *sgfc, char c, U_SHORT spc)
 *** Returns:	true or false
 **************************************************************************/
 
-static int WritePropValue(struct SGFInfo *sgfc, const char *v, int second, U_SHORT flags)
+static int WritePropValue(struct SGFInfo *sgfc, const char *v, bool second, U_SHORT flags)
 {
 	U_SHORT fl;
 
@@ -289,7 +289,7 @@ static int WriteProperty(struct SGFInfo *sgfc, struct TreeInfo *info, struct Pro
 {
 	struct PropValue *v;
 	char *p;
-	int do_tt;
+	bool do_tt;
 
 	if(prop->flags & TYPE_GINFO)
 	{
@@ -477,7 +477,7 @@ static int WriteTree(struct SGFInfo *sgfc, struct TreeInfo *info,
 *** Returns:	true on success, false on error while writing file(s)
 **************************************************************************/
 
-int SaveSGF(struct SGFInfo *sgfc, char *base_name)
+bool SaveSGF(struct SGFInfo *sgfc, char *base_name)
 {
 	struct Node *n;
 	struct TreeInfo *info;

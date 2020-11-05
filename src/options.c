@@ -133,7 +133,7 @@ void PrintGameSignatures(struct SGFInfo *sgfc)
 *** Returns:	true for success / false in case of argument error
 **************************************************************************/
 
-int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
+bool ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 {
 	int i, n, m;
 	char *c, *hlp;

@@ -20,11 +20,11 @@
 *** Parameters: sgfc  ... pointer to SGFInfo structure
 ***				p	  ... property
 ***				v	  ... compose value to be expanded
-***				error ... if true print errors
+***				print_error ... if true print errors
 *** Returns:	true if success / false on error (exits on low memory)
 **************************************************************************/
 
-int ExpandPointList(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v, int error)
+bool ExpandPointList(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v, bool print_error)
 {
 	int x1, y1, x2, y2, h = 0;
 	char val[2];
@@ -38,7 +38,7 @@ int ExpandPointList(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 	{
 		free(v->value2);
 		v->value2 = NULL;
-		if(error)
+		if(print_error)
 			PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->buffer, p->idstr, v->value);
 		return false;
 	}
@@ -57,7 +57,7 @@ int ExpandPointList(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 		v->value2[1] = EncodePosChar(y2);
 	}
 
-	if(h && error)
+	if(h && print_error)
 		PrintError(E_BAD_COMPOSE_CORRECTED, sgfc, v->buffer, p->idstr, v->value, v->value2);
 
 	for(; x1 <= x2; x1++)		/* expand point list */
@@ -83,7 +83,8 @@ int ExpandPointList(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 void CompressPointList(struct SGFInfo *sgfc, struct Property *p)
 {
 	char board[MAX_BOARDSIZE+2][MAX_BOARDSIZE+2];
-	int x, y, yy, i, j, m, mx, my, expx, expy;
+	int x, y, yy, i, j, m, mx, my;
+	bool expx, expy;
 	struct PropValue *v;
 	char val1[12], val2[2];
 
@@ -434,7 +435,7 @@ static void DelEmptyNodes(struct SGFInfo *sgf, struct Node *n)
 *** Returns:	-
 **************************************************************************/
 
-void SplitNode(struct SGFInfo *sgfc, struct Node *n, U_SHORT flags, token id, int move)
+void SplitNode(struct SGFInfo *sgfc, struct Node *n, U_SHORT flags, token id, bool move)
 {
 	struct Property *p, *hlp;
 	struct Node *newnode;
@@ -778,7 +779,7 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatu
 			}
 
 			/* markup is reused (set to 0 for each new node) */
-			st->mrkp_chngd = true;
+			st->markup_changed = true;
 
 			/* path_board is reused (paths marked with different path_num) */
 		}
@@ -797,16 +798,16 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatu
 				SaveMalloc(struct PathBoard *, st->paths, sizeof(struct PathBoard), "path_board buffer")
 				memset(st->paths, 0, sizeof(struct PathBoard));
 			}
-			st->mrkp_chngd = true;
+			st->markup_changed = true;
 		}
 
 		n = r;
 		while(n)
 		{
 			st->annotate = 0;
-			if(st->mrkp_chngd && st->markup)
+			if(st->markup_changed && st->markup)
 				memset(st->markup, 0, area * sizeof(U_SHORT));
-			st->mrkp_chngd = false;
+			st->markup_changed = false;
 
 			if(n->sibling && n != r)		/* for n=r loop is done outside */
 			{
