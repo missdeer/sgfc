@@ -34,7 +34,7 @@
 
 #ifndef VERSION_NO_MAIN
 
-int main(int argc, char *argv[])
+int main(const int argc, const char *argv[])
 {
 	int ret = 20;
 	struct SGFInfo *sgfc;

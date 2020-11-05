@@ -315,7 +315,7 @@ static bool NewValue(struct SGFInfo *sgfc, struct Property *p, U_SHORT flags)
 ***				(exits on fatal error)
 **************************************************************************/
 
-struct Property *AddProperty(struct Node *n, token id, char *id_buf, char *id_str)
+struct Property *AddProperty(struct Node *n, token id, char *id_buf, const char *id_str)
 {
 	struct Property *newp;
 	char *str;
@@ -762,7 +762,7 @@ static int FindStart(struct SGFInfo *sgfc, bool first_time)
 *** Returns:	true on success, false on fatal error
 **************************************************************************/
 
-bool LoadSGF(struct SGFInfo *sgfc, char *name)
+bool LoadSGF(struct SGFInfo *sgfc, const char *name)
 {
 	long size;
 	FILE *file;

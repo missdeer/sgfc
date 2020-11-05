@@ -541,7 +541,7 @@ void f_Delete(struct ListHead *h, struct ListNode *n)
 *** Returns:	true=strings not equal, false= equal
 **************************************************************************/
 
-bool strnccmp(char *a, char *b, size_t len)
+bool strnccmp(const char *a, const char *b, size_t len)
 {
 	if(!len)
 		len = strlen(a) + 1;
@@ -573,7 +573,7 @@ bool strnccmp(char *a, char *b, size_t len)
 *** Returns:	number of chars removed from string
 **************************************************************************/
 
-U_LONG KillChars(char *value, U_SHORT kill, char *cset)
+U_LONG KillChars(char *value, U_SHORT kill, const char *cset)
 {
 	U_LONG faulty = 0, err = 0;
 	char *c, *d;
@@ -618,10 +618,10 @@ U_LONG KillChars(char *value, U_SHORT kill, char *cset)
 *** Returns:	number of selected chars found in value
 **************************************************************************/
 
-U_LONG TestChars(char *value, U_SHORT test, char *cset)
+U_LONG TestChars(const char *value, U_SHORT test, const char *cset)
 {
 	U_LONG faulty = 0;
-	char *c;
+	const char *c;
 
 	for(c = value; *c; c++)
 	{

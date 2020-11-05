@@ -21,8 +21,8 @@
 
 void PrintHelp(enum option_help);
 void PrintStatusLine(const struct SGFInfo *);
-void PrintGameSignatures(struct SGFInfo *);
-bool ParseArgs(struct SGFInfo *, int, char *[]);
+void PrintGameSignatures(const struct SGFInfo *);
+bool ParseArgs(struct SGFInfo *, const int, const char *[]);
 struct SGFCOptions *SGFCDefaultOptions(void);
 
 struct SGFInfo *SetupSGFInfo(struct SGFCOptions *, struct SaveFileHandler *);
@@ -34,11 +34,11 @@ void FreeSGFInfo(struct SGFInfo *);
 void CopyValue(struct SGFInfo *, char *, const char *, size_t, bool);
 struct PropValue *AddPropValue(struct SGFInfo *, struct Property *, char *,
 							   const char *, size_t, const char *, size_t);
-struct Property *AddProperty(struct Node *, token, char *, char *);
+struct Property *AddProperty(struct Node *, token, char *, const char *);
 struct Node *NewNode(struct SGFInfo *, struct Node *, bool);
 
 char *SkipText(struct SGFInfo *, char *, const char *, char, unsigned int);
-bool LoadSGF(struct SGFInfo *, char *);
+bool LoadSGF(struct SGFInfo *, const char *);
 bool LoadSGFFromFileBuffer(struct SGFInfo *);
 
 
@@ -50,7 +50,7 @@ struct SaveFileHandler *SetupSaveFileIO(void);
 struct SaveFileHandler *SetupSaveBufferIO(int (*)(struct SaveFileHandler *, U_LONG));
 struct SaveC_internal *SetupSaveC_internal(void);
 
-bool SaveSGF(struct SGFInfo *, char *);
+bool SaveSGF(struct SGFInfo *, const char *);
 
 
 /**** properties.c ****/
@@ -125,9 +125,9 @@ void f_AddTail(struct ListHead *, struct ListNode *);
 void f_Enqueue(struct ListHead *, struct ListNode *);
 void f_Delete(struct ListHead *, struct ListNode *);
 
-bool strnccmp(char *, char *, size_t);
-U_LONG KillChars(char *, U_SHORT, char *);
-U_LONG TestChars(char *, U_SHORT, char *);
+bool strnccmp(const char *, const char *, size_t);
+U_LONG KillChars(char *, U_SHORT, const char *);
+U_LONG TestChars(const char *, U_SHORT, const char *);
 
 struct Property *FindProperty(struct Node *, token);
 

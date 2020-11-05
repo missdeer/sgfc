@@ -20,7 +20,7 @@
 ***				Prints banner + options
 **************************************************************************/
 
-void PrintHelp(enum option_help format)
+void PrintHelp(const enum option_help format)
 {
 	puts(
 			" SGFC V1.18  - Smart Game Format Syntax Checker & Converter\n"
@@ -104,7 +104,7 @@ void PrintStatusLine(const struct SGFInfo *sgfc) {
 *** Returns:	true for success / false in case of argument error
 **************************************************************************/
 
-void PrintGameSignatures(struct SGFInfo *sgfc)
+void PrintGameSignatures(const struct SGFInfo *sgfc)
 {
 	struct TreeInfo *ti;
 	char signature[14];
@@ -133,10 +133,11 @@ void PrintGameSignatures(struct SGFInfo *sgfc)
 *** Returns:	true for success / false in case of argument error
 **************************************************************************/
 
-bool ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
+bool ParseArgs(struct SGFInfo *sgfc, const int argc, const char *argv[])
 {
 	int i, n, m;
-	char *c, *hlp;
+	const char *c;
+	char *hlp;
 	struct SGFCOptions *options = sgfc->options;
 
 	for(i = 1; i < argc; i++)
@@ -167,15 +168,15 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 						case 'z':	options->reorder_variations = true;		break;
 						case 'h':	options->help = 2;						break;
 						case 'd':
-							c++; hlp = c;
-							n = (int)strtol(c, &c, 10);
+							c++;
+							n = (int)strtol(c, &hlp, 10);
 							if(n < 1 || n > MAX_ERROR_NUM)
 							{
-								PrintError(FE_BAD_PARAMETER, sgfc, hlp);
+								PrintError(FE_BAD_PARAMETER, sgfc, c);
 								return false;
 							}
 							options->error_enabled[n-1] = false;
-							c--;
+							c = hlp - 1;
 							break;
 						case 'l':
 							c++;

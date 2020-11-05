@@ -338,8 +338,8 @@ enum option_findstart {
 
 struct SGFCOptions
 {
-	char *infile;
-	char *outfile;
+	const char *infile;
+	const char *outfile;
 	enum option_linebreaks linebreaks;
 	enum option_findstart find_start;
 	enum option_help help;

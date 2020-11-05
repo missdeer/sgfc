@@ -477,7 +477,7 @@ static int WriteTree(struct SGFInfo *sgfc, struct TreeInfo *info,
 *** Returns:	true on success, false on error while writing file(s)
 **************************************************************************/
 
-bool SaveSGF(struct SGFInfo *sgfc, char *base_name)
+bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 {
 	struct Node *n;
 	struct TreeInfo *info;
