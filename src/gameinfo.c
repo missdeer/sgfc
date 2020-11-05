@@ -24,25 +24,25 @@
 
 static int GetFraction(char *val)
 {
-	int frac = 0;
+	int fraction = 0;
 	char *t;
 
-			if((t = strstr(val, "1/2")))	frac = 2;
-	else	if((t = strstr(val, "3/4")))	frac = 3;
-	else	if((t = strstr(val, "1/4")))	frac = 1;
-	else	if((t = strstr(val, "2/4")))	frac = 2;
+			if((t = strstr(val, "1/2")))	fraction = 2;
+	else	if((t = strstr(val, "3/4")))	fraction = 3;
+	else	if((t = strstr(val, "1/4")))	fraction = 1;
+	else	if((t = strstr(val, "2/4")))	fraction = 2;
 
 	if(t)
 		strcpy(t, "   ");		/* remove fraction */
 
-	if(strstr(val, "half"))		frac = 2;
-	if(strstr(val, "one"))		frac += 4;
-	if(strstr(val, "two"))		frac += 8;
-	if(strstr(val, "three"))	frac += 12;
-	if(strstr(val, "four"))		frac += 16;
-	if(strstr(val, "five"))		frac += 20;
+	if(strstr(val, "half"))		fraction = 2;
+	if(strstr(val, "one"))		fraction += 4;
+	if(strstr(val, "two"))		fraction += 8;
+	if(strstr(val, "three"))	fraction += 12;
+	if(strstr(val, "four"))		fraction += 16;
+	if(strstr(val, "five"))		fraction += 20;
 
-	return frac;
+	return fraction;
 }
 
 
@@ -55,21 +55,21 @@ static int GetFraction(char *val)
 
 static int Parse_Komi(char *val, ...)
 {
-	int frac, ret;
+	int fraction, ret;
 	double points = 0.0;
 
-	frac = GetFraction(val);
+	fraction = GetFraction(val);
 
-	if((frac == 4) && strstr(val, "none"))
-		frac = -1;
+	if((fraction == 4) && strstr(val, "none"))
+		fraction = -1;
 
 	ret = Parse_Float(val, 0);
 
-	if(frac)
+	if(fraction)
 	{
-		if(frac > 0)
+		if(fraction > 0)
 		{
-			points = frac / 4.0;
+			points = fraction / 4.0;
 			if(ret)
 				points += atof(val);
 		}

@@ -9,6 +9,14 @@
 
 #include <stdarg.h>
 
+#ifdef _MSC_VER
+#define no_return __declspec(noreturn)
+#elif __GNUC__
+#define no_return __attribute__((noreturn))
+#else
+#define no_return /* NOP */
+#endif
+
 /**** options.c ****/
 
 void PrintHelp(enum option_help);
@@ -106,7 +114,7 @@ extern void (*print_error_output_hook)(struct SGFCError *);
 
 void SearchPos(const char *, struct SGFInfo *, int *, int *);
 int PrintError(U_LONG, struct SGFInfo *, ...);
-int __attribute__((noreturn)) ExitWithOOMError(char *);
+no_return void ExitWithOOMError(char *);
 bool PrintErrorHandler(U_LONG, struct SGFInfo *, va_list);
 void PrintErrorOutputHook(struct SGFCError *);
 

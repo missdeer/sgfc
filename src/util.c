@@ -204,7 +204,7 @@ int PrintError(U_LONG type, struct SGFInfo *sgfc, ...) {
 ***				Might be called, when SGFInfo is not properly set up yet.
 **************************************************************************/
 
-int __attribute__((noreturn)) ExitWithOOMError(char *detail)
+no_return void ExitWithOOMError(char *detail)
 {
 	int err_num = FE_OUT_OF_MEMORY & M_ERROR_NUM;
 	fprintf(E_OUTPUT, "Fatal error %d: ", err_num);
