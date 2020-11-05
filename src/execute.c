@@ -7,7 +7,6 @@
 ***
 **************************************************************************/
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -46,29 +45,29 @@ static void MakeCapture(int x, int y, struct BoardStatus *st)
 *** Parameters: color ... enemy color
 ***				x	  ... x position
 ***				y	  ... y position
-*** Returns:	TRUE if capture / FALSE if liberty found
+*** Returns:	true if capture / false if liberty found
 **************************************************************************/
 
 static int RecursiveCapture(unsigned char color, int x, int y, struct BoardStatus *st)
 {
 	if(!st->board[MXY(x,y)])
-		return(FALSE);		/* liberty found */
+		return false;		/* liberty found */
 
 	if(st->board[MXY(x,y)] == color)
-		return(TRUE);		/* enemy found */
+		return true;		/* enemy found */
 
 	if(st->paths->board[MXY(x,y)] == st->paths->num)
-		return(TRUE);
+		return true;
 
 	st->paths->board[MXY(x,y)] = st->paths->num;
 
 	/* recursive calls */
-	if(x > 0 			 && !RecursiveCapture(color, x - 1, y, st))	return(FALSE);
-	if(y > 0 			 && !RecursiveCapture(color, x, y - 1, st))	return(FALSE);
-	if(x < st->bwidth-1  && !RecursiveCapture(color, x + 1, y, st))	return(FALSE);
-	if(y < st->bheight-1 && !RecursiveCapture(color, x, y + 1, st))	return(FALSE);
+	if(x > 0 			 && !RecursiveCapture(color, x - 1, y, st))	return false;
+	if(y > 0 			 && !RecursiveCapture(color, x, y - 1, st))	return false;
+	if(x < st->bwidth-1  && !RecursiveCapture(color, x + 1, y, st))	return false;
+	if(y < st->bheight-1 && !RecursiveCapture(color, x, y + 1, st))	return false;
 
-	return(TRUE);
+	return true;
 }
 
 
@@ -105,7 +104,7 @@ static void CaptureStones(struct BoardStatus *st, unsigned char color, int x, in
 ***				n	 ... Node that contains the property
 ***				p	 ... property
 ***				st	 ... current board status
-*** Returns:	TRUE: ok / FALSE: delete property
+*** Returns:	true: ok / false: delete property
 **************************************************************************/
 
 int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
@@ -114,19 +113,19 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 	unsigned char color;
 
 	if(sgfc->info->GM != 1)		/* game != Go? */
-		return(TRUE);
+		return true;
 
 	if(st->annotate & ST_MOVE)	/* there's a move already? */
 	{
 		PrintError(E_TWO_MOVES_IN_NODE, sgfc, p->buffer);
-		SplitNode(sgfc, n, 0, p->id, TRUE);
-		return(TRUE);
+		SplitNode(sgfc, n, 0, p->id, true);
+		return true;
 	}
 
 	st->annotate |= ST_MOVE;
 
 	if(!strlen(p->value->value))	/* pass move */
-		return(TRUE);
+		return true;
 
 	x = DecodePosChar(p->value->value[0]) - 1;
 	y = DecodePosChar(p->value->value[1]) - 1;
@@ -145,10 +144,10 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 	if(sgfc->options->del_move_markup)		/* if del move markup, then */
 	{										/* mark move position as markup */
 		st->markup[MXY(x,y)] |= ST_MARKUP;	/* -> other markup at this */
-		st->mrkp_chngd = TRUE;				/* position will be deleted */
+		st->mrkp_chngd = true;				/* position will be deleted */
 	}
 
-	return(TRUE);
+	return true;
 }
 
 
@@ -159,7 +158,7 @@ int Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 ***				n	 ... Node that contains the property
 ***				p	 ... property
 ***				st	 ... current board status
-*** Returns:	TRUE: ok / FALSE: delete property
+*** Returns:	true: ok / false: delete property
 **************************************************************************/
 
 int Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
@@ -169,7 +168,7 @@ int Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 	struct PropValue *v;
 
 	if(sgfc->info->GM != 1)		/* game != Go? */
-		return(TRUE);
+		return true;
 
 	color = (unsigned char)sgf_token[p->id].data;
 
@@ -187,7 +186,7 @@ int Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 		}
 
 		st->markup[MXY(x,y)] |= ST_ADDSTONE;
-		st->mrkp_chngd = TRUE;
+		st->mrkp_chngd = true;
 
 		if(st->board[MXY(x,y)] == color)		/* Add property is redundant */
 		{
@@ -200,7 +199,7 @@ int Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 		v = v->next;
 	}
 
-	return(TRUE);
+	return true;
 }
 
 
@@ -211,7 +210,7 @@ int Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 ***				n	 ... Node that contains the property
 ***				p	 ... property
 ***				st	 ... current board status
-*** Returns:	TRUE: ok / FALSE: delete property
+*** Returns:	true: ok / false: delete property
 **************************************************************************/
 
 int Do_Letter(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
@@ -221,7 +220,7 @@ int Do_Letter(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 	char letter[2] = "a";
 
 	if(sgfc->info->GM != 1)		/* game != Go? */
-		return(TRUE);
+		return true;
 
 	v = p->value;
 	while(v)
@@ -236,15 +235,15 @@ int Do_Letter(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 		else
 		{
 			st->markup[MXY(x,y)] |= ST_LABEL;
-			st->mrkp_chngd = TRUE;
-			NewPropValue(sgfc, n, TKN_LB, v->value, letter, FALSE);
+			st->mrkp_chngd = true;
+			NewPropValue(sgfc, n, TKN_LB, v->value, letter, false);
 			letter[0]++;
 		}
 
 		v = v->next;
 	}
 
-	return(FALSE);
+	return false;
 }
 
 
@@ -255,7 +254,7 @@ int Do_Letter(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 ***				n	 ... Node that contains the property
 ***				p	 ... property
 ***				st	 ... current board status
-*** Returns:	TRUE: ok / FALSE: delete property
+*** Returns:	true: ok / false: delete property
 **************************************************************************/
 
 int Do_Mark(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
@@ -264,7 +263,7 @@ int Do_Mark(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 	struct PropValue *v;
 
 	if(sgfc->info->GM != 1)		/* game != Go? */
-		return(TRUE);
+		return true;
 
 	v = p->value;
 	while(v)
@@ -279,17 +278,17 @@ int Do_Mark(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 		else
 		{
 			st->markup[MXY(x,y)] |= ST_MARKUP;
-			st->mrkp_chngd = TRUE;
+			st->mrkp_chngd = true;
 
 			if(st->board[MXY(x,y)])
-				NewPropValue(sgfc, n, TKN_TR, v->value, NULL, FALSE);
+				NewPropValue(sgfc, n, TKN_TR, v->value, NULL, false);
 			else
-				NewPropValue(sgfc, n, TKN_MA, v->value, NULL, FALSE);
+				NewPropValue(sgfc, n, TKN_MA, v->value, NULL, false);
 		}
 		v = v->next;
 	}
 
-	return(FALSE);
+	return false;
 }
 
 
@@ -300,7 +299,7 @@ int Do_Mark(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 ***				n	 ... Node that contains the property
 ***				p	 ... property
 ***				st	 ... current board status
-*** Returns:	TRUE: ok / FALSE: delete property
+*** Returns:	true: ok / false: delete property
 **************************************************************************/
 
 int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
@@ -311,12 +310,12 @@ int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 	int empty, not_empty;
 
 	if(sgfc->info->GM != 1)		/* game != Go? */
-		return(TRUE);
+		return true;
 
 	v = p->value;
 	flag = sgf_token[p->id].data;
-	empty = FALSE;
-	not_empty = FALSE;
+	empty = false;
+	not_empty = false;
 
 	while(v)
 	{
@@ -328,12 +327,12 @@ int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 				v = DelPropValue(p, v);
 				continue;
 			}
-			empty = TRUE;
+			empty = true;
 			v = v->next;
 			continue;
 		}
 		else
-			not_empty = TRUE;
+			not_empty = true;
 
 		x = DecodePosChar(v->value[0]) - 1;
 		y = DecodePosChar(v->value[1]) - 1;
@@ -346,7 +345,7 @@ int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 		}
 
 		st->markup[MXY(x,y)] |= flag;
-		st->mrkp_chngd = TRUE;
+		st->mrkp_chngd = true;
 		v = v->next;
 	}
 
@@ -365,7 +364,7 @@ int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 		}
 	}
 
-	return(TRUE);
+	return true;
 }
 
 
@@ -376,7 +375,7 @@ int Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 ***				n	 ... Node that contains the property
 ***				p	 ... property
 ***				st	 ... current board status
-*** Returns:	TRUE: ok / FALSE: delete property
+*** Returns:	true: ok / false: delete property
 **************************************************************************/
 
 int Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
@@ -393,7 +392,7 @@ int Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct
 		hlp->id = TKN_DO;
 		hlp->idstr = sgf_token[TKN_DO].id;
 		hlp->value->value[0] = 0;
-		return(FALSE);
+		return false;
 	}
 
 	if(st->annotate & ST_ANN_TE && p->id == TKN_BM)	/* IT (interesting) */
@@ -403,23 +402,23 @@ int Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct
 		hlp->id = TKN_IT;
 		hlp->idstr = sgf_token[TKN_IT].id;
 		hlp->value->value[0] = 0;
-		return(FALSE);
+		return false;
 	}
 
 	if(st->annotate & flag)
 	{
 		PrintError(E_ANNOTATE_NOT_UNIQUE, sgfc, p->buffer, p->idstr);
-		return(FALSE);
+		return false;
 	}
 
 	if((flag & (ST_ANN_MOVE|ST_KO)) && !(st->annotate & ST_MOVE))
 	{
 		PrintError(E_ANNOTATE_WITHOUT_MOVE, sgfc, p->buffer, p->idstr);
-		return(FALSE);
+		return false;
 	}
 
 	st->annotate |= flag;
-	return(TRUE);
+	return true;
 }
 
 
@@ -430,7 +429,7 @@ int Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct
 ***				n	 ... Node that contains the property
 ***				p	 ... property
 ***				st	 ... current board status
-*** Returns:	TRUE: ok / FALSE: delete property
+*** Returns:	true: ok / false: delete property
 **************************************************************************/
 
 int Do_Root(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
@@ -438,10 +437,10 @@ int Do_Root(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 	if(n->parent)
 	{
 		PrintError(E_ROOTP_NOT_IN_ROOTN, sgfc, p->buffer, p->idstr);
-		return(FALSE);
+		return false;
 	}
 	else
-		return(TRUE);
+		return true;
 }
 
 
@@ -452,7 +451,7 @@ int Do_Root(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 ***				n	 ... Node that contains the property
 ***				p	 ... property
 ***				st	 ... current board status
-*** Returns:	TRUE: ok / FALSE: delete property
+*** Returns:	true: ok / false: delete property
 **************************************************************************/
 
 int Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
@@ -465,12 +464,12 @@ int Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 	{
 		SearchPos(st->ginfo, sgfc, &x, &y);
 		PrintError(E4_GINFO_ALREADY_SET, sgfc, p->buffer, p->idstr, y, x);
-		return(FALSE);
+		return false;
 	}
 
 	st->ginfo = n->buffer;
 	if(p->id != TKN_KI)
-		return(TRUE);
+		return true;
 
 	if(FindProperty(n, TKN_KM))
 		PrintError(W_INT_KOMI_FOUND, sgfc, p->buffer, "deleted (<KM> property found)");
@@ -482,10 +481,10 @@ int Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 		SaveMalloc(char *, new_km, strlen(p->value->value)+3, "new KM number value")
 		if(ki % 2)	sprintf(new_km, "%ld.5", ki/2);
 		else		sprintf(new_km, "%ld", ki/2);
-		NewPropValue(sgfc, n, TKN_KM, new_km, NULL, FALSE);
+		NewPropValue(sgfc, n, TKN_KM, new_km, NULL, false);
 		free(new_km);
 	}
-	return(FALSE);
+	return false;
 }
 
 
@@ -496,7 +495,7 @@ int Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 ***				n	 ... Node that contains the property
 ***				p	 ... property
 ***				st	 ... current board status
-*** Returns:	TRUE: ok / FALSE: delete property
+*** Returns:	true: ok / false: delete property
 **************************************************************************/
 
 int Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
@@ -516,7 +515,7 @@ int Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 				v = DelPropValue(p, v);
 		}
 
-		return(TRUE);
+		return true;
 	}
 
 	while(v)
@@ -534,7 +533,7 @@ int Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 	}
 
 	if(sgfc->info->GM != 1)		/* game not Go */
-		return(TRUE);
+		return true;
 
 	if(sgfc->info->FF < 4)		/* old definition of VW */
 	{
@@ -545,10 +544,10 @@ int Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 			v->next->value = NULL;
 			DelPropValue(p, v->next);
 		
-			if(!ExpandPointList(sgfc, p, v, FALSE))
+			if(!ExpandPointList(sgfc, p, v, false))
 			{
 				PrintError(E_BAD_VW_VALUES, sgfc, v->buffer, "illegal FF[3] definition", "deleted");
-				return(FALSE);
+				return false;
 			}
 
 			DelPropValue(p, v);
@@ -557,5 +556,5 @@ int Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Boa
 			PrintError(E_BAD_VW_VALUES, sgfc, p->buffer, "FF[4] definition in older FF found", "parsing done anyway");
 	}
 
-	return(TRUE);
+	return true;
 }

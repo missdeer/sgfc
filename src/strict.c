@@ -7,7 +7,6 @@
 ***
 **************************************************************************/
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -97,7 +96,7 @@ static void CheckMoveOrder(struct SGFInfo *sgfc, struct Node *node, int check_se
 			old_col = TKN_W;
 		}
 		if (node->sibling)
-			CheckMoveOrder(sgfc, node->sibling, FALSE);
+			CheckMoveOrder(sgfc, node->sibling, false);
 		node = node->child;
 	}
 }
@@ -123,7 +122,7 @@ void StrictChecking(struct SGFInfo *sgfc)
 		if(tree->GM == 1)
 		{
 			CheckHandicap(sgfc, tree->root);
-			CheckMoveOrder(sgfc, tree->root->child, TRUE);
+			CheckMoveOrder(sgfc, tree->root->child, true);
 		}
 		tree = tree->next;
 	}

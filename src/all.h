@@ -1,5 +1,4 @@
 /**************************************************************************
-***
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 all.h
 ***
@@ -10,6 +9,7 @@
 ***
 **************************************************************************/
 
+#include <stdio.h>
 #include <stdbool.h>
 
 /* #define VERSION_NO_MAIN */		/* In case you've written a new main()
@@ -29,15 +29,8 @@ typedef unsigned short	U_SHORT;
 typedef unsigned int	U_INT;
 typedef unsigned long	U_LONG;
 
-#ifndef TRUE
-#define TRUE	1
-#endif
-#ifndef FALSE
-#define FALSE	0
-#endif
 
 /* order must match order in sgf_token[] !! */
-
 typedef enum {
 		TKN_NONE = -1, TKN_UNKNOWN,
 		TKN_B,  TKN_W,  TKN_AB, TKN_AW, TKN_AE, TKN_N,  TKN_C,

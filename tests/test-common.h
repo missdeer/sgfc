@@ -11,9 +11,9 @@
 #define TEST_COMMON_H_
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <strings.h>
 #include <check.h>
+
 #include "all.h"
 #include "protos.h"
 

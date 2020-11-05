@@ -7,7 +7,6 @@
 ***
 **************************************************************************/
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -43,7 +42,7 @@ static int GetFraction(char *val)
 	if(strstr(val, "four"))		frac += 16;
 	if(strstr(val, "five"))		frac += 20;
 
-	return(frac);
+	return frac;
 }
 
 
@@ -80,7 +79,7 @@ static int Parse_Komi(char *val, ...)
 		ret = -1;
 	}
 
-	return(ret);
+	return ret;
 }
 
 
@@ -101,12 +100,12 @@ static int Parse_Time(char *val, ...)
 		ret = -1;
 
 	if(!(*val))		/* only empty value left -> error */
-		return(0);
+		return 0;
 
 	/* ":/;+" indicate that there's byo-yomi time given too */
 	/* &val[1] because of possible leading '+' */
 	if(strlen(val) > 1 && TestChars(&val[1], C_inSET, ":/;+"))
-		return(0);
+		return 0;
 
 	if(TestChars(val, C_ISALPHA, NULL))
 	{
@@ -119,7 +118,7 @@ static int Parse_Time(char *val, ...)
 		if(strstr(val, "min"))		min = 60;
 		if(*s == 'm')				min = 60;
 
-		if(hour && min)		return(0);		/* can't handle both */
+		if(hour && min)		return 0;		/* can't handle both */
 		if(!hour)			hour = min;
 
 		if(Parse_Float(val, 0))
@@ -129,18 +128,18 @@ static int Parse_Time(char *val, ...)
 			Parse_Float(val, 0);			/* remove trailing '0' */
 		}
 		else
-			return(0);
+			return 0;
 	}
 	else
 		switch(Parse_Float(val, 0))
 		{
-			case 0:		return(0);
-			case -1:	return(-1);
+			case 0:		return 0;
+			case -1:	return -1;
 			case 2:		if(ret == 1)
-							return(2);
+							return 2;
 		}
 
-	return(ret);
+	return ret;
 }
 
 
@@ -172,7 +171,7 @@ static int Parse_Result(char *val, ...)
 					break;
 		case 'j':
 		case 'J':	if(strnccmp(val, "jigo", 4))
-						return(0);
+						return 0;
 		case 'd':	err = -1;
 					val[0] = 'D';
 		case 'D':	if(!strcmp(val, "Draw"))
@@ -189,7 +188,7 @@ static int Parse_Result(char *val, ...)
 					break;
 		case 'z':
 		case 'Z':	if(strnccmp(val, "zwart", 5))
-						return(0);
+						return 0;
 					else
 						val[0] = 'B';
 		case 'b':
@@ -226,7 +225,7 @@ static int Parse_Result(char *val, ...)
 							if((!(type & 7) && !charpoints) ||
 								((type & 2) && (type & 4)))	/* win and lose? */
 							{
-								return(0);
+								return 0;
 							}
 
 							if(type & 1)	/* resignation */
@@ -244,7 +243,7 @@ static int Parse_Result(char *val, ...)
 									if(!err && !charpoints)	/* no points found */
 									{
 										if(type & 16)
-											return(0);		/* info would be lost */
+											return 0;		/* info would be lost */
 										else
 											strcpy(&val[1], "+");
 									}
@@ -326,7 +325,7 @@ static int Parse_Result(char *val, ...)
 					break;
 	}
 
-	return(err);
+	return err;
 }
 
 
@@ -340,7 +339,7 @@ static int Parse_Result(char *val, ...)
 static int CorrectDate(char *value)
 {
 	int year = -1, month = -1, day = -1, day2 = -1;
-	int i, charmonth = FALSE;
+	int i, charmonth = false;
 	long n;
 	char *s;
 	const char months[26][4] = { "Jan", "jan", "Feb", "feb", "Mar", "mar",
@@ -357,11 +356,11 @@ static int CorrectDate(char *value)
 		if(s)
 		{
 			if(charmonth)		/* found TWO month names */
-				return(0);
+				return 0;
 			else
 			{
 				month = i/2 + 1;
-				charmonth = TRUE;
+				charmonth = true;
 			}
 		}
 	}
@@ -377,23 +376,23 @@ static int CorrectDate(char *value)
 
 			if(n > 31)
 				if(year < 0)	year = n;
-				else			return(0);	/* two values >31 */
+				else			return 0;	/* two values >31 */
 			else
 			if(n > 12 || charmonth)
 				if(day < 0)		day = n;
 				else
 				if(day2 < 0)	day2 = n;
-				else			return(0);	/* more than two days found */
+				else			return 0;	/* more than two days found */
 			else
 				if(month < 0)	month = n;
-				else			return(0);	/* can't tell if MM or DD */
+				else			return 0;	/* can't tell if MM or DD */
 		}
 		else
 			s++;
 	}
 
 	if(year < 0 || year > 9999)	/* year is missing or false */
-		return(0);
+		return 0;
 	else
 		if(year < 100)			/* only two digits? -> 20th century */
 			year += 1900;
@@ -411,7 +410,7 @@ static int CorrectDate(char *value)
 		else
 			sprintf(value, "%04d", year);
 
-	return(-1);
+	return -1;
 }
 
 
@@ -439,7 +438,7 @@ static int Parse_Date(char *value, ...)
 
 	/* bad chars? -> pass on to CorrectDate */
 	if(TestChars(value, C_NOTinSET, "0123456789-,"))
-		return(CorrectDate(value));
+		return CorrectDate(value);
 
 	c = d = value;
 	while(*c)				/* remove spaces, and unnecessary '-', ',' */
@@ -504,7 +503,7 @@ static int Parse_Date(char *value, ...)
 		}
 
 		if((c-d) == 4)			/* date has year */
-			hasgoty = TRUE;
+			hasgoty = true;
 
 		switch(*c)
 		{
@@ -551,7 +550,7 @@ static int Parse_Date(char *value, ...)
 						}
 
 						turn = 1;		/* new date to parse */
-						hasgoty = FALSE;
+						hasgoty = false;
 						oldtype = type;
 						break;
 		}
@@ -560,7 +559,7 @@ static int Parse_Date(char *value, ...)
 	if(!ret)		/* date has got tough errors -> pass on to CorrectDate */
 		ret = CorrectDate(value);
 
-	return(ret);
+	return ret;
 }
 
 
@@ -571,7 +570,7 @@ static int Parse_Date(char *value, ...)
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				p	 ... property
 ***				v	 ... faulty value (part of p)
-*** Returns:	TRUE / FALSE if property should be deleted
+*** Returns:	true / false if property should be deleted
 **************************************************************************/
 
 static int PromptGameInfo(struct SGFInfo * sgfc, struct Property *p,
@@ -584,7 +583,7 @@ static int PromptGameInfo(struct SGFInfo * sgfc, struct Property *p,
 	if(!sgfc->options->interactive)
 	{
 		PrintError(E4_FAULTY_GC, sgfc, v->buffer, p->idstr, "(NOT CORRECTED!)");
-		return(TRUE);
+		return true;
 	}
 
 	oldgi = SkipText(sgfc, v->buffer, NULL, ']', 0);
@@ -593,14 +592,14 @@ static int PromptGameInfo(struct SGFInfo * sgfc, struct Property *p,
 		size = 25;
 
 	SaveMalloc(char *, newgi, size+2, "game info value buffer")
-	CopyValue(sgfc, newgi, v->buffer+1, oldgi - v->buffer-1, FALSE);
+	CopyValue(sgfc, newgi, v->buffer+1, oldgi - v->buffer-1, false);
 
 	SaveMalloc(char *, oldgi, strlen(newgi)+2, "game info value buffer")
 	strcpy(oldgi, newgi);
 
 	PrintError(E4_FAULTY_GC, sgfc, v->buffer, p->idstr, "");
 
-	while(TRUE)
+	while(true)
 	{
 		ret = (*Parse_Value)(newgi, 0, sgfc);
 
@@ -615,7 +614,7 @@ static int PromptGameInfo(struct SGFInfo * sgfc, struct Property *p,
 		{
 			free(newgi);
 			free(oldgi);
-			return(FALSE);
+			return false;
 		}
 
 		if(strlen(inp))			/* edit */
@@ -650,7 +649,7 @@ static int PromptGameInfo(struct SGFInfo * sgfc, struct Property *p,
 
 	free(newgi);
 	free(oldgi);
-	return(TRUE);
+	return true;
 }
 
 
@@ -660,7 +659,7 @@ static int PromptGameInfo(struct SGFInfo * sgfc, struct Property *p,
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				p	 ... pointer to property containing the value
 ***				v	 ... pointer to property value
-*** Returns:	TRUE for success / FALSE if value has to be deleted
+*** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
 int Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
@@ -671,7 +670,7 @@ int Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v
 	int (*parse)(char *, ...);
 
 	if(!Check_Text(sgfc, p, v))		/* parse text (converts spaces) */
-		return(FALSE);
+		return false;
 
 	switch(p->id)
 	{
@@ -679,7 +678,7 @@ int Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v
 		case TKN_DT:	parse = Parse_Date;			break;
 		case TKN_TM:	parse = Parse_Time;			break;
 		case TKN_KM:	parse = Parse_Komi;			break;
-		default:		return(TRUE);
+		default:		return true;
 	}
 
 	size = (strlen(v->value) > (25-8)) ? (strlen(v->value) + 8) : (25+1);
@@ -697,7 +696,7 @@ int Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v
 			if(!PromptGameInfo(sgfc, p, v, parse))
 			{
 				free(val);
-				return(FALSE);
+				return false;
 			}
 	}
 	else
@@ -709,7 +708,7 @@ int Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v
 			case -1:	PrintError(E4_BAD_VALUE_CORRECTED, sgfc, v->buffer, p->idstr, val);
 				free(v->value);
 				v->value = val;
-				return(TRUE);
+				return true;
 		}
 	}
 
@@ -717,5 +716,5 @@ int Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v
 		strcpy(v->value, val);
 
 	free(val);
-	return(TRUE);
+	return true;
 }

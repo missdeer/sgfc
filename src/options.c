@@ -1,4 +1,12 @@
-#include <stdio.h>
+/**************************************************************************
+*** Project: SGF Syntax Checker & Converter
+***	File:	 options.c
+***
+*** Copyright (C) 1996-2020 by Arno Hollosi
+*** (see 'main.c' for more copyright information)
+***
+**************************************************************************/
+
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -93,7 +101,7 @@ void PrintStatusLine(const struct SGFInfo *sgfc) {
 *** Function:	PrintGameSignatures
 ***				Prints game signatures of all game trees to stdout.
 *** Parameters: sgfc ... pointer to SGFInfo structure
-*** Returns:	TRUE for success / FALSE in case of argument error
+*** Returns:	true for success / false in case of argument error
 **************************************************************************/
 
 void PrintGameSignatures(struct SGFInfo *sgfc)
@@ -122,7 +130,7 @@ void PrintGameSignatures(struct SGFInfo *sgfc)
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				argc ... argument count (like main())
 ***				argv ... arguments (like main())
-*** Returns:	TRUE for success / FALSE in case of argument error
+*** Returns:	true for success / false in case of argument error
 **************************************************************************/
 
 int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
@@ -140,23 +148,23 @@ int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 				{
 					switch(*c)
 					{
-						case 'w':	options->warnings = FALSE;				break;
-						case 'u':	options->keep_unknown_props = FALSE;	break;
-						case 'o':	options->keep_obsolete_props = FALSE;	break;
-						case 'c':	options->write_critical = TRUE;			break;
-						case 'e':	options->expand_cpl = TRUE;				break;
-						case 'k':	options->keep_head = TRUE;				break;
-						case 't':	options->soft_linebreaks = FALSE;		break;
-						case 'L':	options->node_linebreaks = TRUE;			break;
-						case 'p':	options->pass_tt = TRUE;				break;
-						case 's':	options->split_file = TRUE;				break;
-						case 'n':	options->del_empty_nodes = TRUE;		break;
-						case 'm':	options->del_move_markup = TRUE;		break;
-						case 'v':	options->fix_variation = TRUE;			break;
-						case 'i':	options->interactive = TRUE;			break;
-						case 'g':	options->game_signature = TRUE;			break;
-						case 'r':	options->strict_checking = TRUE;		break;
-						case 'z':	options->reorder_variations = TRUE;		break;
+						case 'w':	options->warnings = false;				break;
+						case 'u':	options->keep_unknown_props = false;	break;
+						case 'o':	options->keep_obsolete_props = false;	break;
+						case 'c':	options->write_critical = true;			break;
+						case 'e':	options->expand_cpl = true;				break;
+						case 'k':	options->keep_head = true;				break;
+						case 't':	options->soft_linebreaks = false;		break;
+						case 'L':	options->node_linebreaks = true;			break;
+						case 'p':	options->pass_tt = true;				break;
+						case 's':	options->split_file = true;				break;
+						case 'n':	options->del_empty_nodes = true;		break;
+						case 'm':	options->del_move_markup = true;		break;
+						case 'v':	options->fix_variation = true;			break;
+						case 'i':	options->interactive = true;			break;
+						case 'g':	options->game_signature = true;			break;
+						case 'r':	options->strict_checking = true;		break;
+						case 'z':	options->reorder_variations = true;		break;
 						case 'h':	options->help = 2;						break;
 						case 'd':
 							c++; hlp = c;
@@ -164,9 +172,9 @@ int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 							if(n < 1 || n > MAX_ERROR_NUM)
 							{
 								PrintError(FE_BAD_PARAMETER, sgfc, hlp);
-								return(FALSE);
+								return false;
 							}
-							options->error_enabled[n-1] = FALSE;
+							options->error_enabled[n-1] = false;
 							c--;
 							break;
 						case 'l':
@@ -175,7 +183,7 @@ int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 							if(n < 1 || n > 4)
 							{
 								PrintError(FE_BAD_PARAMETER, sgfc, c);
-								return(FALSE);
+								return false;
 							}
 							options->linebreaks = n;
 							break;
@@ -185,7 +193,7 @@ int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 							if(n < 1 || n > 3)
 							{
 								PrintError(FE_BAD_PARAMETER, sgfc, c);
-								return(FALSE);
+								return false;
 							}
 							options->find_start = n;
 							break;
@@ -202,7 +210,7 @@ int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 							if(!n || !sgf_token[m].id)
 							{
 								PrintError(FE_BAD_PARAMETER, sgfc, c);
-								return(FALSE);
+								return false;
 							}
 							else
 							{
@@ -219,13 +227,13 @@ int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 							else
 							{
 								PrintError(FE_UNKNOWN_LONG_OPTION, sgfc, c);
-								return(FALSE);
+								return false;
 							}
 							break;
 						default:
 						{
 							PrintError(FE_UNKNOWN_OPTION, sgfc, *c);
-							return(FALSE);
+							return false;
 						}
 					}
 				}
@@ -240,13 +248,13 @@ int ParseArgs(struct SGFInfo *sgfc, int argc, char *argv[])
 				else
 				{
 					PrintError(FE_TOO_MANY_FILES, sgfc, argv[i]);
-					return(FALSE);
+					return false;
 				}
 				break;
 		}
 	}
 
-	return(TRUE);
+	return true;
 }
 
 
@@ -263,28 +271,28 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 	struct SGFCOptions *options;
 
 	SaveMalloc(struct SGFCOptions *, options, sizeof(struct SGFCOptions), "SGFC options")
-	memset(options->error_enabled, TRUE, sizeof(options->error_enabled));
-	options->help = FALSE;
-	options->warnings = TRUE;
-	options->keep_head = FALSE;
-	options->keep_unknown_props = TRUE;
-	options->keep_obsolete_props = TRUE;
-	options->del_empty_nodes = FALSE;
-	options->del_move_markup = FALSE;
-	options->split_file = FALSE;
-	options->write_critical = FALSE;
-	options->interactive = FALSE;
+	memset(options->error_enabled, true, sizeof(options->error_enabled));
+	options->help = false;
+	options->warnings = true;
+	options->keep_head = false;
+	options->keep_unknown_props = true;
+	options->keep_obsolete_props = true;
+	options->del_empty_nodes = false;
+	options->del_move_markup = false;
+	options->split_file = false;
+	options->write_critical = false;
+	options->interactive = false;
 	options->linebreaks = OPTION_LINEBREAK_ANY;
-	options->soft_linebreaks = TRUE;
-	options->node_linebreaks = FALSE;
-	options->expand_cpl = FALSE;
-	options->pass_tt = FALSE;
-	options->fix_variation = FALSE;
+	options->soft_linebreaks = true;
+	options->node_linebreaks = false;
+	options->expand_cpl = false;
+	options->pass_tt = false;
+	options->fix_variation = false;
 	options->find_start = OPTION_FINDSTART_SEARCH;
-	options->game_signature = FALSE;
-	options->strict_checking = FALSE;
-	options->reorder_variations = FALSE;
-	options->add_sgfc_ap_property = TRUE;
+	options->game_signature = false;
+	options->strict_checking = false;
+	options->reorder_variations = false;
+	options->add_sgfc_ap_property = true;
 	options->infile = NULL;
 	options->outfile = NULL;
 	return options;

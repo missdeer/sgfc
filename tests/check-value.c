@@ -19,7 +19,7 @@ START_TEST (test_composed_value_check)
 	v.value = val1a;
 	v.value2 = val2a;
 	int result = Check_Value(sgfc, &p, &v, PVT_COMPOSE, Parse_Number);
-	ck_assert_int_eq(result, TRUE);
+	ck_assert_int_eq(result, true);
 	ck_assert_str_eq(v.value, "10");
 	ck_assert_str_eq(v.value2, "11");
 
@@ -27,7 +27,7 @@ START_TEST (test_composed_value_check)
 	v.value = val1b;
 	v.value2 = val2b;
 	result = Check_Value(sgfc, &p, &v, PVT_COMPOSE, Parse_Number);
-	ck_assert_int_eq(result, TRUE);
+	ck_assert_int_eq(result, true);
 	ck_assert_str_eq(v.value, "10");
 	ck_assert_str_eq(v.value2, "11");
 }
@@ -43,13 +43,13 @@ START_TEST (test_composed_value_removed)
 	v.value = val1a;
 	v.value2 = val2a;
 	int result = Check_Value(sgfc, &p, &v, PVT_COMPOSE, Parse_Number);
-	ck_assert_int_eq(result, FALSE);
+	ck_assert_int_eq(result, false);
 
 	char val1b[] = "10", val2b[] = "foo";
 	v.value = val1b;
 	v.value2 = val2b;
 	result = Check_Value(sgfc, &p, &v, PVT_COMPOSE, Parse_Number);
-	ck_assert_int_eq(result, FALSE);
+	ck_assert_int_eq(result, false);
 }
 END_TEST
 

@@ -7,7 +7,6 @@
 ***
 **************************************************************************/
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
@@ -54,7 +53,7 @@ int Parse_Number(char *value, ...)
 	else
 		ret = 0;
 
-	return(ret);
+	return ret;
 }
 
 
@@ -88,7 +87,7 @@ int Parse_Text(char *value, ...)
 			*d-- = 0;
 
 		if(!strlen(value))
-			return(0);
+			return 0;
 
 		if(*d == '\\' && d > value && *(d-1) != '\\')	/* remove trailing '\' */
 			*d = 0;
@@ -201,7 +200,7 @@ int Parse_Text(char *value, ...)
 	}
 	*d = 0;
 
-	return((int)strlen(value));
+	return (int)strlen(value);
 }
 
 
@@ -217,7 +216,7 @@ int Parse_Text(char *value, ...)
 
 int Parse_Move(char *value, ...)
 {
-	int ret = 1, emptyOrSpace = FALSE, c;
+	int ret = 1, emptyOrSpace = false, c;
 	struct SGFInfo *sgfc;
 	U_SHORT flags;
 
@@ -228,14 +227,14 @@ int Parse_Move(char *value, ...)
 	va_end(arglist);
 
 	if(sgfc->info->GM != 1)			/* game != GO ? */
-		return(1);
+		return 1;
 
 	/* At first only delete space so that we can distinguish
 	 * FF4 pass move from erroneous property values */
 	if(KillChars(value, C_ISSPACE, NULL))
 		ret = -1;
 	if(!strlen(value))
-		emptyOrSpace = TRUE;
+		emptyOrSpace = true;
 
 	if(KillChars(value, C_NOT_ISALPHA, NULL))
 		ret = -1;
@@ -245,16 +244,16 @@ int Parse_Move(char *value, ...)
 		if(flags & PARSE_MOVE && emptyOrSpace)
 		{
 			if(sgfc->info->FF >= 4)
-				return(ret);
+				return ret;
 			else					/* new pass '[]' in old FF[1-3] */
-				return(-101);		/* possible cause: missing FF   */
+				return -101;		/* possible cause: missing FF   */
 		}
 		else
-			return(0);
+			return 0;
 	}
 
 	if(strlen(value) < 2)			/* value too short */
-		return(0);
+		return 0;
 
 	if(strlen(value) != 2)			/* value too long? */
 	{
@@ -267,23 +266,23 @@ int Parse_Move(char *value, ...)
 		if(sgfc->info->bwidth <= 19 && sgfc->info->bheight <= 19)
 		{
 			*value = 0;					/* new pass */
-			return(ret);
+			return ret;
 		}
 	}
 
 	c = DecodePosChar(*value);
 	if(!c)								/* check range */
-		return(0);
+		return 0;
 	if(c > sgfc->info->bwidth)
-		return(0);
+		return 0;
 
 	c = DecodePosChar(*(value+1));
 	if(!c)
-		return(0);
+		return 0;
 	if(c > sgfc->info->bheight)
-		return(0);
+		return 0;
 
-	return(ret);
+	return ret;
 }
 
 
@@ -369,9 +368,9 @@ int Parse_Float(char *value, ...)
 			else			*value = '0';
 		}
 
-		if((where & 8) && (where & 4))	/* check for unnecssary '0' */
+		if((where & 8) && (where & 4))	/* check for unnecessary '0' */
 		{
-			int mod = 0;	/* if correction occured */
+			int mod = 0;	/* if correction occurred */
 			d = value + strlen(value) - 1;
 
 			while(*d == '0')
@@ -397,7 +396,7 @@ int Parse_Float(char *value, ...)
 		}
 	}
 
-	return(ret);
+	return ret;
 }
 
 
@@ -425,7 +424,7 @@ int Parse_Color(char *value, ...)
 		case 'w':	*value = 'W';
 					ret = -1;
 					break;
-		default:	return(0);		/* unknown char -> error */
+		default:	return 0;		/* unknown char -> error */
 	}
 
 	if(strlen(value) != 1)			/* string too long? */
@@ -434,7 +433,7 @@ int Parse_Color(char *value, ...)
 		ret = -1;
 	}
 
-	return(ret);
+	return ret;
 }
 
 
@@ -460,7 +459,7 @@ int Parse_Triple(char *value, ...)
 	}
 
 	if(*value != '1' && *value != '2')
-		return(0);
+		return 0;
 
 	if(strlen(value) != 1)		/* string too long? */
 	{
@@ -468,7 +467,7 @@ int Parse_Triple(char *value, ...)
 		ret = -1;
 	}
 
-	return(ret);
+	return ret;
 }
 
 
@@ -480,7 +479,7 @@ int Parse_Triple(char *value, ...)
 ***				v		... pointer to property value
 ***				flags	... flags to be passed on to parse function
 ***				Parse_Value ... function used for parsing
-*** Returns:	TRUE for success / FALSE if value has to be deleted
+*** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
 static int Check_Single_Value(struct SGFInfo *sgfc, struct Property *p,
@@ -495,24 +494,24 @@ static int Check_Single_Value(struct SGFInfo *sgfc, struct Property *p,
 		case -1:	PrintError(E_BAD_VALUE_CORRECTED, sgfc, buffer, p->idstr, value);
 					break;
 		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, buffer, p->idstr);
-					return(FALSE);
+					return false;
 		case 1:
 		case 2:		break;
 	}
-	return(TRUE);
+	return true;
 }
 
 int Check_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
 				U_SHORT flags, int (*Parse_Value)(char *, ...))
 {
 	if (!Check_Single_Value(sgfc, p, v->value, v->buffer, flags, Parse_Value))
-		return(FALSE);
+		return false;
 
 	/* If there's a compose value, then parse the second value like the first one */
 	if (flags & (PVT_COMPOSE|PVT_WEAKCOMPOSE) && v->value2)
-		return(Check_Single_Value(sgfc, p, v->value2, v->buffer, flags, Parse_Value));
+		return Check_Single_Value(sgfc, p, v->value2, v->buffer, flags, Parse_Value);
 
-	return(TRUE);
+	return true;
 }
 
 
@@ -522,7 +521,7 @@ int Check_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				p	 ... pointer to property containing the value
 ***				v	 ... pointer to property value
-*** Returns:	TRUE for success / FALSE if value has to be deleted
+*** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
 int Check_Text(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
@@ -538,9 +537,9 @@ int Check_Text(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	if(!value_len && !value2_len && (p->flags & PVT_DEL_EMPTY))
 	{
 		PrintError(W_EMPTY_VALUE_DELETED, sgfc, v->buffer, p->idstr, "found");
-		return(FALSE);
+		return false;
 	}
-	return(TRUE);
+	return true;
 }
 
 
@@ -550,13 +549,13 @@ int Check_Text(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				p	 ... pointer to property containing the value
 ***				v	 ... pointer to property value
-*** Returns:	TRUE for success / FALSE if value has to be deleted
+*** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
 int Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	if(!Check_Value(sgfc, p, v, PARSE_POS, Parse_Move))
-		return(FALSE);
+		return false;
 
 	if(v->value2)	/* compressed point list */
 	{
@@ -568,17 +567,17 @@ int Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 			case -1:	PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->buffer, p->idstr, v->value2);
 						break;
 			case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
-						return(FALSE);
+						return false;
 			case 1:		break;
 		}
 
 		if(sgfc->info->GM == 1)
-			return((!ExpandPointList(sgfc, p, v, TRUE)));
+			return !ExpandPointList(sgfc, p, v, true);
 		else
-			return(TRUE);
+			return true;
 	}
 
-	return(TRUE);
+	return true;
 }
 
 
@@ -588,7 +587,7 @@ int Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				p	 ... pointer to property containing the value
 ***				v	 ... pointer to property value
-*** Returns:	TRUE for success / FALSE if value has to be deleted
+*** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
 int Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
@@ -598,12 +597,12 @@ int Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	switch(Parse_Move(v->value, PARSE_POS, sgfc))
 	{
 		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
-					return(FALSE);
+					return false;
 		case -1:	error = 1;
 		case 1:		switch(Parse_Text(v->value2, p->flags, sgfc))
 					{
 						case 0:	PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
-								return(FALSE);
+								return false;
 						case 1:	if(strlen(v->value2) > 4 && sgfc->info->FF < 4)
 								{
 									error = 1;
@@ -616,7 +615,7 @@ int Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 					break;
 	}
 
-	return(TRUE);
+	return true;
 }
 
 
@@ -626,7 +625,7 @@ int Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				p	 ... pointer to property containing the value
 ***				v	 ... pointer to property value
-*** Returns:	TRUE for success / FALSE if value has to be deleted
+*** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
 int Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
@@ -636,18 +635,18 @@ int Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	switch(Parse_Move(v->value, PARSE_POS, sgfc))
 	{
 		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
-					return(FALSE);
+					return false;
 		case -1:	error = 1;
 		case 1:		switch(Parse_Move(v->value2, PARSE_POS, sgfc))
 					{
 						case 0:	PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
-								return(FALSE);
+								return false;
 						case -1:
 								error = 1;
 						case 1:	if(!strcmp(v->value, v->value2))
 								{
 									PrintError(E_BAD_VALUE_DELETED, sgfc, v->buffer, p->idstr);
-									return(FALSE);
+									return false;
 								}
 								break;
 					}
@@ -656,7 +655,7 @@ int Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 					break;
 	}
 
-	return(TRUE);
+	return true;
 }
 
 
@@ -666,7 +665,7 @@ int Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				p	 ... pointer to property containing the value
 ***				v	 ... pointer to property value
-*** Returns:	TRUE for success / FALSE if value has to be deleted
+*** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
 int Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
@@ -698,7 +697,7 @@ int Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 		}
 	}
 
-	return(TRUE);
+	return true;
 }
 
 

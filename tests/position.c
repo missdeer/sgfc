@@ -17,12 +17,12 @@ START_TEST (test_add_has_no_effect)
 	sgfc->b_end = buffer + strlen(buffer);
 
 	int ret = LoadSGFFromFileBuffer(sgfc);
-	ck_assert_int_eq(ret, TRUE);
+	ck_assert_int_eq(ret, true);
 	ParseSGF(sgfc);
 
 	expected_output = "(;FF[4]GM[1]SZ[19]B[aa];W[ab];)\n";
 	ret = SaveSGF(sgfc, "outfile");
-	ck_assert_int_eq(ret, TRUE);
+	ck_assert_int_eq(ret, true);
 }
 END_TEST
 
@@ -34,12 +34,12 @@ START_TEST (test_add_effect_across_variations)
 	sgfc->b_end = buffer + strlen(buffer);
 
 	int ret = LoadSGFFromFileBuffer(sgfc);
-	ck_assert_int_eq(ret, TRUE);
+	ck_assert_int_eq(ret, true);
 	ParseSGF(sgfc);
 
 	expected_output = "(;FF[4]GM[1]SZ[19]\n(;W[aa])\n(;W[aa]\n(;B[bb])\n(;AE[aa])))\n";
 	ret = SaveSGF(sgfc, "outfile");
-	ck_assert_int_eq(ret, TRUE);
+	ck_assert_int_eq(ret, true);
 }
 END_TEST
 

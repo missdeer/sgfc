@@ -17,13 +17,13 @@ static bool expected_error_occurred;
 static int mock_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglist)
 {
 	if(type == expected_error)
-		expected_error_occurred = TRUE;
+		expected_error_occurred = true;
 	else if(type != E_NO_ERROR && type != allowed_error)
 	{
 		ck_assert_msg(type == expected_error, "expected error: %d (%lx); received: %d (%lx)",
 					  expected_error & M_ERROR_NUM, expected_error, type & M_ERROR_NUM, type);
 	}
-	return(TRUE);
+	return true;
 }
 
 
@@ -31,7 +31,7 @@ static void setup(void)
 {
 	common_setup();
 	print_error_handler = mock_error_handler;
-	expected_error_occurred = FALSE;
+	expected_error_occurred = false;
 	allowed_error = E_NO_ERROR;
 }
 
@@ -43,10 +43,10 @@ static void trigger_error(U_LONG type, char *buffer, char *expected)
 	expected_output = expected;
 	expected_error = type;
 	int ret = LoadSGFFromFileBuffer(sgfc);
-	ck_assert_int_eq(ret, TRUE);
+	ck_assert_int_eq(ret, true);
 	ParseSGF(sgfc);
 	ret = SaveSGF(sgfc, "outfile");
-	ck_assert_int_eq(ret, TRUE);
+	ck_assert_int_eq(ret, true);
 	ck_assert_msg(expected_error_occurred);
 }
 
@@ -64,7 +64,7 @@ START_TEST (test_FE_NO_SGFDATA)
 	sgfc->b_end = sgf + strlen(sgf);
 	expected_error = FE_NO_SGFDATA;
 	int ret = LoadSGFFromFileBuffer(sgfc);
-	ck_assert_int_eq(ret, FALSE);
+	ck_assert_int_eq(ret, false);
 END_TEST
 
 
@@ -181,7 +181,7 @@ END_TEST
 
 
 START_TEST (test_WS_MOVE_IN_ROOT)
-	sgfc->options->fix_variation = TRUE;
+	sgfc->options->fix_variation = true;
 	trigger_error(WS_MOVE_IN_ROOT,
 				  "(;B[aa])(;W[bb])",
 				  "(;FF[4]GM[1]SZ[19];B[aa])\n"
@@ -204,7 +204,7 @@ END_TEST
 
 
 START_TEST (test_W_PROPERTY_DELETED)
-	sgfc->options->keep_obsolete_props = FALSE;
+	sgfc->options->keep_obsolete_props = false;
 	trigger_error(W_PROPERTY_DELETED,
 				  "(;FF[1]BS[1]RG[aa][cc])",
 				  "(;FF[4]GM[1]SZ[19])\n");
@@ -364,7 +364,7 @@ END_TEST
 
 
 START_TEST (test_W_EMPTY_NODE_DELETED)
-	sgfc->options->del_empty_nodes = TRUE;
+	sgfc->options->del_empty_nodes = true;
 	trigger_error(W_EMPTY_NODE_DELETED,
 				  "(;;;C[empty])",
 				  "(;FF[4]GM[1]SZ[19]C[empty])\n");
@@ -372,7 +372,7 @@ END_TEST
 
 
 START_TEST (test_W_VARLEVEL_UNCERTAIN)
-	sgfc->options->fix_variation = TRUE;
+	sgfc->options->fix_variation = true;
 	trigger_error(W_VARLEVEL_UNCERTAIN,
 				  "(;;B[dd];W[aa](;B[bb])(;AE[aa];W[ba])(;AE[dd][aa];B[ef]))",
 				  "(;FF[4]GM[1]SZ[19];B[dd];W[aa]\n"
@@ -381,7 +381,7 @@ END_TEST
 
 
 START_TEST (test_W_VARLEVEL_CORRECTED)
-	sgfc->options->fix_variation = TRUE;
+	sgfc->options->fix_variation = true;
 	trigger_error(W_VARLEVEL_CORRECTED,
 				  "(;GM[1];W[aa](;B[bb])(;AE[aa];W[ba])(;AE[aa];W[ef]))",
 				  "(;FF[4]GM[1]SZ[19]\n(;W[aa];B[bb])\n(;W[ba])\n(;W[ef]))\n");
@@ -404,7 +404,7 @@ END_TEST
 
 
 START_TEST (test_E_MORE_THAN_ONE_TREE)
-	sgfc->options->strict_checking = TRUE;
+	sgfc->options->strict_checking = true;
 	trigger_error(E_MORE_THAN_ONE_TREE,
 				  "(;GM[1])(;GM[1])",
 				  "(;FF[4]GM[1]SZ[19])\n"
@@ -413,7 +413,7 @@ END_TEST
 
 
 START_TEST (test_W_HANDICAP_NOT_SETUP)
-	sgfc->options->strict_checking = TRUE;
+	sgfc->options->strict_checking = true;
 	allowed_error = E_MORE_THAN_ONE_TREE;
 	trigger_error(W_HANDICAP_NOT_SETUP,
 				  "(;GM[1]AB[aa][bb])(;GM[1]HA[3];B[bb])",
@@ -423,7 +423,7 @@ END_TEST
 
 
 START_TEST (test_W_SETUP_AFTER_ROOT)
-	sgfc->options->strict_checking = TRUE;
+	sgfc->options->strict_checking = true;
 	trigger_error(W_SETUP_AFTER_ROOT,
 				  "(;GM[1];W[cc];AB[aa]AE[cc])",
 				  "(;FF[4]GM[1]SZ[19];W[cc];AB[aa]AE[cc])\n");
@@ -431,7 +431,7 @@ END_TEST
 
 
 START_TEST (test_W_MOVE_OUT_OF_SEQUENCE)
-	sgfc->options->strict_checking = TRUE;
+	sgfc->options->strict_checking = true;
 	trigger_error(W_MOVE_OUT_OF_SEQUENCE,
 				  "(;GM[1];B[dd];W[cc];W[ee])",
 				  "(;FF[4]GM[1]SZ[19];B[dd];W[cc];W[ee])\n");

@@ -7,42 +7,40 @@
 ***
 **************************************************************************/
 
-#include <stdio.h>
-
 #include "all.h"
 #include "protos.h"
 
 
 static int Check_Move(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
-	return(Check_Value(sgfc, p, v, PARSE_MOVE, Parse_Move));
+	return Check_Value(sgfc, p, v, PARSE_MOVE, Parse_Move);
 }
 
 static int Check_Number(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
-	return(Check_Value(sgfc, p, v, p->flags, Parse_Number));
+	return Check_Value(sgfc, p, v, p->flags, Parse_Number);
 }
 
 static int Check_Float(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
-	return(Check_Value(sgfc, p, v, p->flags, Parse_Float));
+	return Check_Value(sgfc, p, v, p->flags, Parse_Float);
 }
 
 static int Check_Color(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
-	return(Check_Value(sgfc, p, v, p->flags, Parse_Color));
+	return Check_Value(sgfc, p, v, p->flags, Parse_Color);
 }
 
 static int Check_Triple(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
-	return(Check_Value(sgfc, p, v, p->flags, Parse_Triple));
+	return Check_Value(sgfc, p, v, p->flags, Parse_Triple);
 }
 
 static int Check_Empty(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	v->value[0] = 0;
 	PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->buffer, p->idstr, v->value);
-	return(TRUE);
+	return true;
 }
 
 #define CP_LIST (PVT_LIST|PVT_CPLIST|PVT_WEAKCOMPOSE)

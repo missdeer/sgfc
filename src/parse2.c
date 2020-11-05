@@ -7,7 +7,6 @@
 ***
 **************************************************************************/
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -21,8 +20,8 @@
 *** Parameters: sgfc  ... pointer to SGFInfo structure
 ***				p	  ... property
 ***				v	  ... compose value to be expanded
-***				error ... if TRUE print errors
-*** Returns:	TRUE if success / FALSE on error (exits on low memory)
+***				error ... if true print errors
+*** Returns:	true if success / false on error (exits on low memory)
 **************************************************************************/
 
 int ExpandPointList(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v, int error)
@@ -41,7 +40,7 @@ int ExpandPointList(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 		v->value2 = NULL;
 		if(error)
 			PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->buffer, p->idstr, v->value);
-		return(FALSE);
+		return false;
 	}
 
 	if(x1 > x2)					/* encoded as [ul:lr] ? */
@@ -69,7 +68,7 @@ int ExpandPointList(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 			AddPropValue(sgfc, p, v->buffer, val, 2, NULL, 0);
 		}
 
-	return(TRUE);
+	return true;
 }
 
 
@@ -117,7 +116,7 @@ void CompressPointList(struct SGFInfo *sgfc, struct Property *p)
 			if(board[x][y])						/* starting point found */
 			{									/* --> ul corner */
 				i = x;	j = y;
-				expx = TRUE;	expy = TRUE;
+				expx = true;	expy = true;
 				while(expx || expy)				/* still enlarging area? */
 				{
 					if(board[i+1][y] && expx)
@@ -128,10 +127,10 @@ void CompressPointList(struct SGFInfo *sgfc, struct Property *p)
 						if(m > j)				/* new column ok? */
 							i++;
 						else
-							expx = FALSE;		/* x limit reached */
+							expx = false;		/* x limit reached */
 					}
 					else
-						expx = FALSE;
+						expx = false;
 
 					if(board[x][j+1] && expy)
 					{
@@ -141,10 +140,10 @@ void CompressPointList(struct SGFInfo *sgfc, struct Property *p)
 						if(m > i)				/* new row ok? */
 							j++;
 						else
-							expy = FALSE;		/* y limit reached */
+							expy = false;		/* y limit reached */
 					}
 					else
-						expy = FALSE;
+						expy = false;
 				}
 
 				val1[0] = EncodePosChar(x);
@@ -225,7 +224,7 @@ static void CorrectVariation(struct SGFInfo *sgfc, struct Node *n)
 				else					b->id = TKN_B;
 				b->flags = sgf_token[b->id].flags;	/* update local copy */
 
-				SplitNode(sgfc, j, TYPE_SETUP | TYPE_ROOT | TYPE_GINFO, TKN_N, FALSE);
+				SplitNode(sgfc, j, TYPE_SETUP | TYPE_ROOT | TYPE_GINFO, TKN_N, false);
 			}
 
 			if(j->child)				/* variation must have a child */
@@ -318,7 +317,7 @@ static void CorrectVariations(struct SGFInfo *sgfc, struct Node *r, struct TreeI
 		{
 			if(FindProperty(n, TKN_B) || FindProperty(n, TKN_W))
 			{
-				SplitNode(sgfc, n, TYPE_ROOT | TYPE_GINFO, TKN_NONE, FALSE);
+				SplitNode(sgfc, n, TYPE_ROOT | TYPE_GINFO, TKN_NONE, false);
 				PrintError(WS_MOVE_IN_ROOT, sgfc, n->buffer);
 			}
 			n = n->sibling;
@@ -430,8 +429,8 @@ static void DelEmptyNodes(struct SGFInfo *sgf, struct Node *n)
 ***				n		... node that should be split
 ***				flags	... prop->flags to select properties
 ***				id		... id of an extra property
-***				move	... TRUE:  move selected to second node
-***							FALSE: selected props stay in first node
+***				move	... true:  move selected to second node
+***							false: selected props stay in first node
 *** Returns:	-
 **************************************************************************/
 
@@ -440,7 +439,7 @@ void SplitNode(struct SGFInfo *sgfc, struct Node *n, U_SHORT flags, token id, in
 	struct Property *p, *hlp;
 	struct Node *newnode;
 
-	newnode = NewNode(sgfc, n, TRUE);		/* create new child node */
+	newnode = NewNode(sgfc, n, true);		/* create new child node */
 	newnode->buffer = n->buffer;
 
 	p = n->prop;
@@ -466,7 +465,7 @@ void SplitNode(struct SGFInfo *sgfc, struct Node *n, U_SHORT flags, token id, in
 ***				(frequent error of an application (which one?))
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				n	 ... pointer to Node
-*** Returns:	TRUE if node is split / FALSE otherwise
+*** Returns:	true if node is split / false otherwise
 **************************************************************************/
 
 static int SplitMoveSetup(struct SGFInfo *sgfc, struct Node *n)
@@ -499,11 +498,11 @@ static int SplitMoveSetup(struct SGFInfo *sgfc, struct Node *n)
 		else
 		{
 			PrintError(E4_MOVE_SETUP_MIXED, sgfc, s->buffer, "split into two nodes");
-			SplitNode(sgfc, n, TYPE_SETUP | TYPE_GINFO | TYPE_ROOT, TKN_N, FALSE);
-			return(TRUE);
+			SplitNode(sgfc, n, TYPE_SETUP | TYPE_GINFO | TYPE_ROOT, TKN_N, false);
+			return true;
 		}
 	}
-	return(FALSE);
+	return false;
 }
 
 
@@ -584,7 +583,7 @@ static void CheckDoubleProp(struct SGFInfo *sgfc, struct Node *n)
 ***				value ... 2: parse value2 else parse value1
 ***				d	  ... pointer to int variable
 ***				def   ... default return value
-*** Returns:	TRUE ... success / FALSE ... errornous property deleted
+*** Returns:	true ... success / false ... erroneous property deleted
 **************************************************************************/
 
 static int GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
@@ -595,7 +594,7 @@ static int GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 	if(!p)				/* no property? -> set default value */
 	{
 		*d = def;
-		return(TRUE);
+		return true;
 	}
 
 	if(value == 2)	v = p->value->value2;
@@ -606,7 +605,7 @@ static int GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 		case 0: PrintError(E_BAD_ROOT_PROP, sgfc, p->value->buffer, p->idstr, err_action);
 				*d = def;
 			DelProperty(n, p);
-				return(FALSE);
+				return false;
 
 		case -1: PrintError(E_BAD_VALUE_CORRECTED, sgfc, p->value->buffer, p->idstr, v);
 		case 1:	*d = atoi(v);
@@ -615,12 +614,12 @@ static int GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 					PrintError(E_BAD_ROOT_PROP, sgfc, p->value->buffer, p->idstr, err_action);
 					*d = def;
 					DelProperty(n, p);
-					return(FALSE);
+					return false;
 				}
 				break;
 	}
 
-	return(TRUE);
+	return true;
 }
 
 
@@ -779,7 +778,7 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatu
 			}
 
 			/* markup is reused (set to 0 for each new node) */
-			st->mrkp_chngd = TRUE;
+			st->mrkp_chngd = true;
 
 			/* path_board is reused (paths marked with different path_num) */
 		}
@@ -798,7 +797,7 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatu
 				SaveMalloc(struct PathBoard *, st->paths, sizeof(struct PathBoard), "path_board buffer")
 				memset(st->paths, 0, sizeof(struct PathBoard));
 			}
-			st->mrkp_chngd = TRUE;
+			st->mrkp_chngd = true;
 		}
 
 		n = r;
@@ -807,7 +806,7 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatu
 			st->annotate = 0;
 			if(st->mrkp_chngd && st->markup)
 				memset(st->markup, 0, area * sizeof(U_SHORT));
-			st->mrkp_chngd = FALSE;
+			st->mrkp_chngd = false;
 
 			if(n->sibling && n != r)		/* for n=r loop is done outside */
 			{

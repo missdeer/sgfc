@@ -17,9 +17,7 @@
 ***
 **************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 #include "all.h"
 #include "protos.h"
@@ -44,7 +42,7 @@ int main(int argc, char *argv[])
 	if(argc <= 1)		/* called without arguments */
 	{
 		PrintHelp(OPTION_HELP_SHORT);
-		return(0);
+		return 0;
 	}
 
 	sgfc = SetupSGFInfo(NULL, NULL);
@@ -56,7 +54,7 @@ int main(int argc, char *argv[])
 	{
 		PrintHelp(sgfc->options->help);
 		FreeSGFInfo(sgfc);
-		return(0);
+		return 0;
 	}
 
 	if(!sgfc->options->infile)
@@ -89,6 +87,6 @@ int main(int argc, char *argv[])
 
 fatal_error:
 	FreeSGFInfo(sgfc);
-	return(ret);
+	return ret;
 }
 #endif
