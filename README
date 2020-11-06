@@ -108,8 +108,8 @@ execute.c       contains routines that actually execute the properties,
                 necessary transformations
 strict.c        contains the functions for restrictive checking (option -r)
 util.c          misc. functions; error messages
-test-files/     subdirectory with some test files, see README.test-files
-tests/          subdirectory with some unit tests, see README.tests
+test-files/     subdirectory with some test files, see README there
+tests/          subdirectory with some unit tests, see README there
 
 
 I use tab size of 4 (instead the usual 8) in my sources.

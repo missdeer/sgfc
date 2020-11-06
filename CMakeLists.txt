@@ -34,12 +34,12 @@ add_executable(sgfc-test
         src/save.c
         src/strict.c
         src/util.c
+        tests/test-runner.c
         tests/test-common.h
-        tests/testrunner.c
+        tests/test-helper.c
         tests/parse-text.c
         tests/check-value.c
-        tests/trigger_errors.c
-        tests/position.c
-        tests/test-helper.c)
+        tests/trigger-errors.c
+        tests/position.c)
 
 target_link_libraries(sgfc-test check rt pthread subunit m)

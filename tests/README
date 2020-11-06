@@ -23,18 +23,18 @@ The Check unit test framework is LGPL licensed. See the library docs or
 their homepage for further information.
 
 Check uses forking in order to limit crashes/segfaults etc. to single
-test cases. To ease debugging you can disable forking in testrunner.c
+test cases. To ease debugging you can disable forking in test-runner.c
 by adding "srunner_set_fork_status(sr, CK_NOFORK)".
 
 
 Files
 -----
 
-testrunner.c        contains the main() function to run all tests
+test-runner.c       contains the main() function to run all tests
 test-common.h       prototypes and common include files
 test-helper.c       setup(), teardown(), and other helpers
 
 check-value.c       test cases for Check_Value()
 parse-text.c        test cases for Parse_Text() and Check_Text()
 position.c          test cases verifying the internal board plays
-trigger_errors.c    test cases for triggering almost all SGFC errors
+trigger-errors.c    test cases for triggering almost all SGFC errors

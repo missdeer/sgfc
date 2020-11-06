@@ -19,7 +19,7 @@ OPTIMIZATION = -O1
 CFLAGS = $(DIRECTORIES) $(OPTIMIZATION) $(OPTIONS)
 
 LIB = -lcheck -lpthread -lrt -lsubunit -lm
-OBJ = testrunner.o test-helper.o position.o parse-text.o check-value.o trigger_errors.o
+OBJ = test-runner.o test-helper.o position.o parse-text.o check-value.o trigger-errors.o
 SRC_OBJ = ../src/execute.o ../src/gameinfo.o ../src/load.o\
 	../src/parse.o ../src/parse2.o ../src/options.o\
 	../src/properties.o ../src/save.o ../src/strict.o ../src/util.o
