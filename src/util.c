@@ -228,6 +228,9 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 	int print_c = 0;
 	char *pos = NULL;
 	struct SGFCError error = {0, NULL, NULL, 0, 0, 0};
+	char *error_msg_buffer = NULL;
+	char *pos2 = NULL;
+	va_list argtmp;
 
 	if(type & E_ERROR4)
 	{
@@ -310,6 +313,9 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 			/* flush buffer and continue ! */
 			PrintError(sgfc->_util_c->ill_type, sgfc, sgfc->_util_c->illegal, false);
 
+	if(type == E_NO_ERROR)
+		return true;
+
 	if(type & E_SEARCHPOS)				/* print position if required */
 		SearchPos(pos, sgfc, &error.x, &error.y);
 
@@ -320,13 +326,7 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 	if(type & E_CRITICAL)
 		sgfc->critical_count++;
 
-
-	if(type == E_NO_ERROR)
-		return true;
-
-	char *error_msg_buffer = NULL;
-	char *pos2 = NULL;
-	va_list argtmp;
+	/* populate SGFCError structure to pass to print_error_output_hook */
 
 	va_copy(argtmp, arglist);
 	size_t size = vsnprintf(NULL, 0, error_mesg[(type & M_ERROR_NUM)-1], argtmp);
@@ -339,9 +339,9 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 		if (pos2 >= pos)
 			malloc_size += pos2 - pos + 2; /* pos2 inclusive + '\n' byte */
 	}
-
 	if(print_c)
 		malloc_size += sgfc->_util_c->ill_count + 4; /* 3 Bytes ""\n + 1 reserve */
+
 	error_msg_buffer = (char *)malloc(malloc_size);
 	if(!error_msg_buffer)
 		error.message = "out of memory (while printing error)\n";
@@ -352,7 +352,7 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 		if(print_c)					/* print accumulated string? */
 		{
 			*msg_cursor++ = '"';
-			/* string is not terminated with '\0'! */
+			/* _util_c->illegal string is _not_ terminated with '\0' */
 			for(; sgfc->_util_c->ill_count; sgfc->_util_c->ill_count--)
 			{
 				*msg_cursor++ = *sgfc->_util_c->illegal++;
@@ -405,21 +405,17 @@ void PrintErrorOutputHook(struct SGFCError *error) {
 	if(error->error & E_CRITICAL)
 		fprintf(E_OUTPUT, " (critical): ");
 	else
-		if(error->error != E_NO_ERROR)
-			fprintf(E_OUTPUT, ": ");
+		fprintf(E_OUTPUT, ": ");
 
-	if(error->error != E_NO_ERROR)
+	fputs(error->message, E_OUTPUT);
+	if(error->error & E_ERRNO)			/* print DOS error message? */
 	{
-		fputs(error->message, E_OUTPUT);
-		if(error->error & E_ERRNO)			/* print DOS error message? */
-		{
-			char *err;
-			err = strerror(error->lib_errno);
-			if(err)
-				fprintf(E_OUTPUT, "%s\n", err);
-			else
-				fprintf(E_OUTPUT, "error code: %d\n", error->lib_errno);
-		}
+		char *err;
+		err = strerror(error->lib_errno);
+		if(err)
+			fprintf(E_OUTPUT, "%s\n", err);
+		else
+			fprintf(E_OUTPUT, "error code: %d\n", error->lib_errno);
 	}
 }
 
