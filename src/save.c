@@ -494,6 +494,7 @@ bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 	if(!(*sgfc->sfh->open)(sgfc->sfh, name, "wb"))
 	{
 		PrintError(FE_DEST_FILE_OPEN, sgfc, name);
+		free(name);
 		return false;
 	}
 
@@ -506,6 +507,7 @@ bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 			{
 				(*sgfc->sfh->close)(sgfc->sfh, FE_DEST_FILE_WRITE);
 				PrintError(FE_DEST_FILE_WRITE, sgfc, name);
+				free(name);
 				return false;
 			}
 	}
@@ -523,6 +525,7 @@ bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 		{
 			(*sgfc->sfh->close)(sgfc->sfh, FE_DEST_FILE_WRITE);
 			PrintError(FE_DEST_FILE_WRITE, sgfc, name);
+			free(name);
 			return false;
 		}
 
@@ -539,6 +542,7 @@ bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 			if(!(*sgfc->sfh->open)(sgfc->sfh, name, "wb"))
 			{
 				PrintError(FE_DEST_FILE_OPEN, sgfc, name);
+				free(name);
 				return false;
 			}
 		}
