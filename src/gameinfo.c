@@ -27,10 +27,10 @@ static int GetFraction(char *val)
 	int fraction = 0;
 	char *t;
 
-			if((t = strstr(val, "1/2")))	fraction = 2;
-	else	if((t = strstr(val, "3/4")))	fraction = 3;
-	else	if((t = strstr(val, "1/4")))	fraction = 1;
-	else	if((t = strstr(val, "2/4")))	fraction = 2;
+	if		((t = strstr(val, "1/2")))	fraction = 2;
+	else if ((t = strstr(val, "3/4")))	fraction = 3;
+	else if ((t = strstr(val, "1/4")))	fraction = 1;
+	else if ((t = strstr(val, "2/4")))	fraction = 2;
 
 	if(t)
 		strcpy(t, "   ");		/* remove fraction */
@@ -189,8 +189,7 @@ static int Parse_Result(char *val, ...)
 		case 'z':
 		case 'Z':	if(strnccmp(val, "zwart", 5))
 						return 0;
-					else
-						val[0] = 'B';
+					val[0] = 'B';
 		case 'b':
 		case 'w':	err = -1;
 					val[0] = toupper(val[0]);
@@ -244,8 +243,7 @@ static int Parse_Result(char *val, ...)
 									{
 										if(type & 16)
 											return 0;		/* info would be lost */
-										else
-											strcpy(&val[1], "+");
+										strcpy(&val[1], "+");
 									}
 									else
 									{
@@ -358,11 +356,8 @@ static int CorrectDate(char *value)
 		{
 			if(char_month)		/* found TWO month names */
 				return 0;
-			else
-			{
-				month = i/2 + 1;
-				char_month = true;
-			}
+			month = i/2 + 1;
+			char_month = true;
 		}
 	}
 
@@ -394,9 +389,9 @@ static int CorrectDate(char *value)
 
 	if(year < 0 || year > 9999)	/* year is missing or false */
 		return 0;
-	else
-		if(year < 100)			/* only two digits? -> 20th century */
-			year += 1900;
+
+	if(year < 100)				/* only two digits? -> 20th century */
+		year += 1900;
 
 	if(day > 0 && month > 0)
 	{
@@ -576,7 +571,7 @@ static int Parse_Date(char *value, ...)
 *** Returns:	true / false if property should be deleted
 **************************************************************************/
 
-static int PromptGameInfo(struct SGFInfo * sgfc, struct Property *p,
+static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 		struct PropValue *v, int (*Parse_Value)(char *, ...))
 {
 	char *newgi, *oldgi, inp[2001];
@@ -630,16 +625,14 @@ static int PromptGameInfo(struct SGFInfo * sgfc, struct Property *p,
 				strcpy(v->value, inp);
 				break;
 			}
-			else
+
+			puts("--! Error in input string !--");
+			if(ret == -1)
 			{
-				puts("--! Error in input string !--");
-				if(ret == -1)
-				{
-					size = (strlen(inp) > 25) ? strlen(inp) : 25;
-					free(newgi);
-					SaveMalloc(char *, newgi, size+2, "game info value buffer")
-					strcpy(newgi, inp);
-				}
+				size = (strlen(inp) > 25) ? strlen(inp) : 25;
+				free(newgi);
+				SaveMalloc(char *, newgi, size+2, "game info value buffer")
+				strcpy(newgi, inp);
 			}
 		}
 		else					/* return */

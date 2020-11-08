@@ -11,7 +11,6 @@
 
 
 START_TEST (test_add_has_no_effect)
-{
 	char buffer[] = "(;B[aa];W[ab];AB[aa]AW[ab]AE[ac])";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -23,12 +22,10 @@ START_TEST (test_add_has_no_effect)
 	expected_output = "(;FF[4]GM[1]SZ[19]B[aa];W[ab];)\n";
 	ret = SaveSGF(sgfc, "outfile");
 	ck_assert_int_eq(ret, true);
-}
 END_TEST
 
 
 START_TEST (test_add_effect_across_variations)
-{
 	char buffer[] = "(; (;W[aa])  (;W[aa] (;B[bb])(;AE[aa])))";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -40,7 +37,6 @@ START_TEST (test_add_effect_across_variations)
 	expected_output = "(;FF[4]GM[1]SZ[19]\n(;W[aa])\n(;W[aa]\n(;B[bb])\n(;AE[aa])))\n";
 	ret = SaveSGF(sgfc, "outfile");
 	ck_assert_int_eq(ret, true);
-}
 END_TEST
 
 

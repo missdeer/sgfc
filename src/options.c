@@ -133,7 +133,7 @@ void PrintGameSignatures(const struct SGFInfo *sgfc)
 *** Returns:	true for success / false in case of argument error
 **************************************************************************/
 
-bool ParseArgs(struct SGFInfo *sgfc, const int argc, const char *argv[])
+bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 {
 	int i, n, m;
 	const char *c;
@@ -213,11 +213,8 @@ bool ParseArgs(struct SGFInfo *sgfc, const int argc, const char *argv[])
 								PrintError(FE_BAD_PARAMETER, sgfc, c);
 								return false;
 							}
-							else
-							{
-								c += n-1;
-								options->delete_property[m] = true;
-							}
+							c += n-1;
+							options->delete_property[m] = true;
 							break;
 						case '-':	/* long options */
 							c++;

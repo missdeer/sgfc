@@ -22,7 +22,7 @@
 void PrintHelp(enum option_help);
 void PrintStatusLine(const struct SGFInfo *);
 void PrintGameSignatures(const struct SGFInfo *);
-bool ParseArgs(struct SGFInfo *, const int, const char *[]);
+bool ParseArgs(struct SGFInfo *, int, const char *[]);
 struct SGFCOptions *SGFCDefaultOptions(void);
 
 struct SGFInfo *SetupSGFInfo(struct SGFCOptions *, struct SaveFileHandler *);
@@ -114,7 +114,7 @@ extern void (*print_error_output_hook)(struct SGFCError *);
 
 void SearchPos(const char *, struct SGFInfo *, int *, int *);
 int PrintError(U_LONG, struct SGFInfo *, ...);
-no_return void ExitWithOOMError(char *);
+no_return void ExitWithOOMError(const char *);
 bool PrintErrorHandler(U_LONG, struct SGFInfo *, va_list);
 void PrintErrorOutputHook(struct SGFCError *);
 

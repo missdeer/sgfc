@@ -11,17 +11,14 @@
 
 
 START_TEST (test_basic_string)
-{
     char text[] = "basic test";
     int len = Parse_Text(text, 0, sgfc);
 	ck_assert_int_eq(len, 10);
 	ck_assert_str_eq(text, "basic test");
-}
 END_TEST
 
 
 START_TEST (test_soft_linebreak)
-{
     char text[] = "soft\\\nbreak";
     Parse_Text(text, 0, sgfc);
 	ck_assert_str_eq(text, "softbreak");
@@ -29,12 +26,10 @@ START_TEST (test_soft_linebreak)
     char text2[] = "soft\\\nbreak:SIMPLE";
     Parse_Text(text2, PVT_SIMPLE, sgfc);
 	ck_assert_str_eq(text2, "softbreak:SIMPLE");
-}
 END_TEST
 
 
 START_TEST (test_trailing_spaces)
-{
     char text[] = "trailing   ";
     Parse_Text(text, 0, sgfc);
 	ck_assert_str_eq(text, "trailing");
@@ -50,12 +45,10 @@ START_TEST (test_trailing_spaces)
     char text4[] = "trailing4 \\\\\\ ";
     Parse_Text(text4, 0, sgfc);
 	ck_assert_str_eq(text4, "trailing4 \\\\");
-}
 END_TEST
 
 
 START_TEST (test_trailing_spaces_simpletext)
-{
     char text[] = "trailing \n ";
     Parse_Text(text, PVT_SIMPLE, sgfc);
 	ck_assert_str_eq(text, "trailing");
@@ -67,12 +60,10 @@ START_TEST (test_trailing_spaces_simpletext)
     char text3[] = "trailing3 \r\n\\\r\\\n\n\r ";
     Parse_Text(text3, PVT_SIMPLE, sgfc);
 	ck_assert_str_eq(text3, "trailing3");
-}
 END_TEST
 
 
 START_TEST (test_composed_simpletext_linebreaks)
-{
 	struct Property p;
 	struct PropValue v;
 
@@ -99,7 +90,6 @@ START_TEST (test_composed_simpletext_linebreaks)
     Check_Text(sgfc, &p, &v);
 	ck_assert_str_eq(val1c, "aa a");
 	ck_assert_str_eq(val2c, "bb b");
-}
 END_TEST
 
 

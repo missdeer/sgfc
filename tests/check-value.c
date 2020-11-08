@@ -11,7 +11,6 @@
 
 
 START_TEST (test_composed_value_check)
-{
 	struct Property p;
 	struct PropValue v;
 
@@ -30,12 +29,10 @@ START_TEST (test_composed_value_check)
 	ck_assert_int_eq(result, true);
 	ck_assert_str_eq(v.value, "10");
 	ck_assert_str_eq(v.value2, "11");
-}
 END_TEST
 
 
 START_TEST (test_composed_value_removed)
-{
 	struct Property p;
 	struct PropValue v;
 
@@ -50,7 +47,6 @@ START_TEST (test_composed_value_removed)
 	v.value2 = val2b;
 	result = Check_Value(sgfc, &p, &v, PVT_COMPOSE, Parse_Number);
 	ck_assert_int_eq(result, false);
-}
 END_TEST
 
 

@@ -1,0 +1,11 @@
+Checks: >-
+  readability-*,
+  -readability-braces-around-statements,
+  -clang-analyzer-security.insecureAPI.strcpy,
+  -readability-misleading-indentation
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+AnalyzeTemporaryDtors: false
+FormatStyle:     none
+User:            arno
+

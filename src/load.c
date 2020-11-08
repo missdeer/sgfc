@@ -383,21 +383,18 @@ static bool NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id
 		{
 			if(newp->flags & PVT_LIST)
 				continue;
-			else					/* error, as only one value allowed */
-			{
-				if (!too_many)
-					too_many = sgfc->current;
-				if (!newp->value || !strlen(newp->value->value))	/* if previous value is empty, */
-				{									/* then use the later value */
-					DelPropValue(newp, newp->value);
-					continue;
-				}
-				SkipValues(sgfc, false);
-				break;
+			/* error, as only one value allowed */
+			if (!too_many)
+				too_many = sgfc->current;
+			if (!newp->value || !strlen(newp->value->value))	/* if previous value is empty, */
+			{									/* then use the later value */
+				DelPropValue(newp, newp->value);
+				continue;
 			}
-		}
-		else						/* reached end of value list */
+			SkipValues(sgfc, false);
 			break;
+		}
+		break;						/* reached end of value list */
 	}
 
 	if(too_many)
@@ -487,11 +484,8 @@ static bool MakeProperties(struct SGFInfo *sgfc, struct Node *n)
 										return false;
 									break;
 								}
-								else
-								{
-									PrintError(WS_UNKNOWN_PROPERTY, sgfc, id, propid, "found");
-									i = TKN_UNKNOWN;
-								}
+								PrintError(WS_UNKNOWN_PROPERTY, sgfc, id, propid, "found");
+								i = TKN_UNKNOWN;
 							}
 
 							if(sgfc->options->delete_property[i])
@@ -712,28 +706,26 @@ static int FindStart(struct SGFInfo *sgfc, bool first_time)
 
 			if(*tmp == ';')
 				return 0;
-			else
-			{
-				o = c = 0;
 
-				if(sgfc->options->find_start == OPTION_FINDSTART_SEARCH)
-				{		/* found a '(' but no ';' -> might be a missing ';' */
-					tmp = sgfc->current + 1;
-					while((tmp != sgfc->b_end) && *tmp != ')' && *tmp != '(')
-					{
-						if(*tmp == '[')		o++;
-						if(*tmp == ']')		c++;
-						tmp++;
-					}
-				}
+			o = c = 0;
 
-				if((sgfc->options->find_start == OPTION_FINDSTART_BRACKET) ||
-				   ((o >= 2) && (o >= c) && (o-c <= 1)))
+			if(sgfc->options->find_start == OPTION_FINDSTART_SEARCH)
+			{		/* found a '(' but no ';' -> might be a missing ';' */
+				tmp = sgfc->current + 1;
+				while((tmp != sgfc->b_end) && *tmp != ')' && *tmp != '(')
 				{
-					PrintError(E_MISSING_SEMICOLON, sgfc, sgfc->current);
-					*sgfc->current = ';';
-					return 1;
+					if(*tmp == '[')		o++;
+					if(*tmp == ']')		c++;
+					tmp++;
 				}
+			}
+
+			if((sgfc->options->find_start == OPTION_FINDSTART_BRACKET) ||
+			   ((o >= 2) && (o >= c) && (o-c <= 1)))
+			{
+				PrintError(E_MISSING_SEMICOLON, sgfc, sgfc->current);
+				*sgfc->current = ';';
+				return 1;
 			}
 		}
 		else

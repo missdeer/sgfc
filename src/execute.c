@@ -331,9 +331,8 @@ bool Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct 
 			v = v->next;
 			continue;
 		}
-		else
-			not_empty = true;
 
+		not_empty = true;
 		x = DecodePosChar(v->value[0]) - 1;
 		y = DecodePosChar(v->value[1]) - 1;
 	
@@ -359,8 +358,7 @@ bool Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct 
 				v = DelPropValue(p, v);
 				continue;
 			}
-			else
-				v = v->next;
+			v = v->next;
 		}
 	}
 
@@ -439,8 +437,7 @@ bool Do_Root(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 		PrintError(E_ROOTP_NOT_IN_ROOTN, sgfc, p->buffer, p->idstr);
 		return false;
 	}
-	else
-		return true;
+	return true;
 }
 
 

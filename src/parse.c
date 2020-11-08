@@ -220,8 +220,8 @@ int Parse_Move(char *value, ...)
 	bool emptyOrSpace = false;
 	struct SGFInfo *sgfc;
 	U_SHORT flags;
-
 	va_list arglist;
+
 	va_start(arglist, value);
 	flags = va_arg(arglist, U_INT);
 	sgfc = va_arg(arglist, struct SGFInfo *);
@@ -246,11 +246,10 @@ int Parse_Move(char *value, ...)
 		{
 			if(sgfc->info->FF >= 4)
 				return ret;
-			else					/* new pass '[]' in old FF[1-3] */
-				return -101;		/* possible cause: missing FF   */
+			/* new pass '[]' in old FF[1-3], possible cause: missing FF */
+			return -101;
 		}
-		else
-			return 0;
+		return 0;
 	}
 
 	if(strlen(value) < 2)			/* value too short */
@@ -574,8 +573,6 @@ bool Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 
 		if(sgfc->info->GM == 1)
 			return !ExpandPointList(sgfc, p, v, true);
-		else
-			return true;
 	}
 
 	return true;
