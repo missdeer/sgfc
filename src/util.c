@@ -20,6 +20,7 @@
 /* Error reporting hooks */
 bool (*print_error_handler)(U_LONG, struct SGFInfo *, va_list) = PrintErrorHandler;
 void (*print_error_output_hook)(struct SGFCError *) = PrintErrorOutputHook;
+void (*oom_panic_hook)(const char *) = ExitWithOOMError;
 
 
 static const char *error_mesg[] =

@@ -111,6 +111,7 @@ struct UtilC_internal *SetupUtilC_internal(void);
 
 extern bool (*print_error_handler)(U_LONG, struct SGFInfo *, va_list);
 extern void (*print_error_output_hook)(struct SGFCError *);
+extern void (*oom_panic_hook)(const char *);
 
 void SearchPos(const char *, struct SGFInfo *, int *, int *);
 int PrintError(U_LONG, struct SGFInfo *, ...);
@@ -150,4 +151,4 @@ void StrictChecking(struct SGFInfo *);
 #define Enqueue(h,n) f_Enqueue((struct ListHead *)(h), (struct ListNode *)(n))
 #define Delete(h,n) f_Delete((struct ListHead *)(h), (struct ListNode *)(n))
 
-#define SaveMalloc(type, v, sz, err)	{ v = (type)malloc((size_t)(sz)); if(!(v)) ExitWithOOMError(err); }
+#define SaveMalloc(type, v, sz, err)	{ v = (type)malloc((size_t)(sz)); if(!(v)) (*oom_panic_hook)(err); }
