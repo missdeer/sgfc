@@ -22,20 +22,22 @@
 
 void PrintHelp(const enum option_help format)
 {
-	puts(
-			" SGFC V1.18  - Smart Game Format Syntax Checker & Converter\n"
-			"               Copyright (C) 1996-2018 by Arno Hollosi\n"
-			"               Email: <ahollosi@xmp.net>\n"
-			" ----------------------------------------------------------");
+	puts(" SGFC v1.18  - Smart Game Format Syntax Checker & Converter");
+	if(format == OPTION_HELP_VERSION)
+		return;
+
+	puts("               Copyright (C) 1996-2018 by Arno Hollosi\n"
+		 "               Email: <ahollosi@xmp.net>\n"
+		 " ----------------------------------------------------------");
 
 	if(format == OPTION_HELP_SHORT)
 		puts(" 'sgfc -h' for help on options");
 	else if (format == OPTION_HELP_LONG)
-		puts(" sgfc [options] infile [outfile]\n"
+		puts(" sgfc [options] infile [outfile]\n\n"
 			 " Options:\n"
 			 "    -h  ... print this help message\n"
 			 "    -bx ... x = 1,2,3: beginning of SGF data is detected by\n"
-			 "              1 - sophisticated search algorithm (default)\n"
+			 "              1 - smart search algorithm (default)\n"
 			 "              2 - first occurrence of '(;'\n"
 			 "              3 - first occurrence of '('\n"
 			 "    -c  ... write file even if a critical error occurs\n"
@@ -218,16 +220,16 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 							break;
 						case '-':	/* long options */
 							c++;
-							if(!strncmp(c, "help", 4))
-								options->help = 2;
-							else if (!strncmp(c, "version", 7))
-								options->help = 1;
+							if(!strcmp(c, "help"))
+								options->help = OPTION_HELP_LONG;
+							else if (!strcmp(c, "version"))
+								options->help = OPTION_HELP_VERSION;
 							else
 							{
 								PrintError(FE_UNKNOWN_LONG_OPTION, sgfc, c);
 								return false;
 							}
-							break;
+							goto argument_parsed;
 						default:
 						{
 							PrintError(FE_UNKNOWN_OPTION, sgfc, *c);
@@ -250,6 +252,7 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 				}
 				break;
 		}
+argument_parsed:;
 	}
 
 	return true;
@@ -271,7 +274,7 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 	SaveMalloc(struct SGFCOptions *, options, sizeof(struct SGFCOptions), "SGFC options")
 	memset(options->error_enabled, true, sizeof(options->error_enabled));
 	memset(options->delete_property, false, sizeof(options->delete_property));
-	options->help = false;
+	options->help = OPTION_HELP_NONE;
 	options->warnings = true;
 	options->keep_head = false;
 	options->keep_unknown_props = true;

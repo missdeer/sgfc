@@ -319,8 +319,10 @@ struct SGFCError {
 /* command line options */
 
 enum option_help {
-	OPTION_HELP_SHORT=1,
-	OPTION_HELP_LONG
+	OPTION_HELP_NONE=0,
+	OPTION_HELP_SHORT,
+	OPTION_HELP_LONG,
+	OPTION_HELP_VERSION,
 };
 
 enum option_linebreaks {
