@@ -25,17 +25,15 @@
 static void CheckHandicap(struct SGFInfo *sgfc, struct Node *root)
 {
 	int setup_stones = 0;
-	struct Property *prop;
-	char *buff = NULL;
-	
-	if((prop = FindProperty(root, TKN_AB))) /* handicap means black stones */
+	struct Property *handicap, *addBlack;
+
+	if((addBlack = FindProperty(root, TKN_AB))) /* handicap means black stones */
 	{
-		buff = prop->buffer;
 		/* if there's an AB but no AW than it is likely to be
 		 * a handicap game, otherwise it's a position setup */
 		if(!FindProperty(root, TKN_AW))
 		{
-			struct PropValue *val = prop->value;
+			struct PropValue *val = addBlack->value;
 			/* count number of handicap stones */
 			while (val)
 			{
@@ -45,13 +43,13 @@ static void CheckHandicap(struct SGFInfo *sgfc, struct Node *root)
 		}
 	}
 
-	if((prop = FindProperty(root, TKN_HA))) /* handicap game info */
+	if((handicap = FindProperty(root, TKN_HA))) /* handicap game info */
 	{
-		if(atoi(prop->value->value) != setup_stones)
-			PrintError(W_HANDICAP_NOT_SETUP, sgfc, prop->buffer);
+		if(atoi(handicap->value->value) != setup_stones)
+			PrintError(W_HANDICAP_NOT_SETUP, sgfc, handicap->row, handicap->col);
 	}
 	else if(setup_stones != 0)
-		PrintError(W_HANDICAP_NOT_SETUP, sgfc, buff);
+		PrintError(W_HANDICAP_NOT_SETUP, sgfc, addBlack->row, addBlack->col);
 }
 
 
@@ -78,7 +76,7 @@ static void CheckMoveOrder(struct SGFInfo *sgfc, struct Node *node, bool check_s
 		   || FindProperty(node, TKN_AE))
 		{
 			if(check_setup)
-				PrintError(W_SETUP_AFTER_ROOT, sgfc, node->buffer);
+				PrintError(W_SETUP_AFTER_ROOT, sgfc, node->row, node->col);
 			else
 				old_col = 0;
 		}
@@ -86,13 +84,13 @@ static void CheckMoveOrder(struct SGFInfo *sgfc, struct Node *node, bool check_s
 		if(FindProperty(node, TKN_B))
 		{
 			if(old_col && old_col != TKN_W)
-				PrintError(W_MOVE_OUT_OF_SEQUENCE, sgfc, node->buffer);
+				PrintError(W_MOVE_OUT_OF_SEQUENCE, sgfc, node->row, node->col);
 			old_col = TKN_B;
 		}
 		if(FindProperty(node, TKN_W))
 		{
 			if(old_col && old_col != TKN_B)
-				PrintError(W_MOVE_OUT_OF_SEQUENCE, sgfc, node->buffer);
+				PrintError(W_MOVE_OUT_OF_SEQUENCE, sgfc, node->row, node->col);
 			old_col = TKN_W;
 		}
 		if (node->sibling)

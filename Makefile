@@ -11,6 +11,8 @@ tests:
 clean:
 	$(MAKE) -C src/ clean
 	$(MAKE) -C tests/ clean
+
+clean-test-files:
 	rm -f test-files/*.txt test-files/*-result.sgf
 
 test-files: src/sgfc
@@ -21,6 +23,6 @@ test-files: src/sgfc
 	src/sgfc -v test-files/reorder.sgf test-files/reorder-result.sgf >test-files/reorder-output.txt || true
 	src/sgfc -vz test-files/reorder.sgf test-files/reorder-z-result.sgf >test-files/reorder-z-output.txt || true
 
-all: clean sgfc tests test-files
+all: clean sgfc tests
 
-.PHONY: sgfc tests test-files clean
+.PHONY: sgfc tests test-files clean clean-test-files

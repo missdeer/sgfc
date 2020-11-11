@@ -28,25 +28,52 @@
 
 
 /**************************************************************************
-*** Function:	SkipSGFText
-***				Wrapper for SkipText, using sgfc->current as buffer
-*** Parameters: sgfc	... pointer to SGFInfo structure
-***				brk		... break char
-***				mode	... see SkipText
-*** Returns:	true or false
+*** Function:	NextCharInBuffer
+***				Advanced buffer pointer and keep track of row & column number
+***				Counts \r\n or \n\r as single step.
+*** Parameters: c	 ... current position
+***				end  ... end position of buffer
+***				step ... how many steps to take
+***				row	 ... row number associated with c
+***				col	 ... column associated with c
+*** Returns:	current position; row & col are updated accordingly
 **************************************************************************/
 
-static bool SkipSGFText(struct SGFInfo *sgfc, char brk, unsigned int mode)
+const char *NextCharInBuffer(const char **c, const char *end, U_LONG step, U_LONG *row, U_LONG *col)
 {
-	char *pos = SkipText(sgfc, sgfc->current, sgfc->b_end, brk, mode);
-	if (!pos)
+	for(; step > 0 && *c < end; step--)
 	{
-		sgfc->current = sgfc->b_end;	/* Apparently we reached the buffer end */
-		return false;
+		if(**c == '\r' || **c == '\n')		/* linebreak char? */
+		{
+			if(row)
+			{
+				(*row)++;
+				*col = 1;
+			}
+			/* next char is linebreak too, but different from current char? */
+			if(*c+1<end && (*(*c+1) == '\r' || *(*c+1) == '\n') && *(*c+1) != **c)
+				(*c)++;						/* ->yes: skip, no real linebreak */
+		}
+		else								/* no linebreak char */
+			if(col)
+				(*col)++;
+		(*c)++;
 	}
-	sgfc->current = pos;
-	return true;
-}	
+	return (*c);
+}
+
+
+/**************************************************************************
+*** Function:	NextChar
+***				Convience wrapper for NextCharInBuffer
+*** Parameters: sfgc ... pointer to SGFInfo
+*** Returns:	current position; row & col are updated accordingly
+**************************************************************************/
+
+const char *NextChar(struct SGFInfo *sgfc)
+{
+	return NextCharInBuffer(&sgfc->current, sgfc->b_end, 1, &sgfc->cur_row, &sgfc->cur_col);
+}
 
 
 /**************************************************************************
@@ -61,46 +88,69 @@ static bool SkipSGFText(struct SGFInfo *sgfc, char brk, unsigned int mode)
 ***				mode	... INSIDE  : do escaping ('\')
 ***							OUTSIDE : detect faulty chars
 ***							P_ERROR : print UNEXPECTED_EOF error message
-*** Returns:	pointer to break char or NULL
+***				row		... row number associated with 's'
+***				col		... column number associated with 's'
+*** Returns:	pointer to break char or NULL if buffer end was reached.
+***				(in case of NULL, row & col reflect position at buffer end)
 **************************************************************************/
 
-char *SkipText(struct SGFInfo *sgfc, char *s, const char *e, char end, unsigned int mode)
+static const char *SkipText(struct SGFInfo *sgfc, const char *s, const char *e,
+							char end, unsigned int mode, U_LONG *row, U_LONG *col)
 {
-	while(!e || s < e)
+	while(s < e)
 	{
 		if(*s == end)			/* found break char? */
 			return s;
 
-		if(!e && !*s)			/* end of buffer? */
-			return NULL;
-
 		if(mode & OUTSIDE)		/* '.. [] ..' */
 		{
 			if(!isspace(*s))
-				PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, s, true);
+				PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, *row, *col, true, s);
 		}
 		else					/* '[ .... ]' */
 		{
 			if(*s == '\\')		/* escaping */
 			{
-				if(!e && !*(s+1))	/* can't escape '\0' char if !e */
-					return NULL;
-				s += 2;
+				NextCharInBuffer(&s, e, 2, row, col);
 				continue;
 			}
 		}
-		s++;
+		NextCharInBuffer(&s, e, 1, row, col);
 	}
 
 	if(mode & P_ERROR)
-		PrintError(E_UNEXPECTED_EOF, sgfc, s);
+		PrintError(E_UNEXPECTED_EOF, sgfc, *row, *col);
 
 	return NULL;
 }
 
 
 /**************************************************************************
-*** Function:	GetNextChar
+*** Function:	SkipSGFText
+***				Wrapper for SkipText, using sgfc->current as buffer
+*** Parameters: sgfc	... pointer to SGFInfo structure
+***				brk		... break char
+***				mode	... see SkipText
+*** Returns:	true or false
+**************************************************************************/
+
+static bool SkipSGFText(struct SGFInfo *sgfc, char brk, unsigned int mode)
+{
+	const char *pos = SkipText(sgfc, sgfc->current, sgfc->b_end,
+							   brk, mode, &sgfc->cur_row, &sgfc->cur_col);
+	/* Reached end of buffer? */
+	if (!pos)
+	{
+		sgfc->current = sgfc->b_end;	// row & col already updated by SkipText
+		return false;
+	}
+	sgfc->current = pos;
+	return true;
+}
+
+
+/**************************************************************************
+*** Function:	GetNextSGFChar
 ***				Sets sgfc->current to next meaningful SGF char
 ***				Detects bad chars and prints an error message if desired
 ***				Chars: ( ) ; [ uppercase
@@ -112,7 +162,7 @@ char *SkipText(struct SGFInfo *sgfc, char *s, const char *e, char end, unsigned 
 *** Returns:	true or false
 **************************************************************************/
 
-static bool GetNextChar(struct SGFInfo *sgfc, bool print_error, U_LONG error)
+static bool GetNextSGFChar(struct SGFInfo *sgfc, bool print_error, U_LONG error)
 {
 	int lc = 0;
 
@@ -124,13 +174,15 @@ static bool GetNextChar(struct SGFInfo *sgfc, bool print_error, U_LONG error)
 			case '(':
 			case ')':
 			case '[':	if(print_error && lc)
-							PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, sgfc->current-lc, true, lc);
+							PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, sgfc->cur_row, sgfc->cur_col-lc,
+				  				       true, sgfc->current-lc, lc);
 						return true;
 
 			default:	if(isupper(*sgfc->current))
 						{
-							sgfc->current -= lc;	/* set back to start */
-							return true;			/* of text */
+							sgfc->current -= lc;	/* set back to start of text */
+							sgfc->cur_col -= lc;
+							return true;
 						}
 
 						if(islower(*sgfc->current))
@@ -140,20 +192,21 @@ static bool GetNextChar(struct SGFInfo *sgfc, bool print_error, U_LONG error)
 							if(print_error)
 							{
 								if(lc)
-									PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, sgfc->current-lc, true, lc);
+									PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, sgfc->cur_row, sgfc->cur_col-lc,
+											   true, sgfc->current-lc, lc);
 								if(!isspace(*sgfc->current))
-									PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, sgfc->current, true);
+									PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, sgfc->cur_row, sgfc->cur_col,
+											   true, sgfc->current);
 							}
 							lc = 0;
 						}
-						sgfc->current++;
-
+						NextChar(sgfc);
 						break;
 		}
 	}
 
 	if(error != E_NO_ERROR)
-		PrintError(error, sgfc, sgfc->current);
+		PrintError(error, sgfc, sgfc->cur_row, sgfc->cur_col);
 	return false;
 }
 
@@ -163,7 +216,7 @@ static bool GetNextChar(struct SGFInfo *sgfc, bool print_error, U_LONG error)
 ***				Skips all property values of current value list
 *** Parameters: sgfc		... pointer to SGFInfo structure
 ***				print_error ... print error message
-***								(passed on to GetNextChar)
+***								(passed on to GetNextSGFChar)
 *** Returns:	true or false
 **************************************************************************/
 
@@ -177,10 +230,10 @@ static bool SkipValues(struct SGFInfo *sgfc, bool print_error)
 		if(!SkipSGFText(sgfc, ']', INSIDE|P_ERROR))	/* skip value */
 			return false;
 
-		sgfc->current++;
+		NextChar(sgfc);
 
 		/* search next value start */
-		if(!GetNextChar(sgfc, print_error, E_UNEXPECTED_EOF))
+		if(!GetNextSGFChar(sgfc, print_error, E_UNEXPECTED_EOF))
 			return false;
 	}
 
@@ -197,19 +250,23 @@ static bool SkipValues(struct SGFInfo *sgfc, bool print_error)
 ***				d		... destination buffer
 ***				s		... source buffer
 ***				size	... number of bytes to copy
-***				print_error ... to print or not to print
+***				row		... current row number associated with s
+***				col		... current column associated with s
 *** Returns:	-
 **************************************************************************/
 
-void CopyValue(struct SGFInfo *sgfc, char *d, const char *s, size_t size, bool print_error)
+void CopyValue(struct SGFInfo *sgfc, char *d, const char *s, size_t size, U_LONG row, U_LONG col)
 {
+	const char *end = s + size;
+
 	while(size--)
 	{
 		if(*s)
 			*d++ = *s;
-		else if(print_error)
-			PrintError(W_CTRL_BYTE_DELETED, sgfc, s);
-		s++;
+		else
+			/* col+1, because col points to '[' and we'd like to be precise */
+			PrintError(W_CTRL_BYTE_DELETED, sgfc, row, col+1);
+		NextCharInBuffer(&s, end, 1, &row, &col);
 	}
 	*d = 0;
 }
@@ -220,7 +277,8 @@ void CopyValue(struct SGFInfo *sgfc, char *d, const char *s, size_t size, bool p
 ***				Adds a value to the property (inits structure etc.)
 *** Parameters: sgfc	... pointer to SGFInfo structure
 ***				p		... pointer to property
-***				buffer	... pointer to position in source buffer (or NULL)
+***				row		... row number associated with property value (or 0)
+***				col		... column associated with property value (or 0)
 ***				value	... pointer to first value
 ***				size	... length of first value (excluding any 0 bytes)
 ***				value2	... pointer to second value (or NULL)
@@ -230,19 +288,21 @@ void CopyValue(struct SGFInfo *sgfc, char *d, const char *s, size_t size, bool p
 **************************************************************************/
 
 struct PropValue *AddPropValue(struct SGFInfo *sgfc,
-							   struct Property *p, char *buffer,
+							   struct Property *p, U_LONG row, U_LONG col,
 							   const char *value, size_t size,
 							   const char *value2, size_t size2)
 {
 	struct PropValue *newv;
 
 	SaveMalloc(struct PropValue *, newv, sizeof(struct PropValue), "property value structure")
+	newv->row = row;
+	newv->col = col;
 
 	if(value)
 	{
 		/* +2 because Parse_Float may add 1 char and for trailing '\0' byte */
 		SaveMalloc(char *, newv->value, size+2, "property value buffer")
-		CopyValue(sgfc, newv->value, value, size, true);
+		CopyValue(sgfc, newv->value, value, size, row, col);
 	}
 	else
 		newv->value = NULL;
@@ -250,12 +310,10 @@ struct PropValue *AddPropValue(struct SGFInfo *sgfc,
 	if(value2)
 	{
 		SaveMalloc(char *, newv->value2, size2+2, "property value2 buffer")
-		CopyValue(sgfc, newv->value2, value2, size2, true);
+		CopyValue(sgfc, newv->value2, value2, size2, row, col);
 	}
 	else
 		newv->value2 = NULL;
-
-	newv->buffer = buffer;
 
 	AddTail(&p->value, newv);				/* add value to property */
 	return newv;
@@ -273,31 +331,37 @@ struct PropValue *AddPropValue(struct SGFInfo *sgfc,
 
 static bool NewValue(struct SGFInfo *sgfc, struct Property *p, U_SHORT flags)
 {
-	char *s, *t, *buffer;
+	U_LONG row = sgfc->cur_row;
+	U_LONG col = sgfc->cur_col;
 
-	buffer = sgfc->current++;
-	s = sgfc->current;					/* points to char after '[' */
+	const char *s = NextChar(sgfc);		/* points to char after '[' */
+	if(!s)
+		return false;
 
 	if(!SkipSGFText(sgfc, ']', INSIDE|P_ERROR))
 		return false;					/* value isn't added */
 
-	sgfc->current++;					/* points now to char after ']' */
+	NextChar(sgfc);						/* points now to char after ']' */
 
 	if(flags & (PVT_COMPOSE|PVT_WEAKCOMPOSE))	/* compose datatype? */
 	{
-		t = SkipText(sgfc, s, sgfc->current, ':', INSIDE);
+		const char *t = SkipText(sgfc, s, sgfc->current, ':', INSIDE, NULL, NULL);
 		if(!t)
 		{
 			if(flags & PVT_WEAKCOMPOSE)	/* no compose -> parse as normal */
-				AddPropValue(sgfc, p, buffer, s, sgfc->current - s - 1, NULL, 0);
+				AddPropValue(sgfc, p, row, col, s, sgfc->current - s - 1, NULL, 0);
 			else						/* not weak -> error */
-				PrintError(E_COMPOSE_EXPECTED, sgfc, s-1, p->idstr);
+			{
+				char *val = SaveDupString(s, sgfc->current - s - 1, "compose error value");
+				PrintError(E_COMPOSE_EXPECTED, sgfc, row, col, val, p->idstr);
+				free(val);
+			}
 		}
 		else	/* composed value */
-			AddPropValue(sgfc, p, buffer, s, t - s, t + 1, sgfc->current - t - 2);
+			AddPropValue(sgfc, p, row, col, s, t - s, t + 1, sgfc->current - t - 2);
 	}
 	else
-		AddPropValue(sgfc, p, buffer, s, sgfc->current - s - 1, NULL, 0);
+		AddPropValue(sgfc, p, row, col, s, sgfc->current - s - 1, NULL, 0);
 
 	return true;
 }
@@ -315,28 +379,19 @@ static bool NewValue(struct SGFInfo *sgfc, struct Property *p, U_SHORT flags)
 ***				(exits on fatal error)
 **************************************************************************/
 
-struct Property *AddProperty(struct Node *n, token id, char *id_buf, const char *id_str)
+struct Property *AddProperty(struct Node *n, token id, U_LONG row, U_LONG col, const char *id_str)
 {
 	struct Property *newp;
 	char *str;
 
 	SaveMalloc(struct Property *, newp, sizeof(struct Property), "property structure")
-
-	newp->id = id;							/* init property structure */
-
-	if(id == TKN_UNKNOWN)
-	{
-		SaveMalloc(char *, str, strlen(id_str)+2, "ID string")
-		strcpy(str, id_str);
-		newp->idstr = str;
-	}
-	else
-		newp->idstr = sgf_token[id].id;
-
+	/* init property structure */
+	newp->id = id;
+	newp->idstr = SaveDupString(id_str, 0, "ID string");
 	newp->priority = sgf_token[id].priority;
 	newp->flags = sgf_token[id].flags;		/* local copy */
-	newp->buffer = id_buf;
-
+	newp->row = row;
+	newp->col = col;
 	newp->value = NULL;
 	newp->valend = NULL;
 
@@ -357,15 +412,15 @@ struct Property *AddProperty(struct Node *n, token id, char *id_buf, const char 
 *** Returns:	true or false
 **************************************************************************/
 
-static bool NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id_buf, char *idstr)
+static bool NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, U_LONG row, U_LONG col, char *idstr)
 {
 	struct Property *newp;
 	bool ret = true;
-	char *too_many = NULL;
+	U_LONG tooMany_row = 0, tooMany_col;
 
 	if(!n)	return true;
 
-	newp = AddProperty(n, id, id_buf, idstr);
+	newp = AddProperty(n, id, row, col, idstr);
 
 	while(true)
 	{
@@ -374,7 +429,7 @@ static bool NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id
 			ret = false;	break;
 		}
 
-		if(!GetNextChar(sgfc, true, E_VARIATION_NESTING))
+		if(!GetNextSGFChar(sgfc, true, E_VARIATION_NESTING))
 		{
 			ret = false;	break;
 		}
@@ -384,8 +439,11 @@ static bool NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id
 			if(newp->flags & PVT_LIST)
 				continue;
 			/* error, as only one value allowed */
-			if (!too_many)
-				too_many = sgfc->current;
+			if (!tooMany_row)
+			{
+				tooMany_row = sgfc->cur_row;
+				tooMany_col = sgfc->cur_col;
+			}
 			if (!newp->value || !strlen(newp->value->value))	/* if previous value is empty, */
 			{									/* then use the later value */
 				DelPropValue(newp, newp->value);
@@ -397,8 +455,8 @@ static bool NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id
 		break;						/* reached end of value list */
 	}
 
-	if(too_many)
-		PrintError(E_TOO_MANY_VALUES, sgfc, too_many, idstr);
+	if(tooMany_row)
+		PrintError(E_TOO_MANY_VALUES, sgfc, tooMany_row, tooMany_col, idstr);
 
 	if(!newp->value)				/* property has values? */
 		DelProperty(n, newp);		/* no -> delete it */
@@ -417,12 +475,13 @@ static bool NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, char *id
 
 static bool MakeProperties(struct SGFInfo *sgfc, struct Node *n)
 {
-	char *id, propid[100];
-	int i;
+	char propid[100], full_propid[300];
+	U_LONG id_row, id_col;
+	int pi, pi_lc;
 
 	while(true)
 	{
-		if(!GetNextChar(sgfc, true, E_VARIATION_NESTING))
+		if(!GetNextSGFChar(sgfc, true, E_VARIATION_NESTING))
 			return false;
 
 		switch(*sgfc->current)
@@ -430,88 +489,100 @@ static bool MakeProperties(struct SGFInfo *sgfc, struct Node *n)
 			case '(':	/* ( ) ; indicate node end */
 			case ')':
 			case ';':	return true;
-			case ']':	PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, sgfc->current, true);
-						sgfc->current++;
+			case ']':	PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, sgfc->cur_row, sgfc->cur_col, true, sgfc->current);
+						NextChar(sgfc);
 						break;
-			case '[':	PrintError(E_VALUES_WITHOUT_ID, sgfc, sgfc->current);
+			case '[':	PrintError(E_VALUES_WITHOUT_ID, sgfc, sgfc->cur_row, sgfc->cur_col);
 						if(!SkipValues(sgfc, true))
 							return false;
 						break;
 
 			default:	/* isalpha */
-
-				id = sgfc->current;
-				i = 0;
+				id_row = sgfc->cur_row;
+				id_col = sgfc->cur_col;
+				pi = 0;		/* counter for propid */
+				pi_lc = 0;	/* counter for lowercase propid */
 
 				while(!SGF_EOF)
 				{
-					if(isupper(*sgfc->current))
+					if(islower(*sgfc->current))
 					{
-						if(i < 100)						/* max. 100 uc chars */
-							propid[i++] = *sgfc->current;
-					}
-					else
-						if(!islower(*sgfc->current))	/* end of PropID? */
+						if(pi_lc < 200)
 						{
-							if(i >= 100)
+							full_propid[pi + pi_lc] = *sgfc->current;
+							pi_lc++;
+						}
+					}
+					else if(isupper(*sgfc->current))
+					{
+						if(pi < 100)						/* max. 100 uc chars */
+						{
+							full_propid[pi+pi_lc] = *sgfc->current;
+							propid[pi++] = *sgfc->current;
+						}
+					}
+					else									/* end of PropID? */
+					{
+						propid[pi >= 100 ? 99 : pi] = 0;
+						full_propid[pi+pi_lc >= 300 ? 299 : pi+pi_lc] = 0;
+
+						if(pi >= 100)
+							break;
+
+						if(!GetNextSGFChar(sgfc, true, E_UNEXPECTED_EOF))
+							return false;
+
+						if(*sgfc->current != '[')
+						{
+							PrintError(E_NO_PROP_VALUES, sgfc, id_row, id_col, full_propid);
+							break;
+						}
+
+						if(pi > 2)
+							PrintError(WS_LONG_PROPID, sgfc, sgfc->cur_row, sgfc->cur_col, full_propid);
+
+						int i = 1;
+						for(; sgf_token[i].id; i++)
+							if(!strcmp(propid, sgf_token[i].id))
 								break;
 
-							if(!GetNextChar(sgfc, true, E_UNEXPECTED_EOF))
-								return false;
-
-							/* propID in propid[], sgfc->current points to '[' */
-							propid[i] = 0;
-
-							if(*sgfc->current != '[')
+						if(!sgf_token[i].id)	/* EOF sgf_token */
+						{
+							if(!sgfc->options->keep_unknown_props)
 							{
-								PrintError(E_NO_PROP_VALUES, sgfc, id, propid);
-								break;
-							}
-
-							if(i > 2)
-								PrintError(WS_LONG_PROPID, sgfc, sgfc->current, propid);
-
-							for(i = 1; sgf_token[i].id; i++)
-								if(!strcmp(propid, sgf_token[i].id))
-									break;
-
-							if(!sgf_token[i].id)	/* EOF sgf_token */
-							{
-								if(!sgfc->options->keep_unknown_props)
-								{
-									PrintError(WS_UNKNOWN_PROPERTY, sgfc, id, propid, "deleted");
-									if(!SkipValues(sgfc, true))
-										return false;
-									break;
-								}
-								PrintError(WS_UNKNOWN_PROPERTY, sgfc, id, propid, "found");
-								i = TKN_UNKNOWN;
-							}
-
-							if(sgfc->options->delete_property[i])
-							{
-								PrintError(W_PROPERTY_DELETED, sgfc, id, "", propid);
+								PrintError(WS_UNKNOWN_PROPERTY, sgfc, id_row, id_col, full_propid, "deleted");
 								if(!SkipValues(sgfc, true))
 									return false;
 								break;
 							}
+							PrintError(WS_UNKNOWN_PROPERTY, sgfc, id_row, id_col, full_propid, "found");
+							i = TKN_UNKNOWN;
+						}
 
-							if(!NewProperty(sgfc, n, (token)i, id, propid))
+						if(sgfc->options->delete_property[i])
+						{
+							PrintError(W_PROPERTY_DELETED, sgfc, id_row, id_col, "", full_propid);
+							if(!SkipValues(sgfc, true))
 								return false;
 							break;
 						}
-					sgfc->current++;
+
+						if(!NewProperty(sgfc, n, (token)i, id_row, id_col, full_propid))
+							return false;
+						break;
+					}
+					NextChar(sgfc);
 				}
 
 				if(SGF_EOF)
 				{
-					PrintError(E_UNEXPECTED_EOF, sgfc, sgfc->current);
+					PrintError(E_UNEXPECTED_EOF, sgfc, sgfc->cur_row, sgfc->cur_col);
 					return false;
 				}
 
-				if(i >= 100)
+				if(pi >= 100)
 				{
-					PrintError(E_PROPID_TOO_LONG, sgfc, id, sgfc->current);
+					PrintError(E_PROPID_TOO_LONG, sgfc, id_row, id_col, full_propid);
 					if(!SkipValues(sgfc, true))
 						return false;
 				}
@@ -543,7 +614,8 @@ struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, bool new_child)
 	newn->sibling	= NULL;
 	newn->prop		= NULL;
 	newn->last		= NULL;
-	newn->buffer	= sgfc->current;
+	newn->row		= sgfc->cur_row;
+	newn->col		= sgfc->cur_col;
 
 	AddTail(sgfc, newn);
 
@@ -600,58 +672,68 @@ struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, bool new_child)
 ***				Recursive function to build up the sgf tree structure
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				r	 ... tree root
+***				missing_semicolon ... whether missing semicolon is known/reported already
 *** Returns:	true or false on success/error
 **************************************************************************/
 
-static bool BuildSGFTree(struct SGFInfo *sgfc, struct Node *r)
+static bool BuildSGFTree(struct SGFInfo *sgfc, struct Node *r, bool missing_semicolon)
 {
 	int end_tree = 0, empty = 1;
 
-	while(GetNextChar(sgfc, true, E_VARIATION_NESTING))
+	while(GetNextSGFChar(sgfc, true, E_VARIATION_NESTING))
 	{
-		sgfc->current++;
-		switch(*(sgfc->current-1))
+		switch(*sgfc->current)
 		{
 			case ';':	if(end_tree)
 						{
-							PrintError(E_NODE_OUTSIDE_VAR, sgfc, sgfc->current - 1);
-							sgfc->current--;
-							if(!BuildSGFTree(sgfc, r))
+							PrintError(E_NODE_OUTSIDE_VAR, sgfc, sgfc->cur_row, sgfc->cur_col);
+							if(!BuildSGFTree(sgfc, r, false))
 								return false;
 							end_tree = 1;
 						}
 						else
 						{
 							empty = 0;
+							NextChar(sgfc);
 							r = NewNode(sgfc, r, false);
 							if(!r)
 								return false;
 						}
 						break;
 			case '(':	if(empty)
-							PrintError(E_VARIATION_START, sgfc, sgfc->current-1);
+						{
+							if(!missing_semicolon)
+								PrintError(E_VARIATION_START, sgfc, sgfc->cur_row, sgfc->cur_col);
+							NextChar(sgfc);
+						}
 						else
 						{
-							if(!BuildSGFTree(sgfc, r))
+							NextChar(sgfc);
+							if(!BuildSGFTree(sgfc, r, false))
 								return false;
 							end_tree = 1;
 						}
 						break;
 			case ')':	if(empty)
-							PrintError(E_EMPTY_VARIATION, sgfc, sgfc->current-1);
+							PrintError(E_EMPTY_VARIATION, sgfc, sgfc->cur_row, sgfc->cur_col);
+						NextChar(sgfc);
 						return true;
 
 			default:	if(empty)		/* assume there's a missing ';' */
 						{
-							PrintError(E_MISSING_NODE_START, sgfc, sgfc->current-1);
+							if(!missing_semicolon)
+								PrintError(E_MISSING_NODE_START, sgfc, sgfc->cur_row, sgfc->cur_col);
 							empty = 0;
-							sgfc->current--;
 							r = NewNode(sgfc, r, false);
 							if(!r)
 								return false;
 						}
 						else
-							PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, sgfc->current-1, true);
+						{
+							PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, sgfc->cur_row, sgfc->cur_col,
+									   true, sgfc->current);
+							NextChar(sgfc);
+						}
 						break;
 		}
 	}
@@ -672,7 +754,7 @@ static bool BuildSGFTree(struct SGFInfo *sgfc, struct Node *r)
 static int FindStart(struct SGFInfo *sgfc, bool first_time)
 {
 	int warn = 0, o, c;
-	char *tmp;
+	const char *tmp;
 
 	while(!SGF_EOF)
 	{
@@ -684,12 +766,12 @@ static int FindStart(struct SGFInfo *sgfc, bool first_time)
 			{
 				if(!warn)		/* print warning only once */
 				{
-					PrintError(W_SGF_IN_HEADER, sgfc, sgfc->current);
+					PrintError(W_SGF_IN_HEADER, sgfc, sgfc->cur_row, sgfc->cur_col);
 					warn = 1;
 				}
 
 				if(!first_time)
-					PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, sgfc->current, true, 4);
+					PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, sgfc->cur_row, sgfc->cur_col, true, sgfc->current, 4);
 
 				sgfc->current += 4;	/* skip '[aa]' */
 				continue;
@@ -723,16 +805,15 @@ static int FindStart(struct SGFInfo *sgfc, bool first_time)
 			if((sgfc->options->find_start == OPTION_FINDSTART_BRACKET) ||
 			   ((o >= 2) && (o >= c) && (o-c <= 1)))
 			{
-				PrintError(E_MISSING_SEMICOLON, sgfc, sgfc->current);
-				*sgfc->current = ';';
-				return 1;
+				PrintError(E_MISSING_SEMICOLON, sgfc, sgfc->cur_row, sgfc->cur_col);
+				return 2;
 			}
 		}
 		else
 			if(!first_time && !isspace(*sgfc->current))
-				PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, sgfc->current, true);
+				PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, sgfc->cur_row, sgfc->cur_col, true, sgfc->current);
 
-		sgfc->current++;
+		NextChar(sgfc);
 	}
 
 	if(first_time)
@@ -810,7 +891,8 @@ bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 	int miss;
 
 	sgfc->current = sgfc->buffer;
-
+	sgfc->cur_row = 1;
+	sgfc->cur_col = 1;
 	miss = FindStart(sgfc, true);		/* skip junk in front of '(;' */
 	if(miss == -1)
 		return false;
@@ -820,8 +902,8 @@ bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 	while(!SGF_EOF)
 	{
 		if(!miss)
-			sgfc->current++;			/* skip '(' */
-		if(!BuildSGFTree(sgfc, NULL))
+			NextChar(sgfc);				/* skip '(' */
+		if(!BuildSGFTree(sgfc, NULL, miss==2))
 			break;
 		miss = FindStart(sgfc, false);	/* skip junk in front of '(;' */
 	}

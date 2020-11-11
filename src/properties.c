@@ -38,8 +38,8 @@ static bool Check_Triple(struct SGFInfo *sgfc, struct Property *p, struct PropVa
 
 static bool Check_Empty(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
+	PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, p->idstr, "");
 	v->value[0] = 0;
-	PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->buffer, p->idstr, v->value);
 	return true;
 }
 

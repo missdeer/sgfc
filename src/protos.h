@@ -9,13 +9,6 @@
 
 #include <stdarg.h>
 
-#ifdef _MSC_VER
-#define no_return __declspec(noreturn)
-#elif __GNUC__
-#define no_return __attribute__((noreturn))
-#else
-#define no_return /* NOP */
-#endif
 
 /**** options.c ****/
 
@@ -31,13 +24,11 @@ void FreeSGFInfo(struct SGFInfo *);
 
 /**** load.c ****/
 
-void CopyValue(struct SGFInfo *, char *, const char *, size_t, bool);
-struct PropValue *AddPropValue(struct SGFInfo *, struct Property *, char *,
+struct PropValue *AddPropValue(struct SGFInfo *, struct Property *, U_LONG, U_LONG,
 							   const char *, size_t, const char *, size_t);
-struct Property *AddProperty(struct Node *, token, char *, const char *);
+struct Property *AddProperty(struct Node *, token, U_LONG, U_LONG, const char *);
 struct Node *NewNode(struct SGFInfo *, struct Node *, bool);
 
-char *SkipText(struct SGFInfo *, char *, const char *, char, unsigned int);
 bool LoadSGF(struct SGFInfo *, const char *);
 bool LoadSGFFromFileBuffer(struct SGFInfo *);
 
@@ -113,11 +104,11 @@ extern bool (*print_error_handler)(U_LONG, struct SGFInfo *, va_list);
 extern void (*print_error_output_hook)(struct SGFCError *);
 extern void (*oom_panic_hook)(const char *);
 
-void SearchPos(const char *, struct SGFInfo *, int *, int *);
 int PrintError(U_LONG, struct SGFInfo *, ...);
-no_return void ExitWithOOMError(const char *);
+void ExitWithOOMError(const char *);
 bool PrintErrorHandler(U_LONG, struct SGFInfo *, va_list);
 void PrintErrorOutputHook(struct SGFCError *);
+void CommonPrintErrorOutputHook(struct SGFCError *, FILE *);
 
 int  DecodePosChar(char);
 char EncodePosChar(int);
@@ -127,6 +118,9 @@ void f_Enqueue(struct ListHead *, struct ListNode *);
 void f_Delete(struct ListHead *, struct ListNode *);
 
 bool strnccmp(const char *, const char *, size_t);
+bool stridcmp(const char *, const char *);
+void strnpcpy(char *, const char *, size_t);
+char *SaveDupString(const char *, size_t, const char *);
 U_LONG KillChars(char *, U_SHORT, const char *);
 U_LONG TestChars(const char *, U_SHORT, const char *);
 
@@ -151,4 +145,10 @@ void StrictChecking(struct SGFInfo *);
 #define Enqueue(h,n) f_Enqueue((struct ListHead *)(h), (struct ListNode *)(n))
 #define Delete(h,n) f_Delete((struct ListHead *)(h), (struct ListNode *)(n))
 
-#define SaveMalloc(type, v, sz, err)	{ v = (type)malloc((size_t)(sz)); if(!(v)) (*oom_panic_hook)(err); }
+#define SaveMalloc(type, v, sz, err)  {	v = (type)malloc((size_t)(sz)); \
+										if(!(v)) { \
+											(*oom_panic_hook)(err); /* function will not return */ \
+                                            /* will never be reached; safe-guard and hint for linting */ \
+											exit(20); \
+										} \
+									  }

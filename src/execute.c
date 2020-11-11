@@ -117,7 +117,7 @@ bool Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 
 	if(st->annotate & ST_MOVE)	/* there's a move already? */
 	{
-		PrintError(E_TWO_MOVES_IN_NODE, sgfc, p->buffer);
+		PrintError(E_TWO_MOVES_IN_NODE, sgfc, p->row, p->col);
 		SplitNode(sgfc, n, 0, p->id, true);
 		return true;
 	}
@@ -132,7 +132,7 @@ bool Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 	color = (unsigned char)sgf_token[p->id].data;
 
 	if(st->board[MXY(x,y)])
-		PrintError(WS_ILLEGAL_MOVE, sgfc, p->buffer);
+		PrintError(WS_ILLEGAL_MOVE, sgfc, p->row, p->col);
 
 	st->board[MXY(x,y)] = color;
 	CaptureStones(st, color, x - 1, y);		/* check for prisoners */
@@ -177,10 +177,10 @@ bool Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, stru
 	{
 		x = DecodePosChar(v->value[0]) - 1;
 		y = DecodePosChar(v->value[1]) - 1;
-	
+
 		if(st->markup[MXY(x,y)] & ST_ADDSTONE)
 		{
-			PrintError(E_POSITION_NOT_UNIQUE, sgfc, v->buffer, "AddStone", p->idstr);
+			PrintError(E_POSITION_NOT_UNIQUE, sgfc, v->row, v->col, v->value, "AddStone", p->idstr);
 			v = DelPropValue(p, v);
 			continue;
 		}
@@ -190,7 +190,7 @@ bool Do_AddStones(struct SGFInfo *sgfc, struct Node *n, struct Property *p, stru
 
 		if(st->board[MXY(x,y)] == color)		/* Add property is redundant */
 		{
-			PrintError(WS_ADDSTONE_REDUNDANT, sgfc, v->buffer, p->idstr);
+			PrintError(WS_ADDSTONE_REDUNDANT, sgfc, v->row, v->col, v->value, p->idstr);
 			v = DelPropValue(p, v);
 			continue;
 		}
@@ -227,10 +227,10 @@ bool Do_Letter(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct 
 	{
 		x = DecodePosChar(v->value[0]) - 1;
 		y = DecodePosChar(v->value[1]) - 1;
-	
+
 		if(st->markup[MXY(x,y)] & ST_LABEL)
 		{
-			PrintError(E_POSITION_NOT_UNIQUE, sgfc, v->buffer, "Label", p->idstr);
+			PrintError(E_POSITION_NOT_UNIQUE, sgfc, v->row, v->col, v->value, "Label", p->idstr);
 		}
 		else
 		{
@@ -270,10 +270,10 @@ bool Do_Mark(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 	{
 		x = DecodePosChar(v->value[0]) - 1;
 		y = DecodePosChar(v->value[1]) - 1;
-	
+
 		if(st->markup[MXY(x,y)] & ST_MARKUP)
 		{
-			PrintError(E_POSITION_NOT_UNIQUE, sgfc, v->buffer, "Markup", p->idstr);
+			PrintError(E_POSITION_NOT_UNIQUE, sgfc, v->row, v->col, v->value, "Markup", p->idstr);
 		}
 		else
 		{
@@ -323,7 +323,7 @@ bool Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct 
 		{
 			if(empty)	/* if we already have an empty value */
 			{
-				PrintError(E_EMPTY_VALUE_DELETED, sgfc, v->buffer, "Markup", p->idstr);
+				PrintError(E_EMPTY_VALUE_DELETED, sgfc, v->row, v->col, "Markup", p->idstr);
 				v = DelPropValue(p, v);
 				continue;
 			}
@@ -335,10 +335,10 @@ bool Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct 
 		not_empty = true;
 		x = DecodePosChar(v->value[0]) - 1;
 		y = DecodePosChar(v->value[1]) - 1;
-	
+
 		if(st->markup[MXY(x,y)] & flag)
 		{
-			PrintError(E_POSITION_NOT_UNIQUE, sgfc, v->buffer, "Markup", p->idstr);
+			PrintError(E_POSITION_NOT_UNIQUE, sgfc, v->row, v->col, v->value, "Markup", p->idstr);
 			v = DelPropValue(p, v);
 			continue;
 		}
@@ -354,7 +354,7 @@ bool Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct 
 		while(v) {
 			if(!strlen(v->value))
 			{
-				PrintError(E_EMPTY_VALUE_DELETED, sgfc, v->buffer, "Markup", p->idstr);
+				PrintError(E_EMPTY_VALUE_DELETED, sgfc, v->row, v->col, "Markup", p->idstr);
 				v = DelPropValue(p, v);
 				continue;
 			}
@@ -385,33 +385,35 @@ bool Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 
 	if((st->annotate & ST_ANN_BM) && p->id == TKN_TE) /* DO (doubtful) */
 	{
-		PrintError(E4_BM_TE_IN_NODE, sgfc, p->buffer, "BM-TE", "DO");
+		PrintError(E4_BM_TE_IN_NODE, sgfc, p->row, p->col, "BM-TE", "DO");
 		hlp = FindProperty(n, TKN_BM);
 		hlp->id = TKN_DO;
-		hlp->idstr = sgf_token[TKN_DO].id;
+		free(hlp->idstr);
+		hlp->idstr = SaveDupString(sgf_token[TKN_DO].id, 0, "DO id string");
 		hlp->value->value[0] = 0;
 		return false;
 	}
 
 	if(st->annotate & ST_ANN_TE && p->id == TKN_BM)	/* IT (interesting) */
 	{
-		PrintError(E4_BM_TE_IN_NODE, sgfc, p->buffer, "TE-BM", "IT");
+		PrintError(E4_BM_TE_IN_NODE, sgfc, p->row, p->col, "TE-BM", "IT");
 		hlp = FindProperty(n, TKN_TE);
 		hlp->id = TKN_IT;
-		hlp->idstr = sgf_token[TKN_IT].id;
+		free(hlp->idstr);
+		hlp->idstr = SaveDupString(sgf_token[TKN_IT].id, 0, "DO id string");
 		hlp->value->value[0] = 0;
 		return false;
 	}
 
 	if(st->annotate & flag)
 	{
-		PrintError(E_ANNOTATE_NOT_UNIQUE, sgfc, p->buffer, p->idstr);
+		PrintError(E_ANNOTATE_NOT_UNIQUE, sgfc, p->row, p->col, p->idstr);
 		return false;
 	}
 
 	if((flag & (ST_ANN_MOVE|ST_KO)) && !(st->annotate & ST_MOVE))
 	{
-		PrintError(E_ANNOTATE_WITHOUT_MOVE, sgfc, p->buffer, p->idstr);
+		PrintError(E_ANNOTATE_WITHOUT_MOVE, sgfc, p->row, p->col, p->idstr);
 		return false;
 	}
 
@@ -434,7 +436,7 @@ bool Do_Root(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 {
 	if(n->parent)
 	{
-		PrintError(E_ROOTP_NOT_IN_ROOTN, sgfc, p->buffer, p->idstr);
+		PrintError(E_ROOTP_NOT_IN_ROOTN, sgfc, p->row, p->col, p->idstr);
 		return false;
 	}
 	return true;
@@ -453,26 +455,25 @@ bool Do_Root(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 
 bool Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
-	int x, y;
 	long ki;
 	char *new_km;
 
-	if(st->ginfo && (st->ginfo != n->buffer))
+	if(st->ginfo && (st->ginfo != n))
 	{
-		SearchPos(st->ginfo, sgfc, &x, &y);
-		PrintError(E4_GINFO_ALREADY_SET, sgfc, p->buffer, p->idstr, y, x);
+		PrintError(E4_GINFO_ALREADY_SET, sgfc, p->row, p->col, p->idstr,
+			 	   st->ginfo->row, st->ginfo->col);
 		return false;
 	}
 
-	st->ginfo = n->buffer;
+	st->ginfo = n;
 	if(p->id != TKN_KI)
 		return true;
 
 	if(FindProperty(n, TKN_KM))
-		PrintError(W_INT_KOMI_FOUND, sgfc, p->buffer, "deleted (<KM> property found)");
+		PrintError(W_INT_KOMI_FOUND, sgfc, p->row, p->col, "deleted (<KM> property found)");
 	else
 	{
-		PrintError(W_INT_KOMI_FOUND, sgfc, p->buffer, "converted to <KM>");
+		PrintError(W_INT_KOMI_FOUND, sgfc, p->row, p->col, "converted to <KM>");
 
 		ki = strtol(p->value->value, NULL, 10);		/* we can ignore errors here */
 		SaveMalloc(char *, new_km, strlen(p->value->value)+3, "new KM number value")
@@ -506,7 +507,8 @@ bool Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 	{
 		if(v->next)
 		{
-			PrintError(E_BAD_VW_VALUES, sgfc, p->buffer, "values after '[]' value found", "deleted");
+			PrintError(E_BAD_VW_VALUES, sgfc, p->row, p->col,
+			  		   "values after '[]' value found", "deleted");
 			v = v->next;
 			while(v)
 				v = DelPropValue(p, v);
@@ -519,7 +521,8 @@ bool Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 	{
 		if(!strlen(v->value))	/* '[]' within other values */
 		{
-			PrintError(E_BAD_VW_VALUES, sgfc, v->buffer, "empty value found in list", "deleted");
+			PrintError(E_BAD_VW_VALUES, sgfc, v->row, v->col,
+			  		   "empty value found in list", "deleted");
 			v = DelPropValue(p, v);
 		}
 		else
@@ -540,17 +543,19 @@ bool Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 			v->value2 = v->next->value;
 			v->next->value = NULL;
 			DelPropValue(p, v->next);
-		
+
 			if(!ExpandPointList(sgfc, p, v, false))
 			{
-				PrintError(E_BAD_VW_VALUES, sgfc, v->buffer, "illegal FF[3] definition", "deleted");
+				PrintError(E_BAD_VW_VALUES, sgfc, v->row, v->col,
+			   			   "illegal FF[3] definition", "deleted");
 				return false;
 			}
 
 			DelPropValue(p, v);
 		}
 		else		/* looks like FF4 definition (wrong FF set?) */
-			PrintError(E_BAD_VW_VALUES, sgfc, p->buffer, "FF[4] definition in older FF found", "parsing done anyway");
+			PrintError(E_BAD_VW_VALUES, sgfc, p->row, p->col,
+			  		   "FF[4] definition in older FF found", "parsing done anyway");
 	}
 
 	return true;

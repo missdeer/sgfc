@@ -14,11 +14,10 @@ OPTIONS = -pedantic -W -Wimplicit -Wreturn-type -Wswitch -Wformat\
 	  -Wnested-externs -Wshadow -Wchar-subscripts -std=c99\
 	  -Wimplicit-fallthrough=0
 
-#OPTIONS =
 OPTIMIZATION = -O1
 CFLAGS = $(OPTIMIZATION) $(OPTIONS)
 
-LIB = 
+LIB = -lm
 OBJ = execute.o gameinfo.o load.o main.o parse.o parse2.o options.o\
 	properties.o save.o strict.o util.o
 

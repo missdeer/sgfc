@@ -574,28 +574,22 @@ static int Parse_Date(char *value, ...)
 static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 		struct PropValue *v, int (*Parse_Value)(char *, ...))
 {
-	char *newgi, *oldgi, inp[2001];
-	long size;
+	char *newgi, inp[2001];
+	size_t size;
 	int ret;
 
 	if(!sgfc->options->interactive)
 	{
-		PrintError(E4_FAULTY_GC, sgfc, v->buffer, p->idstr, "(NOT CORRECTED!)");
+		PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "(not corrected!)");
 		return true;
 	}
 
-	oldgi = SkipText(sgfc, v->buffer, NULL, ']', 0);
-	size = oldgi - v->buffer;
+	size = strlen(v->value);
 	if(size < 25)		/* CorrectDate may use up to 15 chars */
 		size = 25;
+	newgi = SaveDupString(v->value, size, "game info value buffer");
 
-	SaveMalloc(char *, newgi, size+2, "game info value buffer")
-	CopyValue(sgfc, newgi, v->buffer+1, oldgi - v->buffer-1, false);
-
-	SaveMalloc(char *, oldgi, strlen(newgi)+2, "game info value buffer")
-	strcpy(oldgi, newgi);
-
-	PrintError(E4_FAULTY_GC, sgfc, v->buffer, p->idstr, "");
+	PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "");
 
 	while(true)
 	{
@@ -611,7 +605,6 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 		if(!strnccmp(inp, "d", 0))	/* delete */
 		{
 			free(newgi);
-			free(oldgi);
 			return false;
 		}
 
@@ -631,20 +624,14 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 			{
 				size = (strlen(inp) > 25) ? strlen(inp) : 25;
 				free(newgi);
-				SaveMalloc(char *, newgi, size+2, "game info value buffer")
-				strcpy(newgi, inp);
+				newgi = SaveDupString(inp, size, "game info value buffer");
 			}
 		}
-		else					/* return */
-		{
-			if(ret)		strcpy(v->value, newgi);
-			else		strcpy(v->value, oldgi);
+		else					/* [return] */
 			break;
-		}
 	}
 
 	free(newgi);
-	free(oldgi);
 	return true;
 }
 
@@ -687,21 +674,19 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 
 	if(sgfc->options->interactive)
 	{
-
-		if(res < 1)
-			if(!PromptGameInfo(sgfc, p, v, parse))
-			{
-				free(val);
-				return false;
-			}
+		if(res < 1 && !PromptGameInfo(sgfc, p, v, parse))
+		{
+			free(val);
+			return false;
+		}
 	}
 	else
 	{
 		switch(res)
 		{
-			case 0:		PrintError(E4_FAULTY_GC, sgfc, v->buffer, p->idstr, "(NOT CORRECTED!)");
+			case 0:		PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "(NOT CORRECTED!)");
 				break;
-			case -1:	PrintError(E4_BAD_VALUE_CORRECTED, sgfc, v->buffer, p->idstr, val);
+			case -1:	PrintError(E4_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, p->idstr, val);
 				free(v->value);
 				v->value = val;
 				return true;

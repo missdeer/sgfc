@@ -6,40 +6,34 @@ set(CMAKE_C_STANDARD 99)
 include_directories(src)
 include_directories(tests)
 
-add_executable(sgfc
+set(src_files
         src/all.h
+        src/protos.h
         src/execute.c
         src/gameinfo.c
         src/load.c
-        src/main.c
         src/options.c
         src/parse.c
         src/parse2.c
         src/properties.c
-        src/protos.h
         src/save.c
         src/strict.c
         src/util.c)
 
+add_executable(sgfc
+        ${src_files}
+        src/main.c)
+
+target_link_libraries(sgfc m)
+
 add_executable(sgfc-test
-        src/all.h
-        src/execute.c
-        src/gameinfo.c
-        src/load.c
-        src/options.c
-        src/parse.c
-        src/parse2.c
-        src/properties.c
-        src/protos.h
-        src/save.c
-        src/strict.c
-        src/util.c
+        ${src_files}
         tests/test-runner.c
         tests/test-common.h
         tests/test-helper.c
-        tests/parse-text.c
         tests/check-value.c
-        tests/trigger-errors.c
-        tests/position.c)
+        tests/parse-text.c
+        tests/position.c
+        tests/trigger-errors.c)
 
 target_link_libraries(sgfc-test check rt pthread subunit m)

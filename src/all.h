@@ -105,7 +105,7 @@ struct PathBoard
 struct BoardStatus
 {
 	U_SHORT annotate;		/* flags for annotation props, etc. */
-	char *ginfo;			/* pointer into buffer of first GINFO property */
+	struct Node *ginfo;		/* pointer to first node containing GINFO properties */
 	int bwidth;				/* copy of sgf->info->bwidth */
 	int bheight;			/* copy of sgf->info->bheight */
 	unsigned char *board;
@@ -122,8 +122,10 @@ struct PropValue
 	struct PropValue *next;		/* list */
 	struct PropValue *prev;
 
-	char *buffer;
 	char *value, *value2;		/* value2 for compose value type */
+
+	U_LONG row;
+	U_LONG col;
 };
 
 
@@ -134,12 +136,14 @@ struct Property
 	U_CHAR  priority;			/* for sorting properties within a node */
 
 	token id;
-	char *idstr;				/* id string (necessary because of TKN_UNKNOWN) */
+	char *idstr;				/* original ID string including lowercase (for TKN_UNKNOWN, error reporting, ...) */
 	U_SHORT flags;				/* copy of sgf_token[].flags (may get changed though) */
-	char *buffer;
 
 	struct PropValue *value;	/* value list head */
 	struct PropValue *valend;
+
+	U_LONG row;
+	U_LONG col;
 };
 
 
@@ -155,7 +159,8 @@ struct Node
 	struct Property *prop;		/* prop list head */
 	struct Property *last;
 
-	char *buffer;
+	U_LONG row;
+	U_LONG col;
 };
 
 
@@ -203,9 +208,8 @@ struct ListHead
 struct SGFCError {
 	U_LONG error;			/* type and number of error */
 	const char *message;	/* message buffer (freed after output handler returns!) */
-	const char *buffer;		/* pointer to position in SGF buffer where error occurred or NULL */
-	int x;					/* column number in buffer or -1 if no position */
-	int y;					/* row number or -1 if no position */
+	U_LONG row;				/* row number or 0 if no position */
+	U_LONG col;				/* column number in buffer or 0 if no position */
 	int lib_errno;			/* copy of errno in case of file errors */
 };
 
@@ -397,12 +401,14 @@ struct SGFInfo
 	struct TreeInfo *last;
 	struct TreeInfo *info;	/* pointer to info for current GameTree */
 
-	struct Node *root;	/* first root node (tree) */
+	struct Node *root;		/* first root node (tree) */
 
-	char *buffer;		/* file buffer */
-	char *b_end;		/* file buffer end address */
-	char *start;		/* start of SGF data within buffer */
-	char *current;		/* actual read position (cursor) in buffer */
+	char *buffer;			/* file buffer */
+	const char *b_end;		/* file buffer end address */
+	const char *start;		/* start of SGF data within buffer */
+	const char *current;	/* actual read position (cursor) in buffer */
+	U_LONG cur_row;			/* row & column associated with *current */
+	U_LONG cur_col;
 
 	struct SGFCOptions *options;
 	struct SaveFileHandler *sfh;	/* used during SaveSGF() */

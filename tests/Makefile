@@ -19,10 +19,12 @@ OPTIMIZATION = -O1
 CFLAGS = $(DIRECTORIES) $(OPTIMIZATION) $(OPTIONS)
 
 LIB = -lcheck -lpthread -lrt -lsubunit -lm
-OBJ = test-runner.o test-helper.o position.o parse-text.o check-value.o trigger-errors.o
+OBJ = test-runner.o test-helper.o position.o parse-text.o check-value.o\
+	trigger-errors.o
+
 SRC_OBJ = ../src/execute.o ../src/gameinfo.o ../src/load.o\
-	../src/parse.o ../src/parse2.o ../src/options.o\
-	../src/properties.o ../src/save.o ../src/strict.o ../src/util.o
+	../src/parse.o ../src/parse2.o ../src/options.o ../src/save.o\
+	../src/properties.o ../src/strict.o ../src/util.o
 
 sgfc-test: $(OBJ) $(SRC_OBJ)
 	$(CC) $(CFLAGS) $(OBJ) $(SRC_OBJ) -o $@ $(LIB)

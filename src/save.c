@@ -307,7 +307,9 @@ static int WriteProperty(struct SGFInfo *sgfc, struct TreeInfo *info, struct Pro
 	p = prop->idstr;			/* write property ID */
 	while(*p)
 	{
-		saveputc(sgfc, *p)
+		/* idstr is original from file -> may contain lowercase too */
+		if(isupper(*p))
+			saveputc(sgfc, *p)
 		p++;
 	}
 
@@ -481,7 +483,8 @@ bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 {
 	struct Node *n;
 	struct TreeInfo *info;
-	char *c, *name;
+	const char *c;
+	char *name;
 	int nl = 0, i = 1;
 	size_t name_buffer_size = strlen(base_name) + 14; /* +14 == "_99999999.sgf" + \0 */
 
@@ -500,16 +503,11 @@ bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 
 	if(sgfc->options->keep_head)
 	{
-		*sgfc->start = '\n';
-
-		for(c = sgfc->buffer; c <= sgfc->start; c++)
+		for(c = sgfc->buffer; c < sgfc->start; c++)
 			if((*sgfc->sfh->putc)(sgfc->sfh, *c) == EOF)
-			{
-				(*sgfc->sfh->close)(sgfc->sfh, FE_DEST_FILE_WRITE);
-				PrintError(FE_DEST_FILE_WRITE, sgfc, name);
-				free(name);
-				return false;
-			}
+				goto write_error;
+		if((*sgfc->sfh->putc)(sgfc->sfh, '\n') == EOF)
+			goto write_error;
 	}
 
 	sgfc->_save_c->linelen = 0;
@@ -522,12 +520,7 @@ bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 	while(n)
 	{
 		if(!WriteTree(sgfc, info, n, nl))
-		{
-			(*sgfc->sfh->close)(sgfc->sfh, FE_DEST_FILE_WRITE);
-			PrintError(FE_DEST_FILE_WRITE, sgfc, name);
-			free(name);
-			return false;
-		}
+			goto write_error;
 
 		nl = 2;
 		n = n->sibling;
@@ -551,4 +544,10 @@ bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 	(*sgfc->sfh->close)(sgfc->sfh, E_NO_ERROR);
 	free(name);
 	return true;
+
+write_error:
+	(*sgfc->sfh->close)(sgfc->sfh, FE_DEST_FILE_WRITE);
+	PrintError(FE_DEST_FILE_WRITE, sgfc, name);
+	free(name);
+	return false;
 }
