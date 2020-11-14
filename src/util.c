@@ -51,7 +51,7 @@ static const char *error_mesg[] =
 	"property <%s> without any values found (ignored)\n",
 /* 20 */
 	"illegal variation start found (ignored)\n",
-	"$00 byte deleted - binary file?\n",
+	"$00 byte detected (replaced with space) - binary file?\n",
 	"property <%s> expects compose type value (value deleted): ",
 	"move in root node found (split node into two)\n",
 	"illegal <%s> value corrected; new value: [%s:%s], old value: ",
@@ -106,7 +106,11 @@ static const char *error_mesg[] =
 /* 65 */
 	"node outside variation found. Missing '(' assumed.\n",
 	"illegal chars after variation start '(' found. Missing ';' assumed.\n",
-	"unknown command line option '%s' (-h for help)\n"
+	"unknown command line option '%s' (-h for help)\n",
+	"unknown encoding (or unable to convert): %s\n",
+	"unknown iconv error during encoding phase encountered\n",
+/* 70 */
+	"encoding errors detected (faulty bytes ignored) - byte offset: %ld\n"
 };
 
 
@@ -240,6 +244,7 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 	else
 		sgfc->_util_c->last_type = E_NO_ERROR;
 
+	// FIXME: maybe avoid duplicate error messages (compressed point list, delete CTRL byte)
 
 	if((type & E_ACCUMULATE))			/* accumulate error messages? */
 	{
@@ -610,19 +615,21 @@ char *SaveDupString(const char *src, size_t len, const char *err)
 *** Function:	KillChars
 ***				Deletes selected char-set out of a given string
 *** Parameters: value ... string
-***				kill ... type of chars to be removed
-***						 C_ISSPACE, C_NOT_ISALPHA or C_NOTinSET/C_inSET
-***				cset ... additional set of chars to be tested
-***						 (kill has to be one of C_NOTinSET or C_inSET)
+***				len   ... length of string
+***				kill  ... type of chars to be removed
+***						  C_ISSPACE, C_NOT_ISALPHA or C_NOTinSET/C_inSET
+***				cset  ... additional set of chars to be tested
+***						  (kill has to be one of C_NOTinSET or C_inSET)
 *** Returns:	number of chars removed from string
 **************************************************************************/
 
-U_LONG KillChars(char *value, U_SHORT kill, const char *cset)
+U_LONG KillChars(char *value, size_t *len, U_SHORT kill, const char *cset)
 {
 	U_LONG faulty = 0, err = 0;
+	size_t i = *len;
 	char *c, *d;
 
-	for(c = d = value; *c; c++)
+	for(c = d = value; i; c++, i--)
 	{
 		if(((kill & C_ISSPACE) && isspace(*c)) ||
 		   ((kill & C_NOT_ISALPHA) && !isalpha(*c)))
@@ -634,9 +641,8 @@ U_LONG KillChars(char *value, U_SHORT kill, const char *cset)
 					err = 1;
 			}
 			else
-				if(kill & C_inSET)
-					if(strchr(cset, *c))
-						err = 1;
+				if(kill & C_inSET && strchr(cset, *c))
+					err = 1;
 		if(err)
 		{
 			faulty++;
@@ -647,6 +653,7 @@ U_LONG KillChars(char *value, U_SHORT kill, const char *cset)
 	}
 	*d = 0;			/* end mark */
 
+	*len -= faulty;
 	return faulty;
 }
 

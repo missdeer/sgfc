@@ -43,6 +43,9 @@ void PrintHelp(const enum option_help format)
 			 "    -c  ... write file even if a critical error occurs\n"
 			 "    -dn ... n = number : disable message number -n-\n"
 			 "    -e  ... expand compressed point lists\n"
+			 "    -Ex ... x = 1,2: charset encoding is applied to\n"
+			 "              1 - to whole SGF file, _before_ parsing (unit=char; default)\n"
+			 "              2 - text property values only, _after_ parsing (unit=byte)\n"
 			 "    -g  ... print game signature (Go GM[1] games only)\n"
 			 "    -i  ... interactive mode (faulty game-info values only)\n"
 			 "    -k  ... keep header in front of SGF data\n"
@@ -60,10 +63,15 @@ void PrintHelp(const enum option_help format)
 			 "    -s  ... split game collection into single files\n"
 			 "    -t  ... do not insert any soft linebreaks into text values\n"
 			 "    -u  ... delete unknown properties\n"
+			 "    -U  ... alias for '--default-encoding=UTF-8'\n"
 			 "    -v  ... correct variation level and root moves\n"
 			 "    -w  ... disable warning messages\n"
 			 "    -yP ... delete property P (P = property id)\n"
-			 "    -z  ... reverse ordering of variations"
+			 "    -z  ... reverse ordering of variations\n\n"
+			 "    --default-encoding=name ... set default encoding to 'name' (CA[] has priority)\n"
+			 "    --encoding=name         ... override encoding specified in SGF file with 'name'\n"
+			 "    --help    ... print long help text (same as -h)\n"
+			 "    --version ... print version only\n"
 		);
 }
 
@@ -125,6 +133,67 @@ void PrintGameSignatures(const struct SGFInfo *sgfc)
 
 
 /**************************************************************************
+*** Function:	ParsePropertyArg
+***				Helper function for ParseArgs(): reads in property name
+***				(uppercase letters) and returns property ID
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				str  ... pointer to current position in argument
+*** Returns:	property ID or -1 in case of error
+**************************************************************************/
+
+static int ParsePropertyArg(struct SGFInfo *sgfc, const char **str)
+{
+	const char *c = *str;
+	int n, m;
+
+	c++; /* first char after initial option letter */
+	/* count uppercase */
+	for(n = 0; isupper(*c); c++, n++);
+	c -= n;
+	if(n)
+	{
+		/* check for known property name */
+		for(m = 1; sgf_token[m].id; m++)
+			if(!strnccmp(c, sgf_token[m].id, n))
+				break;
+	}
+	/* no property specified or unknown property -> error */
+	if(!n || !sgf_token[m].id)
+	{
+		PrintError(FE_BAD_PARAMETER, sgfc, c);
+		return -1;
+	}
+	*str = c + n - 1;
+	return m;
+}
+
+
+/**************************************************************************
+*** Function:	ParseIntArg
+***				Helper function for ParseArgs(): reads in integer value
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				str  ... pointer to current position in argument
+***				max  ... maximum allowed number
+*** Returns:	integer in range 1..max or 0 in case of error
+**************************************************************************/
+
+static int ParseIntArg(struct SGFInfo *sgfc, const char **str, int max)
+{
+	char *hlp;
+	int n;
+
+	n = (int)strtol(*str+1, &hlp, 10);
+	if(n < 1 || n > max)
+	{
+		PrintError(FE_BAD_PARAMETER, sgfc, *str+1);
+		return 0;
+	}
+	*str = hlp - 1;
+	return n;
+}
+
+
+/**************************************************************************
 *** Function:	ParseArgs
 ***				Parses commandline options
 ***				Options are represented by one char and are preceded with
@@ -137,9 +206,8 @@ void PrintGameSignatures(const struct SGFInfo *sgfc)
 
 bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 {
-	int i, n, m;
+	int i, n;
 	const char *c;
-	char *hlp;
 	struct SGFCOptions *options = sgfc->options;
 
 	for(i = 1; i < argc; i++)
@@ -168,62 +236,43 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 						case 'g':	options->game_signature = true;			break;
 						case 'r':	options->strict_checking = true;		break;
 						case 'z':	options->reorder_variations = true;		break;
-						case 'h':	options->help = 2;						break;
+						case 'h':	options->help = OPTION_HELP_LONG;		break;
+						case 'U':	options->default_encoding = "UTF-8";	break;
 						case 'd':
-							c++;
-							n = (int)strtol(c, &hlp, 10);
-							if(n < 1 || n > MAX_ERROR_NUM)
-							{
-								PrintError(FE_BAD_PARAMETER, sgfc, c);
+							if(!(n = ParseIntArg(sgfc, &c, MAX_ERROR_NUM)))
 								return false;
-							}
 							options->error_enabled[n-1] = false;
-							c = hlp - 1;
 							break;
 						case 'l':
-							c++;
-							n = *c - '0';
-							if(n < 1 || n > 4)
-							{
-								PrintError(FE_BAD_PARAMETER, sgfc, c);
+							if(!(n = ParseIntArg(sgfc, &c, 4)))
 								return false;
-							}
 							options->linebreaks = n;
 							break;
 						case 'b':
-							c++;
-							n = *c - '0';
-							if(n < 1 || n > 3)
-							{
-								PrintError(FE_BAD_PARAMETER, sgfc, c);
+							if(!(n = ParseIntArg(sgfc, &c, 3)))
 								return false;
-							}
 							options->find_start = n;
 							break;
-						case 'y':
-							c++;
-							for(n = 0; isupper(*c); c++, n++);
-							c -= n;
-							if(n)
-							{
-								for(m = 1; sgf_token[m].id; m++)
-									if(!strnccmp(c, sgf_token[m].id, n))
-										break;
-							}
-							if(!n || !sgf_token[m].id)
-							{
-								PrintError(FE_BAD_PARAMETER, sgfc, c);
+						case 'E':
+							if(!(n = ParseIntArg(sgfc, &c, 2)))
 								return false;
-							}
-							c += n-1;
-							options->delete_property[m] = true;
+							options->encoding = n;
+							break;
+						case 'y':
+							if((n = ParsePropertyArg(sgfc, &c)) == -1)
+								return false;
+							options->delete_property[n] = true;
 							break;
 						case '-':	/* long options */
 							c++;
 							if(!strcmp(c, "help"))
 								options->help = OPTION_HELP_LONG;
-							else if (!strcmp(c, "version"))
+							else if(!strcmp(c, "version"))
 								options->help = OPTION_HELP_VERSION;
+							else if(!strncmp(c, "encoding=", 9))
+								options->forced_encoding = &argv[i][9+2];
+							else if(!strncmp(c, "default-encoding=", 17))
+								options->default_encoding = &argv[i][17+2];
 							else
 							{
 								PrintError(FE_UNKNOWN_LONG_OPTION, sgfc, c);
@@ -295,8 +344,11 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 	options->strict_checking = false;
 	options->reorder_variations = false;
 	options->add_sgfc_ap_property = true;
+	options->encoding = OPTION_ENCODING_SPEC;
 	options->infile = NULL;
 	options->outfile = NULL;
+	options->forced_encoding = NULL;
+	options->default_encoding = "ISO-8859-1"; /* according to SGF spec */
 	return options;
 }
 

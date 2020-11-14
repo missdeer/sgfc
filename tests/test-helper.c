@@ -26,7 +26,6 @@ void common_setup(void)
 	struct SaveFileHandler *sfh = SetupSaveBufferIO(Test_BufferIO_Close);
 	sgfc = SetupSGFInfo(NULL, sfh);
 	sgfc->options->add_sgfc_ap_property = false;
-
 	/* run tests without PrintError (makes setup easier) */
 	print_error_handler = NULL;
 }

@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <iconv.h>
 
 /* #define VERSION_NO_MAIN */		/* In case you've written a new main()
 									** e.g. for writing a mouse-interface
@@ -28,178 +29,6 @@ typedef unsigned char	U_CHAR;
 typedef unsigned short	U_SHORT;
 typedef unsigned int	U_INT;
 typedef unsigned long	U_LONG;
-
-
-/* order must match order in sgf_token[] !! */
-typedef enum {
-		TKN_NONE = -1, TKN_UNKNOWN,
-		TKN_B,  TKN_W,  TKN_AB, TKN_AW, TKN_AE, TKN_N,  TKN_C,
-		TKN_BL, TKN_WL, TKN_OB, TKN_OW,
-		TKN_FF, TKN_GM, TKN_SZ, TKN_ST, TKN_CA, TKN_AP,
-		TKN_GN, TKN_GC, TKN_PB, TKN_PW, TKN_BR, TKN_WR,
-		TKN_PC, TKN_DT, TKN_RE,	TKN_KM, TKN_KI, TKN_HA, TKN_TM, TKN_EV,
-		TKN_RO, TKN_SO, TKN_US, TKN_BT, TKN_WT, TKN_RU, TKN_AN, TKN_OT,
-		TKN_ON, TKN_CP,
-		TKN_L,	TKN_LB, TKN_AR, TKN_LN, TKN_M,  TKN_MA, TKN_TR, TKN_CR,
-		TKN_TB, TKN_TW, TKN_SQ,	TKN_SL, TKN_DD,
-		TKN_PL, TKN_V,  TKN_GB, TKN_GW, TKN_UC, TKN_DM, TKN_TE,
-		TKN_BM, TKN_DO, TKN_IT, TKN_HO,
-		TKN_KO, TKN_FG, TKN_MN, TKN_VW, TKN_PM,
-		/* properties not part of FF4 */
-		TKN_CH, TKN_SI, TKN_BS, TKN_WS, TKN_ID, TKN_TC, TKN_OM, TKN_OP,
-		TKN_OV, TKN_LT, TKN_RG, TKN_SC, TKN_SE, TKN_EL, TKN_EX
-	} token;
-
-#define EMPTY	0u
-#define BLACK	0x0fu
-#define WHITE	0xf0u	/* WHITE = ~BLACK */
-
-#define FF12	0x03u
-#define FF3		0x04u
-#define FF4		0x08u
-
-#define PVT_LIST		0x0001u
-#define PVT_CPLIST		0x0002u	/* compressed point list */
-#define PVT_EMPTY		0x0004u	/* empty value allowed */
-#define PVT_COMPOSE		0x0008u
-#define PVT_WEAKCOMPOSE	0x0010u	/* weak: value may or may not be composed */
-#define PVT_SIMPLE		0x0020u
-#define PVT_DEL_EMPTY	0x0040u	/* empty values get removed */
-#define PVT_CHECK_EMPTY 0x0080u	/* empty values are checked by Check_xxx */
-#define SPLIT_SAVE		0x0100u	/* splitting with '\' (only text values) */
-#define DOUBLE_MERGE	0x0200u
-#define TYPE_MOVE		0x1000u
-#define TYPE_SETUP		0x2000u
-#define TYPE_ROOT		0x4000u
-#define TYPE_GINFO		0x8000u
-
-#define ST_ADDSTONE		0x0001u	/* defines are used in BoardStatus.markup */
-#define ST_MARKUP		0x0002u
-#define ST_LABEL		0x0004u
-#define ST_TERRITORY	0x0008u
-#define ST_DIMMED		0x0010u
-
-#define ST_ANN_GEN		0x0100u	/* defines are used in BoardStatus.annotate */
-#define ST_ANN_MOVE		0x0200u
-#define ST_ANN_TE		0x0400u
-#define ST_ANN_BM		0x0800u
-#define ST_MOVE			0x1000u
-#define ST_KO			0x2000u
-
-#define ST_OBSOLETE		0x8000u	/* obsolete props which are converted */
-
-#define PARSE_MOVE      0x0001u  /* flags for Parse_Move */
-#define PARSE_POS       0x0002u
-
-#define MAX_BOARDSIZE	52
-
-#define MAX_REORDER_VARIATIONS 100
-
-/* separate structure, so that it can be re-used when iterating the node tree */
-struct PathBoard
-{
-	U_LONG board[MAX_BOARDSIZE*MAX_BOARDSIZE];
-	U_LONG num;
-};
-
-struct BoardStatus
-{
-	U_SHORT annotate;		/* flags for annotation props, etc. */
-	struct Node *ginfo;		/* pointer to first node containing GINFO properties */
-	int bwidth;				/* copy of sgf->info->bwidth */
-	int bheight;			/* copy of sgf->info->bheight */
-	unsigned char *board;
-	U_SHORT *markup;
-	bool markup_changed;	/* markup field changed */
-	struct PathBoard *paths;	/* board for capturing stones */
-};
-
-#define MXY(x,y) ((y)*st->bwidth + (x))
-
-
-struct PropValue
-{
-	struct PropValue *next;		/* list */
-	struct PropValue *prev;
-
-	char *value, *value2;		/* value2 for compose value type */
-
-	U_LONG row;
-	U_LONG col;
-};
-
-
-struct Property
-{
-	struct Property *next;		/* list */
-	struct Property *prev;
-	U_CHAR  priority;			/* for sorting properties within a node */
-
-	token id;
-	char *idstr;				/* original ID string including lowercase (for TKN_UNKNOWN, error reporting, ...) */
-	U_SHORT flags;				/* copy of sgf_token[].flags (may get changed though) */
-
-	struct PropValue *value;	/* value list head */
-	struct PropValue *valend;
-
-	U_LONG row;
-	U_LONG col;
-};
-
-
-struct Node
-{
-	struct Node *next;			/* list */
-	struct Node *prev;
-
-	struct Node *parent;		/* tree */
-	struct Node *child;
-	struct Node *sibling;
-
-	struct Property *prop;		/* prop list head */
-	struct Property *last;
-
-	U_LONG row;
-	U_LONG col;
-};
-
-
-struct TreeInfo
-{
-	struct TreeInfo *next;	/* list */
-	struct TreeInfo *prev;
-
-	int num;			/* number of game tree (sequence) */
-	int FF;				/* File format of GameTree */
-	int GM;				/* Type of game */
-	int bwidth;			/* Board width  */
-	int bheight;		/* Board height */
-
-	struct Node *root;	/* root node of this tree */
-};
-
-#define SGF_EOF			(sgfc->current >= sgfc->b_end)
-
-struct ListNode
-{
-	struct ListNode *next;
-	struct ListNode *prev;
-	U_CHAR priority;		/* is only used by Enqueue function */
-};
-
-struct ListHead
-{
-	struct ListNode *first;
-	struct ListNode *last;
-};
-
-/* Defines for KillChars / TestChars */
-
-#define C_ISSPACE		0x01u
-#define C_ISALPHA		0x02u
-#define C_NOT_ISALPHA	0x04u
-#define C_inSET			0x08u
-#define C_NOTinSET		0x10u
 
 /* defines for error handling */
 
@@ -312,8 +141,188 @@ struct SGFCError {
 #define E_NODE_OUTSIDE_VAR		(66UL | E_ERROR | E_CRITICAL | E_SEARCHPOS)
 #define E_MISSING_NODE_START	(67UL | E_ERROR | E_CRITICAL | E_SEARCHPOS)
 #define FE_UNKNOWN_LONG_OPTION	(68UL | E_FATAL_ERROR)
+#define WS_UNKNOWN_ENCODING		(69UL | E_WARNING_STRICT | E_CRITICAL)
+#define FE_ENCODING_ERROR		(70UL | E_FATAL_ERROR)
+#define WS_ENCODING_ERRORS		(71UL | E_WARNING_STRICT | E_CRITICAL)
 
-#define MAX_ERROR_NUM	68
+#define MAX_ERROR_NUM	71UL
+
+
+/* order must match order in sgf_token[] !! */
+typedef enum {
+		TKN_NONE = -1, TKN_UNKNOWN,
+		TKN_B,  TKN_W,  TKN_AB, TKN_AW, TKN_AE, TKN_N,  TKN_C,
+		TKN_BL, TKN_WL, TKN_OB, TKN_OW,
+		TKN_FF, TKN_CA, TKN_GM, TKN_SZ, TKN_ST, TKN_AP,
+		TKN_GN, TKN_GC, TKN_PB, TKN_PW, TKN_BR, TKN_WR,
+		TKN_PC, TKN_DT, TKN_RE,	TKN_KM, TKN_KI, TKN_HA, TKN_TM, TKN_EV,
+		TKN_RO, TKN_SO, TKN_US, TKN_BT, TKN_WT, TKN_RU, TKN_AN, TKN_OT,
+		TKN_ON, TKN_CP,
+		TKN_L,	TKN_LB, TKN_AR, TKN_LN, TKN_M,  TKN_MA, TKN_TR, TKN_CR,
+		TKN_TB, TKN_TW, TKN_SQ,	TKN_SL, TKN_DD,
+		TKN_PL, TKN_V,  TKN_GB, TKN_GW, TKN_UC, TKN_DM, TKN_TE,
+		TKN_BM, TKN_DO, TKN_IT, TKN_HO,
+		TKN_KO, TKN_FG, TKN_MN, TKN_VW, TKN_PM,
+		/* properties not part of FF4 */
+		TKN_CH, TKN_SI, TKN_BS, TKN_WS, TKN_ID, TKN_TC, TKN_OM, TKN_OP,
+		TKN_OV, TKN_LT, TKN_RG, TKN_SC, TKN_SE, TKN_EL, TKN_EX
+	} token;
+
+#define EMPTY	0u
+#define BLACK	0x0fu
+#define WHITE	0xf0u	/* WHITE = ~BLACK */
+
+#define FF12	0x03u
+#define FF3		0x04u
+#define FF4		0x08u
+
+#define PVT_LIST		0x0001u
+#define PVT_CPLIST		0x0002u	/* compressed point list */
+#define PVT_EMPTY		0x0004u	/* empty value allowed */
+#define PVT_COMPOSE		0x0008u
+#define PVT_WEAKCOMPOSE	0x0010u	/* weak: value may or may not be composed */
+#define PVT_SIMPLE		0x0020u	/* simple text value */
+#define PVT_DEL_EMPTY	0x0040u	/* empty values get removed */
+#define PVT_CHECK_EMPTY 0x0080u	/* empty values are checked by Check_xxx */
+#define PVT_TEXT		0x0100u	/* text value (simple or "complex") */
+#define SPLIT_SAVE		0x0400u	/* splitting with '\' (only text values) */
+#define DOUBLE_MERGE	0x0800u
+#define TYPE_MOVE		0x1000u
+#define TYPE_SETUP		0x2000u
+#define TYPE_ROOT		0x4000u
+#define TYPE_GINFO		0x8000u
+
+#define ST_ADDSTONE		0x0001u	/* defines are used in BoardStatus.markup */
+#define ST_MARKUP		0x0002u
+#define ST_LABEL		0x0004u
+#define ST_TERRITORY	0x0008u
+#define ST_DIMMED		0x0010u
+
+#define ST_ANN_GEN		0x0100u	/* defines are used in BoardStatus.annotate */
+#define ST_ANN_MOVE		0x0200u
+#define ST_ANN_TE		0x0400u
+#define ST_ANN_BM		0x0800u
+#define ST_MOVE			0x1000u
+#define ST_KO			0x2000u
+
+#define ST_OBSOLETE		0x8000u	/* obsolete props which are converted */
+
+#define PARSE_MOVE      0x0001u  /* flags for Parse_Move */
+#define PARSE_POS       0x0002u
+
+#define MAX_BOARDSIZE	52
+
+#define MAX_REORDER_VARIATIONS 100
+
+/* separate structure, so that it can be re-used when iterating the node tree */
+struct PathBoard
+{
+	U_LONG board[MAX_BOARDSIZE*MAX_BOARDSIZE];
+	U_LONG num;
+};
+
+struct BoardStatus
+{
+	U_SHORT annotate;		/* flags for annotation props, etc. */
+	struct Node *ginfo;		/* pointer to first node containing GINFO properties */
+	int bwidth;				/* copy of sgf->info->bwidth */
+	int bheight;			/* copy of sgf->info->bheight */
+	unsigned char *board;
+	U_SHORT *markup;
+	bool markup_changed;	/* markup field changed */
+	struct PathBoard *paths;	/* board for capturing stones */
+};
+
+#define MXY(x,y) ((y)*st->bwidth + (x))
+
+
+struct PropValue
+{
+	struct PropValue *next;		/* list */
+	struct PropValue *prev;
+
+	char *value;
+	size_t value_len;
+	char *value2;				/* value2 for compose value type */
+	size_t value2_len;
+
+	U_LONG row;
+	U_LONG col;
+};
+
+
+struct Property
+{
+	struct Property *next;		/* list */
+	struct Property *prev;
+	U_CHAR  priority;			/* for sorting properties within a node */
+
+	token id;
+	char *idstr;				/* original ID string including lowercase (for TKN_UNKNOWN, error reporting, ...) */
+	U_SHORT flags;				/* copy of sgf_token[].flags (may get changed programmatically) */
+
+	struct PropValue *value;	/* value list head */
+	struct PropValue *valend;
+
+	U_LONG row;
+	U_LONG col;
+};
+
+
+struct Node
+{
+	struct Node *next;			/* list */
+	struct Node *prev;
+
+	struct Node *parent;		/* tree */
+	struct Node *child;
+	struct Node *sibling;
+
+	struct Property *prop;		/* prop list head */
+	struct Property *last;
+
+	U_LONG row;
+	U_LONG col;
+};
+
+
+struct TreeInfo
+{
+	struct TreeInfo *next;	/* list */
+	struct TreeInfo *prev;
+
+	int num;			/* number of game tree (sequence) */
+	int FF;				/* File format of GameTree */
+	int GM;				/* Type of game */
+	int bwidth;			/* Board width  */
+	int bheight;		/* Board height */
+	iconv_t encoding;
+
+	struct Node *root;	/* root node of this tree */
+};
+
+
+struct ListNode
+{
+	struct ListNode *next;
+	struct ListNode *prev;
+	U_CHAR priority;		/* is only used by Enqueue function */
+};
+
+struct ListHead
+{
+	struct ListNode *first;
+	struct ListNode *last;
+};
+
+
+/* Defines for KillChars / TestChars */
+
+#define C_ISSPACE		0x01u
+#define C_ISALPHA		0x02u
+#define C_NOT_ISALPHA	0x04u
+#define C_inSET			0x08u
+#define C_NOTinSET		0x10u
 
 
 /* known tokens (properties.c) */
@@ -342,13 +351,23 @@ enum option_findstart {
 	OPTION_FINDSTART_BRACKET
 };
 
+enum option_encoding {
+	OPTION_ENCODING_SPEC=1,
+	OPTION_ENCODING_EVERYTHING
+};
+
 struct SGFCOptions
 {
 	const char *infile;
 	const char *outfile;
+	const char *forced_encoding;
+	const char *default_encoding;
+
 	enum option_linebreaks linebreaks;
 	enum option_findstart find_start;
+	enum option_encoding encoding;
 	enum option_help help;
+
 	bool warnings;
 	bool keep_head;
 	bool keep_unknown_props;

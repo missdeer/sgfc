@@ -18,7 +18,7 @@ static char *ReadTestFile(const char *path, size_t *length)
 
 	file = fopen(path, "rb");
 	ck_assert_msg(!!file, "could not open file %s", path);
-	// being lazy: we know that all files are smaller than 10000 bytes
+	/* being lazy: we know that all files are smaller than 10000 bytes */
 	SaveMalloc(char *, buffer, 10000, "test file buffer")
 	*length = fread(buffer, 1, 10000, file);
 	fclose(file);

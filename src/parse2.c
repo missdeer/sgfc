@@ -96,7 +96,7 @@ void CompressPointList(struct SGFInfo *sgfc, struct Property *p)
 	v = p->value;
 	while(v)		/* generate board position & delete old values */
 	{
-		if(strlen(v->value))
+		if(v->value_len)
 		{
 			i = DecodePosChar(v->value[0]);
 			j = DecodePosChar(v->value[1]);
@@ -536,32 +536,19 @@ static void CheckDoubleProp(struct SGFInfo *sgfc, struct Node *n)
 			{
 				if(p->flags & DOUBLE_MERGE)
 				{
+					if(!(p->flags & PVT_LIST))
+					{
+						q = q->next;
+						continue;
+					}
 					PrintError(E_DOUBLE_PROP, sgfc, q->row, q->col, q->idstr, "values merged");
-					if(p->flags & PVT_LIST)
-					{
-						v = p->value;
-						while(v->next)	v = v->next;
-						v->next = q->value;
-						q->value->prev = v;
-						p->valend = q->valend;
-						q->value = NULL;	/* values are not deleted */
-						q->valend = NULL;
-					}
-					else	/* single values are merged to one value */
-					{
-						v = p->value;	l = strlen(v->value);
-						w = q->value;
-
-						SaveMalloc(char *, c, l + strlen(w->value) + 4, "new property value")
-
-						strcpy(c, v->value);
-						strcpy(c+l+2, w->value);
-						c[l]   = '\n';
-						c[l+1] = '\n';
-
-						free(v->value);		/* free old buffer */
-						v->value = c;
-					}
+					v = p->value;
+					while(v->next)	v = v->next;
+					v->next = q->value;
+					q->value->prev = v;
+					p->valend = q->valend;
+					q->value = NULL;	/* values are not deleted */
+					q->valend = NULL;
 				}
 				else
 					PrintError(E_DOUBLE_PROP, sgfc, q->row, q->col, q->idstr, "deleted");
@@ -570,6 +557,49 @@ static void CheckDoubleProp(struct SGFInfo *sgfc, struct Node *n)
 			}
 			else
 				q = q->next;
+		}
+		p = p->next;
+	}
+}
+
+static void MergeDoubleText(struct SGFInfo *sgfc, struct Node *n)
+{
+	struct Property *p, *q;
+	struct PropValue *v, *w;
+	char *c;
+
+	p = n->prop;
+	while(p)
+	{
+		if(!(p->flags & PVT_TEXT && p->flags & DOUBLE_MERGE))
+		{
+			p = p->next;
+			continue;
+		}
+		q = p->next;
+		while(q)
+		{
+			if(!(q->flags & PVT_TEXT) || !(q->flags & DOUBLE_MERGE) ||
+				!(p->id == q->id) || stridcmp(p->idstr, q->idstr))
+			{
+				q = q->next;
+				continue;
+			}
+			PrintError(E_DOUBLE_PROP, sgfc, q->row, q->col, q->idstr, "values merged");
+			/* single values are merged to one value */
+			v = p->value;
+			w = q->value;
+
+			SaveMalloc(char *, c, v->value_len + w->value_len + 3, "new property value")
+			memcpy(c, v->value, v->value_len);
+			c[v->value_len]   = '\n';
+			c[v->value_len+1] = '\n';
+			memcpy(c+v->value_len+2, w->value, w->value_len+1);
+			*(c + v->value_len + w->value_len + 2) = 0;
+			free(v->value);		/* free old buffer */
+			v->value = c;
+			v->value_len = v->value_len + w->value_len + 2;
+			q = DelProperty(n, q);	/* delete double property */
 		}
 		p = p->next;
 	}
@@ -593,6 +623,7 @@ static bool GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 					 int value, int *d, int def, char *err_action)
 {
 	char *v;
+	size_t *v_len;
 
 	if(!p)				/* no property? -> set default value */
 	{
@@ -600,10 +631,18 @@ static bool GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 		return true;
 	}
 
-	if(value == 2)	v = p->value->value2;
-	else			v = p->value->value;
+	if(value == 2)
+	{
+		v = p->value->value2;
+		v_len = &p->value->value2_len;
+	}
+	else
+	{
+		v = p->value->value;
+		v_len = &p->value->value_len;
+	}
 
-	switch(Parse_Number(v))
+	switch(Parse_Number(v, v_len))
 	{
 		case 0: PrintError(E_BAD_ROOT_PROP, sgfc, p->value->row, p->value->col, p->idstr, err_action);
 				*d = def;
@@ -638,7 +677,7 @@ static bool GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 
 static void InitTreeInfo(struct SGFInfo *sgfc, struct TreeInfo *ti, struct Node *r)
 {
-	struct Property *ff, *gm, *sz;
+	struct Property *ff, *gm, *sz, *ca;
 
 	ti->FF = 0;						/* Init structure */
 	ti->GM = 0;
@@ -655,6 +694,8 @@ static void InitTreeInfo(struct SGFInfo *sgfc, struct TreeInfo *ti, struct Node 
 
 	if(ti->FF > 4)
 		PrintError(E_UNKNOWN_FILE_FORMAT, sgfc, ff->value->row, ff->value->col, ti->FF);
+
+	ti->encoding = DetectTreeEncoding(sgfc, r);
 
 	gm = FindProperty(r, TKN_GM);
 	GetNumber(sgfc, r, gm, 1, &ti->GM, 1, "GM[1]");
@@ -704,13 +745,17 @@ static void InitTreeInfo(struct SGFInfo *sgfc, struct TreeInfo *ti, struct Node 
 		{
 			ti->bwidth = 52;
 			strcpy(sz->value->value, "52");
+			sz->value->value_len = 2;
 		}
 
 		if(ti->bheight > 52)
 		{
 			ti->bheight = 52;
 			if(sz->value->value2)
+			{
 				strcpy(sz->value->value2, "52");
+				sz->value->value2_len = 2;
+			}
 		}
 
 		if(ti->bwidth == ti->bheight && sz->value->value2)
@@ -815,7 +860,7 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 
 			CheckDoubleProp(sgfc, n);		/* remove/merge double properties */
 			Check_Properties(sgfc, n, st);	/* perform checks, update board status */
-
+			MergeDoubleText(sgfc, n);
 			if(SplitMoveSetup(sgfc, n))
 				n = n->child;				/* new child node already parsed */
 

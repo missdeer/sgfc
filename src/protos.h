@@ -8,7 +8,7 @@
 **************************************************************************/
 
 #include <stdarg.h>
-
+#include <iconv.h>
 
 /**** options.c ****/
 
@@ -33,6 +33,23 @@ bool LoadSGF(struct SGFInfo *, const char *);
 bool LoadSGFFromFileBuffer(struct SGFInfo *);
 
 
+/**** encoding.c ****/
+
+char *DetectEncoding(struct SGFInfo *);
+char *ConvertEncoding(struct SGFInfo *, const char *, char **);
+bool DecodeWholeSGFBuffer(struct SGFInfo *);
+struct StreamReader *InitStreamReader(const char *, char *, char *);
+int StreamDecode(struct StreamReader *);
+int NextDecodedChar(struct StreamReader *);
+bool DecodeTextPropertyValues(struct SGFInfo *, struct Node *, iconv_t);
+
+
+char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
+				   char *in_buffer, size_t in_size,
+				   U_LONG row, U_LONG col,
+				   char **buffer_end);
+iconv_t DetectTreeEncoding(struct SGFInfo *sgfc, struct Node *n);
+
 /**** save.c ****/
 
 int SaveBufferIO_close(struct SaveFileHandler *, U_LONG);
@@ -51,15 +68,17 @@ extern const struct SGFToken sgf_token[];
 
 /**** parse.c ****/
 
-int Parse_Number(char *, ...);
-int Parse_Move(char *, ...);
-int Parse_Float(char *, ...);
-int Parse_Color(char *, ...);
-int Parse_Triple(char *, ...);
-int Parse_Text(char *, ...);
+int Parse_Number(char *, size_t *, ...);
+int Parse_Move(char *, size_t *, ...);
+int Parse_Float(char *, size_t *, ...);
+int Parse_Color(char *, size_t *, ...);
+int Parse_Triple(char *, size_t *, ...);
+
+int Parse_Float_Offset(char *, size_t *, size_t);
+int Parse_Text(struct SGFInfo *, struct PropValue *, int prop_num, U_SHORT flags);
 
 bool Check_Value(struct SGFInfo *, struct Property *, struct PropValue *,
-				U_SHORT, int (*)(char *, ...));
+				U_SHORT, int (*)(char *, size_t *, ...));
 bool Check_Text(struct SGFInfo *, struct Property *, struct PropValue *);
 bool Check_Label(struct SGFInfo *, struct Property *, struct PropValue *);
 bool Check_Pos(struct SGFInfo *, struct Property *, struct PropValue *);
@@ -122,7 +141,7 @@ bool strnccmp(const char *, const char *, size_t);
 bool stridcmp(const char *, const char *);
 void strnpcpy(char *, const char *, size_t);
 char *SaveDupString(const char *, size_t, const char *);
-U_LONG KillChars(char *, U_SHORT, const char *);
+U_LONG KillChars(char *, size_t *, U_SHORT, const char *);
 U_LONG TestChars(const char *, U_SHORT, const char *);
 
 struct Property *FindProperty(struct Node *, token);

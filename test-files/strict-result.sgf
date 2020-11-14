@@ -1,33 +1,34 @@
-(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]
 
 HA[2]
 
 )
-(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]
 
 HA[2]
 
 AB[aa][bb])
-(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]AB[aa:ab])
-(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]AB[aa:ab])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]
 
 HA[2]
 
 AB[aa:ab]AW[cc])
-(;FF[4]GM[1]SZ[19]AP[SGFC:1.18]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]
 
 HA[2]
 
 AW[aa:ab])
-(;FF[4]GM[1]SZ[19]AP[SGFC:1.18];B[aa];W[cc];B[dd])
-(;FF[4]GM[1]SZ[19]AP[SGFC:1.18];W[bb];B[aa];C[empty];W[cc];B[dd]
-)
-(;FF[4]GM[1]SZ[19]AP[SGFC:1.18];B[aa];W[cc];B[dd];C[empty];B[ee]
-)
-(;FF[4]GM[1]SZ[19]AP[SGFC:1.18];B[aa];W[cc];B[dd];C[empty];AB[ee]
-)
-(;FF[4]GM[1]SZ[19]AP[SGFC:1.18];B[aa];W[cc];AE[cc];B[ee])
-(;FF[4]GM[1]SZ[19]AP[SGFC:1.18];B[aa];W[cg]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];B[aa];W[cc];B[dd])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];W[bb];B[aa];C[empty]
+;W[cc];B[dd])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];B[aa];W[cc];B[dd];C[empty]
+;B[ee])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];B[aa];W[cc];B[dd];C[empty]
+;AB[ee])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];B[aa];W[cc];AE[cc]
+;B[ee])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];B[aa];W[cg]
 (;B[ab];W[cc];AE[ab];W[gh])
 (;W[ab];B[cc];AW[cb];W[ff])
 (;B[ab];W[cc];AE[ab];W[dd];B[ee]))

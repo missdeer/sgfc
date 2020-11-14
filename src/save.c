@@ -256,16 +256,15 @@ static int WritePropValue(struct SGFInfo *sgfc, const char *v, bool second, U_SH
 
 	while(*v)
 	{
+		if(*v == '\\' || *v == ']' || (flags & PVT_COMPOSE && *v == ':'))
+			saveputc(sgfc, '\\');
+
 		if(!WriteChar(sgfc, *v, flags & PVT_SIMPLE))
 			return false;
 
 		if(fl && (sgfc->_save_c->linelen > MAXTEXT_LINELEN)) /* soft linebreak */
 		{
-			if (*v == '\\' && *(v-1) != '\\')
-								 /* if we have just written a single '\' then  */
-				v--;					/* treat it as soft linebreak and set  */
-			else						/* v back so that it is written again. */
-				saveputc(sgfc, '\\')	/* else insert soft linebreak */
+			saveputc(sgfc, '\\')	/* insert soft linebreak */
 			saveputc(sgfc, '\n')
 		}
 
@@ -323,7 +322,7 @@ static int WriteProperty(struct SGFInfo *sgfc, struct TreeInfo *info, struct Pro
 	{
 		saveputc(sgfc, '[')
 
-		if(do_tt && !strlen(v->value))
+		if(do_tt && !v->value_len)
 			WritePropValue(sgfc, "tt", false, prop->flags);
 		else
 		{
@@ -406,6 +405,7 @@ static void SetRootProps(struct SGFInfo *sgfc, struct TreeInfo *info, struct Nod
 		return;
 
 	NewPropValue(sgfc, r, TKN_FF, "4", NULL, true);
+	NewPropValue(sgfc, r, TKN_CA, "UTF-8", NULL, true);
 
 	if(sgfc->options->add_sgfc_ap_property)
 		NewPropValue(sgfc, r, TKN_AP, "SGFC", "1.18", true);

@@ -20,8 +20,9 @@
 #include "all.h"
 #include "protos.h"
 
-/* defines for SkipText */
+#define SGF_EOF			(sgfc->current >= sgfc->b_end)
 
+/* defines for SkipText */
 #define INSIDE	0u
 #define OUTSIDE 1u
 #define P_ERROR	2u
@@ -247,37 +248,6 @@ static bool SkipValues(struct SGFInfo *sgfc, bool print_error)
 
 
 /**************************************************************************
-*** Function:	CopyValue
-***				Copies property value into new buffer and
-***				deletes all CTRL chars and adds a '\0' at the end ->
-***				value becomes real C string
-*** Parameters: sgfc	... pointer to SGFInfo structure
-***				d		... destination buffer
-***				s		... source buffer
-***				size	... number of bytes to copy
-***				row		... current row number associated with s
-***				col		... current column associated with s
-*** Returns:	-
-**************************************************************************/
-
-void CopyValue(struct SGFInfo *sgfc, char *d, const char *s, size_t size, U_LONG row, U_LONG col)
-{
-	const char *end = s + size;
-
-	while(size--)
-	{
-		if(*s)
-			*d++ = *s;
-		else
-			/* col+1, because col points to '[' and we'd like to be precise */
-			PrintError(W_CTRL_BYTE_DELETED, sgfc, row, col+1);
-		NextCharInBuffer(&s, end, 1, &row, &col);
-	}
-	*d = 0;
-}
-
-
-/**************************************************************************
 *** Function:	AddPropValue
 ***				Adds a value to the property (inits structure etc.)
 *** Parameters: sgfc	... pointer to SGFInfo structure
@@ -307,18 +277,28 @@ struct PropValue *AddPropValue(struct SGFInfo *sgfc,
 	{
 		/* +2 because Parse_Float may add 1 char and for trailing '\0' byte */
 		SaveMalloc(char *, newv->value, size+2, "property value buffer")
-		CopyValue(sgfc, newv->value, value, size, row, col);
+		memcpy(newv->value, value, size);
+		*(newv->value + size) = 0;
+		newv->value_len = size;
 	}
 	else
+	{
 		newv->value = NULL;
+		newv->value_len = 0;
+	}
 
 	if(value2)
 	{
 		SaveMalloc(char *, newv->value2, size2+2, "property value2 buffer")
-		CopyValue(sgfc, newv->value2, value2, size2, row, col);
+		memcpy(newv->value2, value2, size2);
+		*(newv->value2 + size2) = 0;
+		newv->value2_len = size2;
 	}
 	else
+	{
 		newv->value2 = NULL;
+		newv->value2_len = 0;
+	}
 
 	AddTail(&p->value, newv);				/* add value to property */
 	return newv;
@@ -449,8 +429,8 @@ static bool NewProperty(struct SGFInfo *sgfc, struct Node *n, token id, U_LONG r
 				tooMany_row = sgfc->cur_row;
 				tooMany_col = sgfc->cur_col;
 			}
-			if (!newp->value || !strlen(newp->value->value))	/* if previous value is empty, */
-			{									/* then use the later value */
+			if (!newp->value || !newp->value->value_len)	/* if previous value is empty, */
+			{												/* then use the later value */
 				DelPropValue(newp, newp->value);
 				continue;
 			}
@@ -903,12 +883,11 @@ load_error:
 
 bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 {
-	int miss;
-
 	sgfc->current = sgfc->buffer;
 	sgfc->cur_row = 1;
 	sgfc->cur_col = 1;
-	miss = FindStart(sgfc, true);		/* skip junk in front of '(;' */
+
+	int miss = FindStart(sgfc, true);	/* skip junk in front of '(;' */
 	if(miss == -1)
 		return false;
 

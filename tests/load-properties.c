@@ -60,7 +60,7 @@ END_TEST
 int test_lwic_errors_seen = -1;
 struct SGFCError test_lwic_errors[] =
 {
-	// 13x {err, msg, row, col, errno}
+	/* 13x {err, msg, row, col, errno} */
 	{E_ILLEGAL_OUTSIDE_CHARS, "\"xx\"", 1,  3, 0},
 	{E_ILLEGAL_OUTSIDE_CHARS, "\"z3\"", 1, 15, 0},
 	{E_NO_PROP_VALUES,		  "<zzZZ>", 1, 18, 0},

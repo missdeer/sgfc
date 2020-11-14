@@ -40,6 +40,7 @@ static bool Check_Empty(struct SGFInfo *sgfc, struct Property *p, struct PropVal
 {
 	PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, p->idstr, "");
 	v->value[0] = 0;
+	v->value_len = 0;
 	return true;
 }
 
@@ -49,6 +50,8 @@ static bool Check_Empty(struct SGFInfo *sgfc, struct Property *p, struct PropVal
 #define FF123	(FF12|FF3)
 #define FF34	(FF3|FF4)
 
+#define PVT_SIMPLETEXT (PVT_SIMPLE|PVT_TEXT)
+
 
 /*******************************************/
 /* CHECK ALL.H BEFORE MODIFYING THIS ARRAY */
@@ -57,7 +60,7 @@ static bool Check_Empty(struct SGFInfo *sgfc, struct Property *p, struct PropVal
 const struct SGFToken sgf_token[NUM_SGF_TOKENS] =
 {
 	/* TKN_UNKNOWN */
-	{ "\0",	0,	FF1234,	Check_Text,	NULL,		  PVT_LIST|PVT_EMPTY, 0 },
+	{ "\0",	0,	FF1234,	Check_Text,	NULL,		  PVT_TEXT|PVT_LIST|PVT_EMPTY, 0 },
 
 	{ "B",	60, FF1234,	Check_Move, Do_Move,	  TYPE_MOVE|PVT_CHECK_EMPTY,		   BLACK },
 	{ "W",	60, FF1234,	Check_Move,	Do_Move,	  TYPE_MOVE|PVT_CHECK_EMPTY,		   WHITE },
@@ -66,8 +69,8 @@ const struct SGFToken sgf_token[NUM_SGF_TOKENS] =
 	{ "AW",	62, FF1234,	Check_Pos,  Do_AddStones, TYPE_SETUP | CP_LIST | DOUBLE_MERGE, WHITE },
 	{ "AE",	61, FF1234,	Check_Pos,  Do_AddStones, TYPE_SETUP | CP_LIST | DOUBLE_MERGE, EMPTY },
 
-	{ "N",	40, FF1234,	Check_Text,	NULL, PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "C",	40, FF1234,	Check_Text,	NULL, PVT_DEL_EMPTY|DOUBLE_MERGE|SPLIT_SAVE, 0 },
+	{ "N",	40, FF1234,	Check_Text,	NULL, PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
+	{ "C",	40, FF1234,	Check_Text,	NULL, PVT_DEL_EMPTY|PVT_TEXT|DOUBLE_MERGE|SPLIT_SAVE, 0 },
 
 	{ "BL",	31, FF1234,	Check_Float,	NULL, TYPE_MOVE, 0 },
 	{ "WL",	31, FF1234,	Check_Float,	NULL, TYPE_MOVE, 0 },
@@ -75,39 +78,39 @@ const struct SGFToken sgf_token[NUM_SGF_TOKENS] =
 	{ "OW",	30, FF34,	Check_Number,	NULL, TYPE_MOVE, 0 },
 
 	{ "FF",	96, FF1234,	Check_Number,	Do_Root,	TYPE_ROOT, 0 },
-	{ "GM",	95, FF1234,	Check_Number,	Do_Root,	TYPE_ROOT, 0 },
-	{ "SZ",	94, FF1234,	Check_Number,	Do_Root,	TYPE_ROOT|PVT_WEAKCOMPOSE, 0 },
-	{ "ST",	93, FF4,	Check_Number,	Do_Root,	TYPE_ROOT, 0 },
-	{ "CA",	92, FF4,	Check_Text,		Do_Root,	TYPE_ROOT|PVT_SIMPLE, 0 },
-	{ "AP",	91, FF4,	Check_Text,		Do_Root,	TYPE_ROOT|PVT_COMPOSE|PVT_SIMPLE, 0 },
+	{ "CA",	95, FF4,	Check_Text,		Do_Root,	TYPE_ROOT|PVT_SIMPLETEXT, 0 },
+	{ "GM",	94, FF1234,	Check_Number,	Do_Root,	TYPE_ROOT, 0 },
+	{ "SZ",	93, FF1234,	Check_Number,	Do_Root,	TYPE_ROOT|PVT_WEAKCOMPOSE, 0 },
+	{ "ST",	92, FF4,	Check_Number,	Do_Root,	TYPE_ROOT, 0 },
+	{ "AP",	91, FF4,	Check_Text,		Do_Root,	TYPE_ROOT|PVT_COMPOSE|PVT_SIMPLETEXT, 0 },
 
-	{ "GN",	89, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "GC",	67, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|DOUBLE_MERGE|SPLIT_SAVE, 0 },
-	{ "PB",	86, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_SIMPLE|PVT_DEL_EMPTY, 0 },
-	{ "PW",	82, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_SIMPLE|PVT_DEL_EMPTY, 0 },
-	{ "BR",	85, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_SIMPLE|PVT_DEL_EMPTY, 0 },
-	{ "WR",	81, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_SIMPLE|PVT_DEL_EMPTY, 0 },
-	{ "PC",	76, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_SIMPLE|PVT_DEL_EMPTY, 0 },
-	{ "DT",	77, FF1234,	Check_GameInfo,	Do_GInfo,	TYPE_GINFO|PVT_SIMPLE|PVT_DEL_EMPTY, 0 },
-	{ "RE",	75, FF1234,	Check_GameInfo,	Do_GInfo,	TYPE_GINFO|PVT_SIMPLE|PVT_DEL_EMPTY, 0 },
+	{ "GN",	89, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
+	{ "GC",	67, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_TEXT|DOUBLE_MERGE|SPLIT_SAVE, 0 },
+	{ "PB",	86, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_SIMPLETEXT|PVT_DEL_EMPTY, 0 },
+	{ "PW",	82, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_SIMPLETEXT|PVT_DEL_EMPTY, 0 },
+	{ "BR",	85, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_SIMPLETEXT|PVT_DEL_EMPTY, 0 },
+	{ "WR",	81, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_SIMPLETEXT|PVT_DEL_EMPTY, 0 },
+	{ "PC",	76, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_SIMPLETEXT|PVT_DEL_EMPTY, 0 },
+	{ "DT",	77, FF1234,	Check_GameInfo,	Do_GInfo,	TYPE_GINFO|PVT_SIMPLETEXT|PVT_DEL_EMPTY, 0 },
+	{ "RE",	75, FF1234,	Check_GameInfo,	Do_GInfo,	TYPE_GINFO|PVT_SIMPLETEXT|PVT_DEL_EMPTY, 0 },
 	{ "KM",	78, FF1234,	Check_GameInfo,	Do_GInfo,	TYPE_GINFO, 0 },
 	{ "KI",	78, FF12,	Check_Number,	Do_GInfo,	TYPE_GINFO, ST_OBSOLETE },
 	{ "HA",	83, FF1234,	Check_Number,	Do_GInfo,	TYPE_GINFO, 0 },
 	{ "TM",	74, FF1234,	Check_GameInfo,	Do_GInfo,	TYPE_GINFO, 0 },
-	{ "EV",	88, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "RO",	87, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "SO",	70, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "US",	69, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "BT",	84, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "WT",	80, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "RU",	72, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "AN",	68, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "OT",	73, FF4,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
-	{ "ON",	66, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|DOUBLE_MERGE|SPLIT_SAVE, 0 },
-	{ "CP",	65, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|DOUBLE_MERGE|SPLIT_SAVE, 0 },
+	{ "EV",	88, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
+	{ "RO",	87, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
+	{ "SO",	70, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
+	{ "US",	69, FF1234,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
+	{ "BT",	84, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
+	{ "WT",	80, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
+	{ "RU",	72, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
+	{ "AN",	68, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
+	{ "OT",	73, FF4,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
+	{ "ON",	66, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_TEXT|DOUBLE_MERGE|SPLIT_SAVE, 0 },
+	{ "CP",	65, FF34,	Check_Text,		Do_GInfo,	TYPE_GINFO|PVT_DEL_EMPTY|PVT_TEXT|DOUBLE_MERGE|SPLIT_SAVE, 0 },
 
 	{ "L",	49,	FF12,	Check_Pos,	Do_Letter,	PVT_LIST|DOUBLE_MERGE, ST_LABEL|ST_OBSOLETE },
-	{ "LB",	50, FF34,	Check_Label,Do_Markup,	PVT_LIST|PVT_COMPOSE|DOUBLE_MERGE|PVT_SIMPLE, ST_LABEL },
+	{ "LB",	50, FF34,	Check_Label,Do_Markup,	PVT_LIST|PVT_COMPOSE|DOUBLE_MERGE|PVT_SIMPLETEXT, ST_LABEL },
 	{ "AR",	50, FF4,	Check_AR_LN,NULL,		PVT_LIST|PVT_COMPOSE|DOUBLE_MERGE, 0 },
 	{ "LN",	50, FF4,	Check_AR_LN,NULL,		PVT_LIST|PVT_COMPOSE|DOUBLE_MERGE, 0 },
 	{ "M",	49, FF12,	Check_Pos,	Do_Mark,	PVT_LIST|DOUBLE_MERGE, ST_MARKUP|ST_OBSOLETE },
@@ -143,7 +146,7 @@ const struct SGFToken sgf_token[NUM_SGF_TOKENS] =
 	{ "SI",	5,	FF3,	Check_Triple,	NULL,		PVT_CHECK_EMPTY, 0 },
 	{ "BS",	5,	FF123,	Check_Number,	Do_GInfo,	TYPE_GINFO, 0 },
 	{ "WS",	5,	FF123,	Check_Number,	Do_GInfo,	TYPE_GINFO, 0 },
-	{ "ID",	5,	FF3,	Check_Text,		Do_GInfo, 	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLE, 0 },
+	{ "ID",	5,	FF3,	Check_Text,		Do_GInfo, 	TYPE_GINFO|PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
 	{ "TC",	5,	FF3,	Check_Number,	NULL,	0, 0 },
 	{ "OM",	5,	FF3,	Check_Number,	NULL,	0, 0 },
 	{ "OP",	5,	FF3,	Check_Float,	NULL,	0, 0 },

@@ -124,7 +124,7 @@ bool Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 
 	st->annotate |= ST_MOVE;
 
-	if(!strlen(p->value->value))	/* pass move */
+	if(!p->value->value_len)	/* pass move */
 		return true;
 
 	x = DecodePosChar(p->value->value[0]) - 1;
@@ -319,7 +319,7 @@ bool Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct 
 
 	while(v)
 	{
-		if(!strlen(v->value))
+		if(!v->value_len)
 		{
 			if(empty)	/* if we already have an empty value */
 			{
@@ -352,7 +352,7 @@ bool Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct 
 	{
 		v = p->value;
 		while(v) {
-			if(!strlen(v->value))
+			if(!v->value_len)
 			{
 				PrintError(E_EMPTY_VALUE_DELETED, sgfc, v->row, v->col, "Markup", p->idstr);
 				v = DelPropValue(p, v);
@@ -391,6 +391,7 @@ bool Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 		free(hlp->idstr);
 		hlp->idstr = SaveDupString(sgf_token[TKN_DO].id, 0, "DO id string");
 		hlp->value->value[0] = 0;
+		hlp->value->value_len = 0;
 		return false;
 	}
 
@@ -402,6 +403,7 @@ bool Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 		free(hlp->idstr);
 		hlp->idstr = SaveDupString(sgf_token[TKN_IT].id, 0, "DO id string");
 		hlp->value->value[0] = 0;
+		hlp->value->value_len = 0;
 		return false;
 	}
 
@@ -476,7 +478,7 @@ bool Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 		PrintError(W_INT_KOMI_FOUND, sgfc, p->row, p->col, "converted to <KM>");
 
 		ki = strtol(p->value->value, NULL, 10);		/* we can ignore errors here */
-		SaveMalloc(char *, new_km, strlen(p->value->value)+3, "new KM number value")
+		SaveMalloc(char *, new_km, p->value->value_len+3, "new KM number value")
 		if(ki % 2)	sprintf(new_km, "%ld.5", ki/2);
 		else		sprintf(new_km, "%ld", ki/2);
 		NewPropValue(sgfc, n, TKN_KM, new_km, NULL, false);
@@ -503,7 +505,7 @@ bool Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 
 	v = p->value;
 
-	if(!strlen(v->value))	/* VW[] */
+	if(!v->value_len)	/* VW[] */
 	{
 		if(v->next)
 		{
@@ -519,7 +521,7 @@ bool Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 
 	while(v)
 	{
-		if(!strlen(v->value))	/* '[]' within other values */
+		if(!v->value_len)	/* '[]' within other values */
 		{
 			PrintError(E_BAD_VW_VALUES, sgfc, v->row, v->col,
 			  		   "empty value found in list", "deleted");

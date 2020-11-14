@@ -49,21 +49,22 @@ static int GetFraction(char *val)
 /**************************************************************************
 *** Function:	Parse_Komi
 ***				Checks komi value and corrects it if possible
-*** Parameters: val ... pointer to KM string
+*** Parameters: value ... pointer to KM string
+*** 			len ... length of string
 *** Returns:	-1/0/1/2: corrected error / error / ok / corrected
 **************************************************************************/
 
-static int Parse_Komi(char *val, ...)
+static int Parse_Komi(char *value, size_t *len, ...)
 {
 	int fraction, ret;
 	double points = 0.0;
 
-	fraction = GetFraction(val);
+	fraction = GetFraction(value);
 
-	if((fraction == 4) && strstr(val, "none"))
+	if((fraction == 4) && strstr(value, "none"))
 		fraction = -1;
 
-	ret = Parse_Float(val, 0);
+	ret = Parse_Float(value, len, 0);
 
 	if(fraction)
 	{
@@ -71,11 +72,12 @@ static int Parse_Komi(char *val, ...)
 		{
 			points = fraction / 4.0;
 			if(ret)
-				points += atof(val);
+				points += atof(value);
 		}
 
-		sprintf(val, "%f", points);
-		Parse_Float(val, 0);		/* remove trailing '0' */
+		sprintf(value, "%f", points);
+		*len = strlen(value);
+		Parse_Float(value, len, 0);		/* remove trailing '0' */
 		ret = -1;
 	}
 
@@ -87,31 +89,32 @@ static int Parse_Komi(char *val, ...)
 *** Function:	Parse_Time
 ***				Checks time value and corrects it if possible
 *** Parameters: val ... pointer to TM string
+***				len ... length of string
 *** Returns:	-1/0/1/2: corrected error / error / ok / corrected
 **************************************************************************/
 
-static int Parse_Time(char *val, ...)
+static int Parse_Time(char *val, size_t *len, ...)
 {
 	int ret = 1, hour = 0, min = 0;
 	double time;
 	char *s;
 
-	if(KillChars(val, C_ISSPACE, NULL))
+	if(KillChars(val, len, C_ISSPACE, NULL))
 		ret = -1;
 
-	if(!(*val))		/* only empty value left -> error */
+	if(!*len)		/* only empty value left -> error */
 		return 0;
 
 	/* ":/;+" indicate that there's byo-yomi time given too */
 	/* &val[1] because of possible leading '+' */
-	if(strlen(val) > 1 && TestChars(&val[1], C_inSET, ":/;+"))
+	if(*len > 1 && TestChars(&val[1], C_inSET, ":/;+"))
 		return 0;
 
 	if(TestChars(val, C_ISALPHA, NULL))
 	{
 		ret = -1;
 
-		s = val + strlen(val) - 1;
+		s = val + *len - 1;
 		if(strstr(val, "hr"))		hour = 3600;
 		if(strstr(val, "hour"))		hour = 3600;
 		if(*s == 'h')				hour = 3600;
@@ -121,17 +124,18 @@ static int Parse_Time(char *val, ...)
 		if(hour && min)		return 0;		/* can't handle both */
 		if(!hour)			hour = min;
 
-		if(Parse_Float(val, 0))
+		if(Parse_Float(val, len, 0))
 		{
 			time = atof(val) * hour;
 			sprintf(val, "%.1f", time);		/* limit time resolution to 0.1 seconds */
-			Parse_Float(val, 0);			/* remove trailing '0' */
+			*len = strlen(val);
+			Parse_Float(val, len, 0);		/* remove trailing '0' */
 		}
 		else
 			return 0;
 	}
 	else
-		switch(Parse_Float(val, 0))
+		switch(Parse_Float(val, len, 0))
 		{
 			case 0:		return 0;
 			case -1:	return -1;
@@ -146,79 +150,84 @@ static int Parse_Time(char *val, ...)
 /**************************************************************************
 *** Function:	Parse_Result
 ***				Checks result value and corrects it if possible
-*** Parameters: val ... pointer to RE string
+*** Parameters: value ... pointer to RE string
+***				len ... length of string
 *** Returns:	-1/0/1/2: corrected error / error / ok / corrected
 **************************************************************************/
 
-static int Parse_Result(char *val, ...)
+static int Parse_Result(char *value, size_t *len, ...)
 {
 	char *s, *d;
 	int err = 1, charpoints;
 	unsigned int type = 0;
 	double points = 0.0;
 
-	if(KillChars(val, C_ISSPACE, NULL))
+	if(KillChars(value, len, C_ISSPACE, NULL))
 		err = -1;
 
-	switch(val[0])
+	switch(value[0])
 	{
 		case '0':
-		case '?':	if(strlen(val) > 1)
+		case '?':	if(*len > 1)
 					{
 						err = -1;
-						val[1] = 0;
+						value[1] = 0;
+						*len = 1;
 					}
 					break;
 		case 'j':
-		case 'J':	if(strnccmp(val, "jigo", 4))
+		case 'J':	if(strnccmp(value, "jigo", 4))
 						return 0;
 		case 'd':	err = -1;
-					val[0] = 'D';
-		case 'D':	if(!strcmp(val, "Draw"))
+					value[0] = 'D';
+		case 'D':	if(!strcmp(value, "Draw"))
 						break;
 					err = -1;
-					strcpy(val, "0");	/* use shortcut for draw */
+					strcpy(value, "0");	/* use shortcut for draw */
+					*len = 1;
 					break;
 		case 'v':	err = -1;
-					val[0] = 'V';
-		case 'V':	if(!strcmp(val, "Void"))
+					value[0] = 'V';
+		case 'V':	if(!strcmp(value, "Void"))
 						break;
 					err = -1;
-					strcpy(val, "Void");
+					strcpy(value, "Void");
+					*len = 4;
 					break;
 		case 'z':
-		case 'Z':	if(strnccmp(val, "zwart", 5))
+		case 'Z':	if(strnccmp(value, "zwart", 5))
 						return 0;
-					val[0] = 'B';
+					value[0] = 'B';
 		case 'b':
 		case 'w':	err = -1;
-					val[0] = toupper(val[0]);
+					value[0] = toupper(value[0]);
 		case 'B':
-		case 'W':	charpoints = GetFraction(val);
+		case 'W':	charpoints = GetFraction(value);
 
-					if(val[1] != '+')	/* some text between 'B/W' and '+' */
+					if(value[1] != '+')	/* some text between 'B/W' and '+' */
 					{
-						for(s=val; *s && *s != '+'; s++);
+						for(s=value; *s && *s != '+'; s++);
 						if(*s)
 						{
 							err = -1;
-							d = &val[1];
+							d = &value[1];
 							while((*d++ = *s++));  /* copy must be left2right */
+							*len = strlen(value);
 						}
 						else			/* no '+' at all */
 						{
-							if(strstr(val, "resign"))	type |= 1;
-							if(strstr(val, "Resign"))	type |= 1;
-							if(strstr(val, "opgave"))	type |= 1;
-							if(strstr(val, "win"))		type |= 2;
-							if(strstr(val, "won"))		type |= 2;
-							if(strstr(val, "lose"))		type |= 4;
-							if(strstr(val, "loose"))	type |= 4;
-							if(strstr(val, "lost"))		type |= 4;
-							if(strstr(val, "with"))		type |= 8;
-							if(strstr(val, "by"))		type |= 8;
-							if(strstr(val, "point"))	type |= 16;
-							if(strstr(val, "punt"))		type |= 16;
+							if(strstr(value, "resign")) type |= 1;
+							if(strstr(value, "Resign")) type |= 1;
+							if(strstr(value, "opgave")) type |= 1;
+							if(strstr(value, "win")) type |= 2;
+							if(strstr(value, "won")) type |= 2;
+							if(strstr(value, "lose")) type |= 4;
+							if(strstr(value, "loose")) type |= 4;
+							if(strstr(value, "lost")) type |= 4;
+							if(strstr(value, "with")) type |= 8;
+							if(strstr(value, "by")) type |= 8;
+							if(strstr(value, "point")) type |= 16;
+							if(strstr(value, "punt")) type |= 16;
 							/* type 64: for search for double numbers */
 
 							if((!(type & 7) && !charpoints) ||
@@ -232,66 +241,73 @@ static int Parse_Result(char *val, ...)
 								if(!(type & 2))
 									type |= 4;
 
-								strcpy(&val[1], "+R");
+								strcpy(&value[1], "+R");
+								*len = 3;
 							}
 							else
 								if((type & 24) || charpoints)	/* point win */
 								{
-									err = Parse_Float(&val[1], TYPE_GINFO);
+									err = Parse_Float_Offset(value, len, 1);
 
 									if(!err && !charpoints)	/* no points found */
 									{
 										if(type & 16)
 											return 0;		/* info would be lost */
-										strcpy(&val[1], "+");
+										strcpy(&value[1], "+");
+										*len = 2;
 									}
 									else
 									{
 										if(err)
-											points = atof(&val[1]);
+											points = atof(&value[1]);
 
 										points += (charpoints / 4.0);
-										sprintf(&val[1], "+%f", points);
-										Parse_Float(&val[2], TYPE_GINFO);
+										sprintf(&value[1], "+%f", points);
+										*len = strlen(value);
+										Parse_Float_Offset(value, len, 2);
 									}
 								}
 								else	/* just win or lose */
-									strcpy(&val[1], "+");
+								{
+									strcpy(&value[1], "+");
+									*len = 2;
+								}
 
-							if((type & 4))
+							if(type & 4)
 							{
-								if(val[0] == 'B')	val[0] = 'W';
-								else				val[0] = 'B';
+								if(value[0] == 'B')		value[0] = 'W';
+								else					value[0] = 'B';
 							}
 							err = -1;
 							break;
 						}
 					}
 
-					if(val[2])			/* text after the '+' */
+					if(value[2])			/* text after the '+' */
 					{
-						if(!strcmp(&val[2], "Resign"))
+						if(!strcmp(&value[2], "Resign"))
 							break;
-						if(!strcmp(&val[2], "Time"))
+						if(!strcmp(&value[2], "Time"))
 							break;
-						if(!strcmp(&val[2], "Forfeit"))
+						if(!strcmp(&value[2], "Forfeit"))
 							break;
-						switch(val[2])	/* looking for shortcuts */
+						switch(value[2])	/* looking for shortcuts */
 						{				/* or win by points		 */
 							case 'r':
 							case 't':
 							case 'f':	err = -1;
-										val[2] = toupper(val[2]);
+										value[2] = toupper(value[2]);
 							case 'R':
 							case 'T':
-							case 'F':	if(strlen(val) > 3)
+							case 'F':	if(*len > 3)
 										{
 											err = -1;
-											val[3] = 0;
+											value[3] = 0;
+											*len = 3;
 										}
 										break;
 
-							default:	switch(Parse_Float(&val[2], TYPE_GINFO))
+							default:	switch(Parse_Float_Offset(value, len, 2))
 										{
 											case 0:		err = 0;	break;
 											case -1:	err = -1;	break;
@@ -304,14 +320,16 @@ static int Parse_Result(char *val, ...)
 										if(charpoints)
 										{
 											err = -1;
-											points = atof(&val[2]) + (charpoints/4.0);
-											sprintf(&val[2], "%f", points);
-											Parse_Float(&val[2], TYPE_GINFO);
+											points = atof(&value[2]) + (charpoints / 4.0);
+											sprintf(&value[2], "%f", points);
+											*len = strlen(value);
+											Parse_Float_Offset(value, len, 2);
 										}
 										else
 											if(!err)
 											{
-												val[2] = 0;	/* win without reason */
+												value[2] = 0;	/* win without reason */
+												*len = 2;
 												err = -1;
 											}
 										break;
@@ -331,10 +349,11 @@ static int Parse_Result(char *val, ...)
 *** Function:	CorrectDate
 ***				Tries to fix date value
 *** Parameters: value ... pointer to date string
+***				len ... length of string
 *** Returns:	-1/0: corrected error / error
 **************************************************************************/
 
-static int CorrectDate(char *value)
+static int CorrectDate(char *value, size_t *len)
 {
 	int year = -1, month = -1, day = -1, day2 = -1;
 	int i;
@@ -347,7 +366,7 @@ static int CorrectDate(char *value)
 								"Oct", "oct", "Nov", "nov", "Dec", "dec",
 								"Okt", "okt" };
 
-	KillChars(value, C_inSET, "\n");
+	KillChars(value, len, C_inSET, "\n");
 
 	for(i = 0; i < 26; i++)
 	{
@@ -406,6 +425,7 @@ static int CorrectDate(char *value)
 		else
 			sprintf(value, "%04d", year);
 
+	*len = strlen(value);
 	return -1;
 }
 
@@ -415,10 +435,11 @@ static int CorrectDate(char *value)
 ***				Checks date value, corrects easy errors (space etc.)
 ***				Tough cases are passed on to CorrectDate
 *** Parameters: value ... pointer to date string
+***				len	  ... length of string
 *** Returns:	-1/0/1: corrected error / error / ok
 **************************************************************************/
 
-static int Parse_Date(char *value, ...)
+static int Parse_Date(char *value, size_t *len, ...)
 {
 	int ret = 1, allowed, type, turn, oldtype;
 	bool has_year;
@@ -435,7 +456,7 @@ static int Parse_Date(char *value, ...)
 
 	/* bad chars? -> pass on to CorrectDate */
 	if(TestChars(value, C_NOTinSET, "0123456789-,"))
-		return CorrectDate(value);
+		return CorrectDate(value, len);
 
 	c = d = value;
 	while(*c)				/* remove spaces, and unnecessary '-', ',' */
@@ -554,8 +575,9 @@ static int Parse_Date(char *value, ...)
 		}
 	}
 
+	*len = strlen(value);
 	if(!ret)		/* date has got tough errors -> pass on to CorrectDate */
-		ret = CorrectDate(value);
+		ret = CorrectDate(value, len);
 
 	return ret;
 }
@@ -572,7 +594,7 @@ static int Parse_Date(char *value, ...)
 **************************************************************************/
 
 static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
-		struct PropValue *v, int (*Parse_Value)(char *, ...))
+		struct PropValue *v, int (*Parse_Value)(char *, size_t *, ...))
 {
 	char *newgi, inp[2001];
 	size_t size;
@@ -584,7 +606,7 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 		return true;
 	}
 
-	size = strlen(v->value);
+	size = v->value_len;
 	if(size < 25)		/* CorrectDate may use up to 15 chars */
 		size = 25;
 	newgi = SaveDupString(v->value, size, "game info value buffer");
@@ -614,7 +636,8 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 			if(ret == 1)
 			{
 				free(v->value);
-				SaveMalloc(char *, v->value, strlen(inp)+4, "game info value buffer")
+				v->value_len = strlen(inp);
+				SaveMalloc(char *, v->value, v->value_len+4, "game info value buffer")
 				strcpy(v->value, inp);
 				break;
 			}
@@ -650,7 +673,7 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 	char *val;
 	size_t size;
 	int res;
-	int (*parse)(char *, ...);
+	int (*parse)(char *, size_t *, ...);
 
 	if(!Check_Text(sgfc, p, v))		/* parse text (converts spaces) */
 		return false;
@@ -664,13 +687,13 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 		default:		return true;
 	}
 
-	size = (strlen(v->value) > (25-8)) ? (strlen(v->value) + 8) : (25+1);
+	size = (v->value_len > 25-8) ? (v->value_len + 8) : (25+1);
 	/* correct functions may use up to 25 bytes; +8 because time in hours multiplies by 3600 and adds ".0" */
 
 	SaveMalloc(char *, val, size, "result value buffer")
 	strcpy(val, v->value);
-
-	res = (*parse)(val);
+	size_t val_len = v->value_len;
+	res = (*parse)(val, &val_len);
 
 	if(sgfc->options->interactive)
 	{
@@ -684,17 +707,23 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 	{
 		switch(res)
 		{
-			case 0:		PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "(NOT CORRECTED!)");
+			case 0:
+				PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "(NOT CORRECTED!)");
 				break;
-			case -1:	PrintError(E4_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, p->idstr, val);
+			case -1:
+				PrintError(E4_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, p->idstr, val);
 				free(v->value);
 				v->value = val;
+				v->value_len = val_len;
 				return true;
 		}
 	}
 
 	if(res == 2)
+	{
 		strcpy(v->value, val);
+		v->value_len = val_len;
+	}
 
 	free(val);
 	return true;

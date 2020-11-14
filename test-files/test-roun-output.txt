@@ -5,7 +5,6 @@ Line:12 Col:2 - Error 12: empty variation found (ignored)
 Line:13 Col:8 - Error 13 (critical): property <W> may have only ONE value (other values deleted)
 Line:20 Col:15 - Error 20 (critical): property <AB> without any values found (ignored)
 Line:21 Col:2 - Error 21 (critical): illegal variation start found (ignored)
-Line:22 Col:3 - Warning 22: $00 byte deleted - binary file?
 Line:23 Col:4 - Error 23: property <LB> expects compose type value (value deleted): [aa]
 Line:23 Col:8 - Error 23: property <LB> expects compose type value (value deleted): [bb]
 Line:31 Col:8 - Error 31: property identifier consists of more than 2 uppercase letters: <LONGID>
@@ -39,6 +38,7 @@ Line:16 Col:2 - Error 16: lowercase char not allowed in property identifier
 Line:17 Col:4 - Error 17: empty <AW> value not allowed (deleted)
 Line:17 Col:9 - Warning 17: empty <C> value found (deleted)
 Line:17 Col:16 - Warning 17: empty <N> value found (deleted)
+Line:22 Col:3 - Warning 22: $00 byte detected (replaced with space) - binary file?
 Line:25 Col:3 - Error 25: illegal <AR> value corrected; new value: [aa:cr], old value: [a a: c r]
 Line:25 Col:16 - Error 25: illegal <LB> value corrected; new value: [ff:text], old value: [f f:text]
 Line:28 Col:11 - Error 28: property <C> already exists (values merged)

@@ -17,22 +17,217 @@
 
 
 /**************************************************************************
+*** Function:	Parse_Text
+***				Transforms any kind of linebreaks to '\n' (or ' ')
+***				and all WS to space. Cuts off trailing WS.
+*** Parameters: value	... pointer to property value
+***				len		... length of string
+***				flags	... PVT_SIMPLE (SimpleText type)
+***							PVT_COMPOSE (compose type)
+***				sgfc    ... pointer to SGFInfo
+*** Returns:	length of converted string (0 for empty string)
+**************************************************************************/
+
+void ParseText_Unescape(char *s, size_t *len, U_SHORT flags)
+{
+	char *end = s + *len;
+	char *d = s;                        /* remove unnecessary '\' */
+
+	while(s < end)
+	{
+		if(*s != '\\')
+		{
+			*d++ = *s++;
+			continue;
+		}
+
+		if(*(s+1) != '\n' && *(s+1) != '\r')
+		{
+			s++;
+			(*len)--;
+			*d++ = *s++;
+			continue;
+		}
+
+		/* soft linebreak */
+		s += 2;
+		(*len) -= 2;
+		/* CRLF or LFCR */
+		if(s < end && (*s == '\n' || *s == '\r') && *s != *(s-1))
+		{
+			s++;
+			(*len)--;
+		}
+	}
+	*d = 0;
+}
+
+void ParseText_Decode(struct SGFInfo *sgfc, char **value_ptr, size_t *len)
+{
+	if(!sgfc->info || !sgfc->info->encoding)	/* short cut for unit tests */
+		return;
+
+	char *end;
+	char *decoded = DecodeBuffer(sgfc, sgfc->info->encoding, *value_ptr, *len, -1, -1, &end);
+	if(decoded)
+	{
+		free(*value_ptr);
+		*value_ptr = decoded;
+		*len = end - decoded;
+	}
+	// FIXME: what to do in error case? delete Prop? or at least propvalue? additional PrintError?
+
+}
+
+void ParseText_NormalizeWhitespace(struct SGFInfo *sgfc, char *s, size_t *len, U_LONG row, U_LONG col) {
+	char old = 0;
+	char *d = s;
+	char *end = s + *len;
+
+	while(s < end)						/* transform linebreaks to '\n' */
+	{									/*			and all WS to space */
+		if(*s == '\r' || *s == '\n')	/* linebreak char? */
+		{
+			if(old && old != *s)		/* different from preceding char? */
+			{
+				(*len)--;
+				old = 0;				/* -> no real linebreak */
+			}
+			else
+			{
+				old = *s;
+				*d++ = '\n';			/* insert linebreak */
+			}
+		}
+		else							/* other chars than \r,\n */
+		{
+			old = 0;
+			if(isspace(*s))				/* transform all WS to space */
+				*d++ = ' ';
+			else if(!*s)				/* replace \0 bytes with space, so that we can use NULL terminated strings */
+			{
+				PrintError(W_CTRL_BYTE_DELETED, sgfc, row, col+1);
+				*d++ = ' ';
+			}
+			else
+				*d++ = *s;
+		}
+		s++;
+	}
+	*d = 0;
+}
+
+void ParseText_ApplyLinebreakStyle(struct SGFInfo *sgfc, char *value, size_t *len, U_SHORT flags)
+{
+	char *end = value + *len;
+	char *d = value, *s = value;
+
+	while(s < end)
+	{
+		if(*s != '\n')
+		{
+			*d++ = *s++;
+			continue;
+		}
+		if (flags & PVT_SIMPLE)
+		{
+			*d++ = ' ';
+			s++;
+			continue;
+		}
+
+		switch(sgfc->options->linebreaks)
+		{
+			case OPTION_LINEBREAK_ANY:	/* every line break encountered */
+				*d++ = *s++;
+				break;
+			case OPTION_LINEBREAK_NOSPACE:	/* MGT style */
+				if((s != value) && (*(s-1) == ' '))
+				{
+					*d++ = ' ';
+					s++;
+				}
+				else
+					*d++ = *s++;
+				break;
+			case OPTION_LINEBREAK_2BRK: /* two linebreaks in a row */
+				if(*(s+1) == '\n')
+				{
+					*d++ = *s;
+					s += 2;
+					(*len)--;
+				}
+				else
+				{
+					*d++ = ' ';
+					s++;
+				}
+				break;
+			case OPTION_LINEBREAK_PRGRPH: /* paragraph style (ISHI format, MFGO) */
+				if(*(s+1) == '\n')
+				{
+					*d++ = *s++;
+					*d++ = *s++;
+				}
+				else
+				{
+					*d++ = ' ';
+					s++;
+				}
+				break;
+		}
+	}
+	*d = 0;
+}
+
+void ParseText_StripTrailingSpace(char *value, size_t *len)
+{
+	char *c = value + *len - 1;
+
+	while(c >= value && isspace(*c))
+		*c-- = 0;
+
+	*len = c - value + 1;
+}
+
+int Parse_Text(struct SGFInfo *sgfc, struct PropValue *v, int prop_num, U_SHORT flags)
+{
+	char **value_ptr = &v->value;
+	size_t *value_len = &v->value_len;
+	if (prop_num == 2)
+	{
+		value_ptr = &v->value2;
+		value_len = &v->value2_len;
+	}
+
+	ParseText_Unescape(*value_ptr, value_len, flags);
+	ParseText_Decode(sgfc, value_ptr, value_len);
+	ParseText_NormalizeWhitespace(sgfc, *value_ptr, value_len, v->row, v->col);
+	ParseText_ApplyLinebreakStyle(sgfc, *value_ptr, value_len, flags);
+	ParseText_StripTrailingSpace(*value_ptr, value_len);
+
+	return (int)(*value_len);
+}
+
+
+/**************************************************************************
 *** Function:	Parse_Number
 ***				Checks for illegal chars and for LONG INT range
 *** Parameters: value ... pointer to value string
+***				len		... length of string
 *** Returns:	-1/0/1 for corrected error / error / OK
 **************************************************************************/
 
-int Parse_Number(char *value, ...)
+int Parse_Number(char *value, size_t *len, ...)
 {
 	long i;
 	int ret = 1;
 	char *d;
 
-	if(KillChars(value, C_NOTinSET, "+-0123456789"))
+	if(KillChars(value, len, C_NOTinSET, "+-0123456789"))
 		ret = -1;
 
-	if(strlen(value))					/* empty? */
+	if(*len)							/* empty? */
 	{
 		errno = 0;
 		i = strtol(value, &d, 10);
@@ -40,13 +235,15 @@ int Parse_Number(char *value, ...)
 		if(*d)							/* if *d: d >= value + 1 */
 		{
 			*d = 0;
-			if(strlen(value))	ret = -1;
-			else				ret = 0;
+			*len = strlen(value);
+			if(*len)	ret = -1;
+			else		ret = 0;
 		}
 
 		if(errno == ERANGE)				/* out of range? */
 		{
 			sprintf(value, "%ld", i);	/* set to max range value */
+			*len = strlen(value);
 			ret = -1;
 		}
 	}
@@ -58,163 +255,17 @@ int Parse_Number(char *value, ...)
 
 
 /**************************************************************************
-*** Function:	Parse_Text
-***				Transforms any kind of linebreaks to '\n' (or ' ')
-***				and all WS to space. Cuts off trailing WS.
-*** Parameters: value	... pointer to property value
-***				flags	... PVT_SIMPLE (SimpleText type)
-***							PVT_COMPOSE (compose type)
-***				sgfc    ... pointer to SGFInfo
-*** Returns:	length of converted string (0 for empty string)
-**************************************************************************/
-
-int Parse_Text(char *value, ...)
-{
-	char *s, *d, *end, old = 0;
-	U_SHORT flags;
-	struct SGFInfo *sgfc;
-	va_list arglist;
-
-	va_start(arglist, value);
-	flags = va_arg(arglist, U_INT);
-	sgfc = va_arg(arglist, struct SGFInfo *);
-	va_end(arglist);
-
-	do			/* loop, because trailing spaces may be protected by '\' */
-	{
-		d = value + strlen(value) - 1;		/* remove trailing spaces */
-		while(d >= value && isspace(*d))
-			*d-- = 0;
-
-		if(!strlen(value))
-			return 0;
-
-		if(*d == '\\' && d > value && *(d-1) != '\\')	/* remove trailing '\' */
-			*d = 0;
-	} while(!*d);
-
-	end = value + strlen(value);
-	s = d = value;
-
-	while(s < end)						/* transform linebreaks to '\n' */
-	{									/*			and all WS to space */
-		if(*s == '\r' || *s == '\n')	/* linebreak char? */
-		{
-			if(old && old != *s)		/* different from preceding char? */
-				old = 0;				/* -> no real linebreak */
-			else
-			{
-				old = *s;
-				*d++ = '\n';			/* insert linebreak */
-			}
-		}
-		else							/* other chars than \r,\n */
-		{
-			old = 0;
-			if(isspace(*s))	*d++ = ' ';	/* transform all WS to space */
-			else			*d++ = *s;
-		}
-		s++;
-	}
-	*d = 0;
-
-
-	end = value + strlen(value);
-	s = d = value;						/* remove unnecessary '\' */
-										/* apply linebreak style */
-	while(s < end)
-	{
-		if(*s == '\\')
-		{
-			switch(*(s+1))
-			{
-				case '\\':
-				case ']':	*d++ = *s++;
-							*d++ = *s++;
-							break;
-				case ':':	if(flags & (PVT_COMPOSE|PVT_WEAKCOMPOSE))
-							{
-								*d++ = *s++;
-								*d++ = *s++;
-							}
-							else
-								s++;
-							break;
-				case '\n':	s += 2;		/* '\' + '\n' is removed */
-							break;
-				default:	*d++ = *(s+1);
-							s += 2;
-							break;
-			}
-			continue;
-		}
-
-		if(*s == '\n') {
-			if (flags & PVT_SIMPLE) {
-				*d++ = ' ';
-				s++;
-				continue;
-			}
-			switch(sgfc->options->linebreaks)
-			{
-				case OPTION_LINEBREAK_ANY:	/* every line break encountered */
-						*d++ = *s++;
-						break;
-				case OPTION_LINEBREAK_NOSPACE:	/* MGT style */
-						if((s != value) && (*(s-1) == ' '))
-						{
-							*d++ = ' ';
-							s++;
-						}
-						else
-							*d++ = *s++;
-						break;
-				case OPTION_LINEBREAK_2BRK: /* two linebreaks in a row */
-						if(*(s+1) == '\n')
-						{
-							*d++ = *s;
-							s += 2;
-						}
-						else
-						{
-							*d++ = ' ';
-							s++;
-						}
-						break;
-				case OPTION_LINEBREAK_PRGRPH: /* paragraph style (ISHI format, MFGO) */
-						if(*(s+1) == '\n')
-						{
-							*d++ = *s++;
-							*d++ = *s++;
-						}
-						else
-						{
-							*d++ = ' ';
-							s++;
-						}
-						break;
-			}
-		}
-		else
-			*d++ = *s++;
-	}
-	*d = 0;
-
-	return (int)strlen(value);
-}
-
-
-/**************************************************************************
 *** Function:	Parse_Move
 ***				Kills illegal chars, checks position (board size)
 ***				transforms FF[3] PASS 'tt' into FF[4] PASS ''
 *** Parameters: value ... pointer to value string
+***				len		... length of string
 ***				flags ... PARSE_MOVE or PARSE_POS (treats 'tt' as error)
 ***				sgfc  ... pointer to SGFInfo
 *** Returns:	-101/-1/0/1	for wrong pass / corrected error / error / OK
 **************************************************************************/
 
-int Parse_Move(char *value, ...)
+int Parse_Move(char *value, size_t *len, ...)
 {
 	int ret = 1, c;
 	bool emptyOrSpace = false;
@@ -222,7 +273,7 @@ int Parse_Move(char *value, ...)
 	U_SHORT flags;
 	va_list arglist;
 
-	va_start(arglist, value);
+	va_start(arglist, len);
 	flags = va_arg(arglist, U_INT);
 	sgfc = va_arg(arglist, struct SGFInfo *);
 	va_end(arglist);
@@ -232,15 +283,15 @@ int Parse_Move(char *value, ...)
 
 	/* At first only delete space so that we can distinguish
 	 * FF4 pass move from erroneous property values */
-	if(KillChars(value, C_ISSPACE, NULL))
+	if(KillChars(value, len, C_ISSPACE, NULL))
 		ret = -1;
-	if(!strlen(value))
+	if(!*len)
 		emptyOrSpace = true;
 
-	if(KillChars(value, C_NOT_ISALPHA, NULL))
+	if(KillChars(value, len, C_NOT_ISALPHA, NULL))
 		ret = -1;
 
-	if(!strlen(value))				/* empty value? */
+	if(!*len)				/* empty value? */
 	{
 		if(flags & PARSE_MOVE && emptyOrSpace)
 		{
@@ -252,12 +303,13 @@ int Parse_Move(char *value, ...)
 		return 0;
 	}
 
-	if(strlen(value) < 2)			/* value too short */
+	if(*len < 2)			/* value too short */
 		return 0;
 
-	if(strlen(value) != 2)			/* value too long? */
+	if(*len != 2)			/* value too long? */
 	{
 		*(value+2) = 0;
+		*len = 2;
 		ret = -1;
 	}
 
@@ -266,6 +318,7 @@ int Parse_Move(char *value, ...)
 		if(sgfc->info->bwidth <= 19 && sgfc->info->bheight <= 19)
 		{
 			*value = 0;					/* new pass */
+			*len = 0;
 			return ret;
 		}
 	}
@@ -290,11 +343,12 @@ int Parse_Move(char *value, ...)
 *** Function:	Parse_Float
 ***				Checks for correct float format / tries to correct
 *** Parameters: value ... pointer to value string
+***				len		... length of string
 ***				flags ... TYPE_GINFO => disallow '-' and '+' characters
 *** Returns:	-1/0/1/2 for corrected error / error / OK / corrected
 **************************************************************************/
 
-int Parse_Float(char *value, ...)
+int Parse_Float(char *value, size_t *len, ...)
 {
 	int ret = 1, where = 0;
 	/* where (bits): 0-minus / 1-int / 2-fraction / 3-'.' / 4-plus */
@@ -304,12 +358,12 @@ int Parse_Float(char *value, ...)
 	U_SHORT flags;
 	va_list arglist;
 
-	va_start(arglist, value);
+	va_start(arglist, len);
 	flags = va_arg(arglist, U_INT);
 	va_end(arglist);
 	allowed = (flags & TYPE_GINFO) ? "0123456789.," : "0123456789+-.,";
 
-	if(KillChars(value, C_NOTinSET, allowed))
+	if(KillChars(value, len, C_NOTinSET, allowed))
 		ret = -1;
 
 	s = d = value;
@@ -324,20 +378,18 @@ int Parse_Float(char *value, ...)
 								}
 						break;
 			case '-':	if(where)	ret = -1;
-						else
-						{
-							*d++ = *s;
-							where = 1;
-						}
+						else	{
+									*d++ = *s;
+									where = 1;
+								}
 						break;
 			case ',':	ret = -1;
 						*s = '.';
 			case '.':	if(where & 8)	ret = -1;
-						else
-						{
-							*d++ = *s;
-							where |= 8;
-						}
+						else	{
+										*d++ = *s;
+										where |= 8;
+								}
 						break;
 			default:	if(where & 8)	where |= 4;
 						else			where |= 2;
@@ -348,21 +400,23 @@ int Parse_Float(char *value, ...)
 	}
 
 	*d = 0;
+	*len = strlen(value);
 
-	if(!strlen(value) || !(where & 6))	/* empty || no digits? */
+	if(!*len || !(where & 6))	/* empty || no digits? */
 		ret = 0;
 	else
 	{
 		if((where & 8) && !(where & 2))		/* missing '0' in front of '.' */
 		{
 			ret = -1;
-			i = strlen(value);
+			i = *len;
 			d = value + i;
 			s = d - 1;
 
 			*(d+1) = 0;
 			for(; i; i--)
 				*d-- = *s--;
+			(*len)++;
 
 			if(where & 1)	*(value+1) = '0';	/* minus? */
 			else			*value = '0';
@@ -371,17 +425,19 @@ int Parse_Float(char *value, ...)
 		if((where & 8) && (where & 4))	/* check for unnecessary '0' */
 		{
 			int mod = 0;	/* if correction occurred */
-			d = value + strlen(value) - 1;
+			d = value + *len - 1;
 
 			while(*d == '0')
 			{
 				*d-- = 0;
+				(*len)--;
 				mod = 1;
 			}
 
 			if(*d == '.')
 			{
 				*d = 0;
+				(*len)--;
 				mod = 1;
 			}
 
@@ -392,11 +448,21 @@ int Parse_Float(char *value, ...)
 		if((where & 8) && !(where & 4))		/* '.' without digits following */
 		{
 			ret = -1;
-			*(value + strlen(value) - 1) = 0;
+			(*len)--;
+			*(value + *len) = 0;
 		}
 	}
 
 	return ret;
+}
+
+/* Wrapper for easier handling of calling Parse_Float() with an offset into the string */
+int Parse_Float_Offset(char *value, size_t *len, size_t offset)
+{
+	size_t len_offset = *len - offset;
+	int result = Parse_Float(&value[offset], &len_offset, TYPE_GINFO);
+	*len = len_offset + offset;
+	return result;
 }
 
 
@@ -404,14 +470,15 @@ int Parse_Float(char *value, ...)
 *** Function:	Parse_Color
 ***				Checks & corrects color value
 *** Parameters: value	... pointer to value string
+***				len		... length of string
 *** Returns:	-1/0/1	for corrected error / error / OK
 **************************************************************************/
 
-int Parse_Color(char *value, ...)
+int Parse_Color(char *value, size_t *len, ...)
 {
 	int ret = 1;
 
-	if(KillChars(value, C_NOTinSET, "BbWw"))
+	if(KillChars(value, len, C_NOTinSET, "BbWw"))
 		ret = -1;
 
 	switch(*value)
@@ -427,9 +494,10 @@ int Parse_Color(char *value, ...)
 		default:	return 0;		/* unknown char -> error */
 	}
 
-	if(strlen(value) != 1)			/* string too long? */
+	if(*len != 1)			/* string too long? */
 	{
 		*(value+1) = 0;
+		(*len) = 1;
 		ret = -1;
 	}
 
@@ -441,29 +509,32 @@ int Parse_Color(char *value, ...)
 *** Function:	Parse_Triple
 ***				Checks & corrects triple value
 *** Parameters: value	... pointer to value string
+***				len		... length of string
 *** Returns:	-1/0/1	for corrected error / error / OK
 **************************************************************************/
 
-int Parse_Triple(char *value, ...)
+int Parse_Triple(char *value, size_t *len, ...)
 {
 	int ret = 1;
 
-	if(KillChars(value, C_NOTinSET, "12"))
+	if(KillChars(value, len, C_NOTinSET, "12"))
 		ret = -1;
 
-	if(!strlen(value))
+	if(!*len)
 	{
 		*value = '1';
 		*(value+1) = 0;
+		*len = 1;
 		ret = -1;
 	}
 
 	if(*value != '1' && *value != '2')
 		return 0;
 
-	if(strlen(value) != 1)		/* string too long? */
+	if(*len != 1)		/* string too long? */
 	{
 		*(value+1) = 0;
+		*len = 1;
 		ret = -1;
 	}
 
@@ -482,13 +553,13 @@ int Parse_Triple(char *value, ...)
 *** Returns:	true for success / false if value has to be deleted
 **************************************************************************/
 
-static bool Check_Single_Value(struct SGFInfo *sgfc, struct Property *p,
-							   struct PropValue *v, char *value, U_SHORT flags,
-							   int (*Parse_Value)(char *, ...))
+static bool Check_Single_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
+							   char *value, size_t *value_len, U_SHORT flags,
+							   int (*Parse_Value)(char *, size_t *, ...))
 {
 	char *before = SaveDupString(value, 0, "prop value before checking");
 
-	switch((*Parse_Value)(value, flags, sgfc))
+	switch((*Parse_Value)(value, value_len, flags, sgfc))
 	{
 		case -101:	/* special case for Parse_Move */
 					PrintError(E_FF4_PASS_IN_OLD_FF, sgfc, v->row, v->col);
@@ -506,14 +577,14 @@ static bool Check_Single_Value(struct SGFInfo *sgfc, struct Property *p,
 }
 
 bool Check_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
-				 U_SHORT flags, int (*Parse_Value)(char *, ...))
+				 U_SHORT flags, int (*Parse_Value)(char *, size_t *, ...))
 {
-	if (!Check_Single_Value(sgfc, p, v, v->value, flags, Parse_Value))
+	if (!Check_Single_Value(sgfc, p, v, v->value, &v->value_len, flags, Parse_Value))
 		return false;
 
 	/* If there's a compose value, then parse the second value like the first one */
 	if (flags & (PVT_COMPOSE|PVT_WEAKCOMPOSE) && v->value2)
-		return Check_Single_Value(sgfc, p, v, v->value2, flags, Parse_Value);
+		return Check_Single_Value(sgfc, p, v, v->value2, &v->value2_len, flags, Parse_Value);
 
 	return true;
 }
@@ -532,10 +603,10 @@ bool Check_Text(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	int value_len, value2_len = 0;
 
-	value_len = Parse_Text(v->value, p->flags, sgfc);
+	value_len = Parse_Text(sgfc, v, 1, p->flags);
 	if (p->flags & (PVT_COMPOSE|PVT_WEAKCOMPOSE) && v->value2)
 	{
-		value2_len = Parse_Text(v->value2, p->flags, sgfc);
+		value2_len = Parse_Text(sgfc, v, 2, p->flags);
 	}
 
 	if(!value_len && !value2_len && (p->flags & PVT_DEL_EMPTY))
@@ -566,7 +637,7 @@ bool Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 		if(sgfc->info->FF < 4)
 			PrintError(E_VERSION_CONFLICT, sgfc, v->row, v->col, sgfc->info->FF);
 
-		switch(Parse_Move(v->value2, PARSE_POS, sgfc))
+		switch(Parse_Move(v->value2, &v->value2_len, PARSE_POS, sgfc))
 		{
 			case -1:	PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, p->idstr, v->value2);
 						break;
@@ -598,19 +669,19 @@ bool Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	bool result = false;
 	char *before;
 
-	SaveMalloc(char *, before, strlen(v->value)+strlen(v->value2)+2, "AR_LN value")
+	SaveMalloc(char *, before, v->value_len+v->value2_len+2, "AR_LN value")
 	sprintf(before, "%s:%s", v->value, v->value2);
 
-	switch(Parse_Move(v->value, PARSE_POS, sgfc))
+	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc))
 	{
 		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 					goto done;
 		case -1:	error = 1;
-		case 1:		switch(Parse_Text(v->value2, p->flags, sgfc))
+		case 1:		switch(Parse_Text(sgfc, v, 2, p->flags))
 					{
 						case 0:	PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 								goto done;
-						case 1:	if(strlen(v->value2) > 4 && sgfc->info->FF < 4)
+						case 1:	if(v->value2_len > 4 && sgfc->info->FF < 4)
 								{
 									error = 1;
 									*(v->value2+4) = 0;
@@ -645,15 +716,15 @@ bool Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	char *before;
 	bool result = false;
 
-	SaveMalloc(char *, before, strlen(v->value)+strlen(v->value2)+2, "AR_LN value")
+	SaveMalloc(char *, before, v->value_len+v->value2_len+2, "AR_LN value")
 	sprintf(before, "%s:%s", v->value, v->value2);
 
-	switch(Parse_Move(v->value, PARSE_POS, sgfc))
+	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc))
 	{
 		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 					goto done;
 		case -1:	error = 1;
-		case 1:		switch(Parse_Move(v->value2, PARSE_POS, sgfc))
+		case 1:		switch(Parse_Move(v->value2, &v->value2_len, PARSE_POS, sgfc))
 					{
 						case 0:	PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 								goto done;
@@ -692,9 +763,9 @@ bool Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	if(!v->value2)	/* no compose type */
 	{
-		if(strlen(v->value))
+		if(v->value_len)
 		{
-			if(!Parse_Text(v->value, PVT_SIMPLE|PVT_COMPOSE, sgfc))
+			if(!Parse_Text(sgfc, v, 1, PVT_SIMPLE|PVT_COMPOSE))
 				PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, "FG", "");
 			else
 			{
@@ -707,8 +778,8 @@ bool Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	}
 	else
 	{
-		Parse_Text(v->value2, PVT_SIMPLE|PVT_COMPOSE, sgfc);
-		switch(Parse_Number(v->value))
+		Parse_Text(sgfc, v, 2, PVT_SIMPLE|PVT_COMPOSE);
+		switch(Parse_Number(v->value, &v->value_len))
 		{
 			case 0:	strcpy(v->value, "0");
 			case -1:
@@ -737,7 +808,7 @@ static void Check_PropValues(struct SGFInfo *sgfc, struct Property *p)
 	v = p->value;
 	while(v)
 	{
-		if(!strlen(v->value) && !(p->flags & PVT_CHECK_EMPTY))
+		if(!v->value_len && !(p->flags & PVT_CHECK_EMPTY))
 		{
 			if(sgf_token[p->id].flags & PVT_DEL_EMPTY)
 			{

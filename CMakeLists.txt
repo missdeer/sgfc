@@ -9,6 +9,7 @@ include_directories(tests)
 set(src_files
         src/all.h
         src/protos.h
+        src/encoding.c
         src/execute.c
         src/gameinfo.c
         src/load.c
@@ -33,10 +34,11 @@ add_executable(sgfc-test
         tests/test-helper.c
         tests/check-value.c
         tests/delete-node.c
+        tests/encoding.c
         tests/load-properties.c
         tests/parse-text.c
         tests/position.c
         tests/test-files.c
-        tests/trigger-errors.c)
+        tests/trigger-errors.c tests/value-length.c)
 
 target_link_libraries(sgfc-test check rt pthread subunit m)
