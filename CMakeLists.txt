@@ -34,6 +34,7 @@ add_executable(sgfc-test
         tests/check-value.c
         tests/parse-text.c
         tests/position.c
+        tests/test-files.c
         tests/trigger-errors.c)
 
 target_link_libraries(sgfc-test check rt pthread subunit m)
