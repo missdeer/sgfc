@@ -138,12 +138,16 @@ static bool SkipSGFText(struct SGFInfo *sgfc, char brk, unsigned int mode)
 {
 	const char *pos = SkipText(sgfc, sgfc->current, sgfc->b_end,
 							   brk, mode, &sgfc->cur_row, &sgfc->cur_col);
+
+	sgfc->lowercase = 0;		/* we are no longer parsing for GetNextSGFChar -> reset */
+
 	/* Reached end of buffer? */
 	if (!pos)
 	{
-		sgfc->current = sgfc->b_end;	// row & col already updated by SkipText
+		sgfc->current = sgfc->b_end;	/* row & col already updated by SkipText */
 		return false;
 	}
+
 	sgfc->current = pos;
 	return true;
 }
@@ -164,7 +168,7 @@ static bool SkipSGFText(struct SGFInfo *sgfc, char brk, unsigned int mode)
 
 static bool GetNextSGFChar(struct SGFInfo *sgfc, bool print_error, U_LONG error)
 {
-	int lc = 0;
+	U_LONG lc = 0;
 
 	while(!SGF_EOF)
 	{
@@ -176,15 +180,14 @@ static bool GetNextSGFChar(struct SGFInfo *sgfc, bool print_error, U_LONG error)
 			case '[':	if(print_error && lc)
 							PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, sgfc->cur_row, sgfc->cur_col-lc,
 				  				       true, sgfc->current-lc, lc);
+						sgfc->lowercase = 0;
 						return true;
 
 			default:	if(isupper(*sgfc->current))
 						{
-							sgfc->current -= lc;	/* set back to start of text */
-							sgfc->cur_col -= lc;
+							sgfc->lowercase += lc;
 							return true;
 						}
-
 						if(islower(*sgfc->current))
 							lc++;
 						else		/* !islower && !isupper */
@@ -199,6 +202,7 @@ static bool GetNextSGFChar(struct SGFInfo *sgfc, bool print_error, U_LONG error)
 											   true, sgfc->current);
 							}
 							lc = 0;
+							sgfc->lowercase = 0;
 						}
 						NextChar(sgfc);
 						break;
@@ -207,6 +211,7 @@ static bool GetNextSGFChar(struct SGFInfo *sgfc, bool print_error, U_LONG error)
 
 	if(error != E_NO_ERROR)
 		PrintError(error, sgfc, sgfc->cur_row, sgfc->cur_col);
+	sgfc->lowercase = 0;
 	return false;
 }
 
@@ -503,6 +508,14 @@ static bool MakeProperties(struct SGFInfo *sgfc, struct Node *n)
 				pi = 0;		/* counter for propid */
 				pi_lc = 0;	/* counter for lowercase propid */
 
+				if(sgfc->lowercase)
+				{
+					U_LONG lc = sgfc->lowercase >= 200 ? 199 : sgfc->lowercase;
+					strncpy(full_propid, sgfc->current - sgfc->lowercase, lc);
+					pi_lc = lc;
+					id_col -= sgfc->lowercase;
+				}
+
 				while(!SGF_EOF)
 				{
 					if(islower(*sgfc->current))
@@ -722,7 +735,8 @@ static bool BuildSGFTree(struct SGFInfo *sgfc, struct Node *r, bool missing_semi
 			default:	if(empty)		/* assume there's a missing ';' */
 						{
 							if(!missing_semicolon)
-								PrintError(E_MISSING_NODE_START, sgfc, sgfc->cur_row, sgfc->cur_col);
+								PrintError(E_MISSING_NODE_START, sgfc,
+				   						   sgfc->cur_row, sgfc->cur_col - sgfc->lowercase);
 							empty = 0;
 							r = NewNode(sgfc, r, false);
 							if(!r)
@@ -730,8 +744,9 @@ static bool BuildSGFTree(struct SGFInfo *sgfc, struct Node *r, bool missing_semi
 						}
 						else
 						{
-							PrintError(E_ILLEGAL_OUTSIDE_CHAR, sgfc, sgfc->cur_row, sgfc->cur_col,
-									   true, sgfc->current);
+							PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc,
+				  					   sgfc->cur_row, sgfc->cur_col - sgfc->lowercase,
+									   true, sgfc->current, sgfc->lowercase+1);
 							NextChar(sgfc);
 						}
 						break;
@@ -771,7 +786,7 @@ static int FindStart(struct SGFInfo *sgfc, bool first_time)
 				}
 
 				if(!first_time)
-					PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, sgfc->cur_row, sgfc->cur_col, true, sgfc->current, 4);
+					PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, sgfc->cur_row, sgfc->cur_col, true, sgfc->current, 4UL);
 
 				sgfc->current += 4;	/* skip '[aa]' */
 				continue;

@@ -267,7 +267,7 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 			}
 
 			illegal = va_arg(arglist, char *);
-			if(type & E_MULTIPLE)	illegal_count = va_arg(arglist, int);
+			if(type & E_MULTIPLE)	illegal_count = va_arg(arglist, U_LONG);
 			else					illegal_count = 1;
 
 			/* illegal_count might overflow or even be much larger than ACCUMULATE_SIZE */
