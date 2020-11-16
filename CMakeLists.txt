@@ -32,6 +32,7 @@ add_executable(sgfc-test
         tests/test-common.h
         tests/test-helper.c
         tests/check-value.c
+        tests/delete-node.c
         tests/load-properties.c
         tests/parse-text.c
         tests/position.c

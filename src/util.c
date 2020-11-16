@@ -766,27 +766,28 @@ struct Property *DelProperty(struct Node *n, struct Property *p)
 
 /**************************************************************************
 *** Function:	DelNode
-***				Deletes empty node if
+***				Deletes empty node *only if*
 ***				- node has no siblings
 ***				- has siblings (or is root) but has max. one child
 *** Parameters: sgfc  ... pointer to SGFInfo
 ***				n	  ... node that should be deleted
 ***				error ... error code to report (while deleting) or E_NO_ERROR
-*** Returns:	n->next
+*** Returns:	-
 **************************************************************************/
 
-struct Node *DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error)
+void DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error)
 {
 	struct Node *p, *h;
 	struct Property *i;
 
 	p = n->parent;
 
+	/* parent and siblings || root? */
 	if((p && (n->sibling || (p->child != n))) || !p)
 	{
-		if(n->child)
-			if(n->child->sibling)
-				return n->next;
+		/* if child has siblings, deleting would change tree structure */
+		if(n->child && n->child->sibling)
+			return;
 	}
 
 	if(error != E_NO_ERROR)
@@ -809,17 +810,40 @@ struct Node *DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error)
 
 		if(sgfc->root == n)			/* n is first root */
 		{
-			if(n->child) sgfc->root = n->child;
-			else sgfc->root = n->sibling;
+			if(n->child)
+			{
+				sgfc->root = n->child;
+				sgfc->tree->root = n->child;
+				n->child->sibling = n->sibling;
+			}
+			else					/* delete whole gametree */
+			{
+				struct TreeInfo *ti = sgfc->tree;
+				sgfc->root = n->sibling;
+				Delete(&sgfc->tree, ti);
+				if(sgfc->info == ti)
+					sgfc->info = NULL;
+				free(ti);
+			}
 		}
 		else
 		{							/* n is subsequent root */
-			h = sgfc->root;
-			while(h->sibling != n)
-				h = h->sibling;
-
-			if(n->child)	h->sibling = n->child;
-			else			h->sibling = n->sibling;
+			struct TreeInfo *tiprev = sgfc->tree;
+			struct TreeInfo *ti;
+			while(tiprev->root->sibling != n)
+				tiprev = tiprev->next;
+			ti = tiprev->next;
+			ti->root = n->child;
+			if(n->child)
+				tiprev->root->sibling = n->child;
+			else					/* delete whole gametree */
+			{
+				tiprev->root->sibling = n->sibling;
+				Delete(&sgfc->tree, ti);
+				if(sgfc->info == ti)
+					sgfc->info = NULL;
+				free(ti);
+			}
 		}
 	}
 	else							/* n is root of subtree */
@@ -859,11 +883,8 @@ struct Node *DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error)
 		}
 	}
 
-	h = n->next;
 	Delete(&sgfc->first, n);
 	free(n);
-
-	return h;
 }
 
 

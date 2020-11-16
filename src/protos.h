@@ -75,6 +75,7 @@ bool ExpandPointList(struct SGFInfo *, struct Property *, struct PropValue *, bo
 void CompressPointList(struct SGFInfo *, struct Property *);
 
 void SplitNode(struct SGFInfo *, struct Node *, U_SHORT, token, bool);
+void InitAllTreeInfo(struct SGFInfo *);
 void ParseSGF(struct SGFInfo *);
 
 
@@ -129,7 +130,7 @@ struct Property *FindProperty(struct Node *, token);
 struct Property *NewPropValue(struct SGFInfo *, struct Node *, token, const char *, const char *, bool);
 struct PropValue *DelPropValue(struct Property *, struct PropValue *);
 struct Property *DelProperty(struct Node *, struct Property *);
-struct Node *DelNode(struct SGFInfo *, struct Node *, U_LONG);
+void DelNode(struct SGFInfo *, struct Node *, U_LONG);
 
 bool CalcGameSig(struct TreeInfo *, char *);
 

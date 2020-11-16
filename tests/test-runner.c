@@ -16,6 +16,7 @@ TCase *sgfc_tc_trigger_errors(void);
 TCase *sgfc_tc_position(void);
 TCase *sgfc_tc_test_files(void);
 TCase *sgfc_tc_load_properties(void);
+TCase *sgfc_tc_delete_node(void);
 
 
 Suite *sgfc_suite(void)
@@ -27,6 +28,7 @@ Suite *sgfc_suite(void)
 	suite_add_tcase(s, sgfc_tc_position());
 	suite_add_tcase(s, sgfc_tc_test_files());
 	suite_add_tcase(s, sgfc_tc_load_properties());
+	suite_add_tcase(s, sgfc_tc_delete_node());
 	return s;
 }
 

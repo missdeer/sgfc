@@ -7,6 +7,7 @@
 
 # System environment
 CC = gcc
+#CC = /home/arno/development/sgfc/afl-2.52b/afl-gcc
 
 OPTIONS = -pedantic -W -Wimplicit -Wreturn-type -Wswitch -Wformat\
 	  -Wuninitialized -Wparentheses -Wpointer-arith -Wbad-function-cast\

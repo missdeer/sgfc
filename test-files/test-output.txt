@@ -16,6 +16,13 @@ Line:54 Col:2 - Error 54 (critical): values without property id found (deleted)
 Line:66 Col:20 - Error 66 (critical): node outside variation found. Missing '(' assumed.
 Line:67 Col:21 - Error 67 (critical): illegal chars after variation start '(' found. Missing ';' assumed.
 Line:69 Col:33 - Error 10 (critical): unexpected end of file
+Line:18 Col:10 - Error 18: illegal root property <GM> found (assuming GM[1])
+Line:18 Col:24 - Error 18: illegal root property <SZ> found (assuming 19x19)
+Line:19 Col:3 - Warning 19 (critical): game stored in tree 3 is not Go. Cannot check move & position type -> errors will not get corrected!
+Line:47 Col:1 - Error 47: square board size in rectangular definition (corrected)
+Line:50 Col:8 - Error 50: board size too big (corrected to 52x52)
+Line:50 Col:23 - Error 50: board size too big (corrected to 10x52)
+Line:51 Col:8 - Error 51 (critical): used feature is not defined in FF[1] (parsing done anyway)
 Line:14 Col:3 - Error 14: illegal <WL> value deleted: [not much time left]
 Line:14 Col:25 - Error 14: illegal <B> value deleted: [90]
 Line:15 Col:3 - Error 15: illegal <B> value corrected; new value: [cc], old value: [c   c]
@@ -32,10 +39,6 @@ Line:16 Col:2 - Error 16: lowercase char not allowed in property identifier
 Line:17 Col:4 - Error 17: empty <AW> value not allowed (deleted)
 Line:17 Col:9 - Warning 17: empty <C> value found (deleted)
 Line:17 Col:16 - Warning 17: empty <N> value found (deleted)
-Line:18 Col:10 - Error 18: illegal root property <GM> found (assuming GM[1])
-Line:18 Col:24 - Error 18: illegal root property <SZ> found (assuming 19x19)
-Line:19 Col:3 - Warning 19 (critical): game stored in tree 3 is not Go. Cannot check move & position type -> errors will not get corrected!
-Line:19 Col:3 - Warning 53: different game types stored in one file (may cause troubles with some applications)
 Line:25 Col:3 - Error 25: illegal <AR> value corrected; new value: [aa:cr], old value: [a a: c r]
 Line:25 Col:16 - Error 25: illegal <LB> value corrected; new value: [ff:text], old value: [f f:text]
 Line:28 Col:11 - Error 28: property <C> already exists (values merged)
@@ -59,15 +62,12 @@ Line:42 Col:11 - Error 42: combination of <BM-TE> found (converted to <DO>)
 Line:42 Col:27 - Error 42: combination of <TE-BM> found (converted to <IT>)
 Line:43 Col:2 - Error 43: move annotation <TE> without a move in node (deleted)
 Line:44 Col:22 - Error 44: game info entry <GC> outside game-info node (line:44 col:2) (deleted)
-Line:45 Col:3 - Warning 45: different file formats stored in one file (may cause troubles with some applications)
-Line:47 Col:1 - Error 47: square board size in rectangular definition (corrected)
-Line:50 Col:8 - Error 50: board size too big (corrected to 52x52)
-Line:50 Col:23 - Error 50: board size too big (corrected to 10x52)
-Line:51 Col:8 - Error 51 (critical): used feature is not defined in FF[1] (parsing done anyway)
 Line:52 Col:2 - Error 52: <VW> property: values after '[]' value found (deleted)
 Line:52 Col:11 - Error 52: <VW> property: FF[4] definition in older FF found (parsing done anyway)
 Line:58 Col:9 - Warning 58: forbidden move found (played on a point occupied by another stone)
 Line:59 Col:3 - Warning 59: obsolete <KI> property found: converted to <KM>
 Line:65 Col:15 - Error 65: FF4 style pass value '[]' in older format found (corrected)
 Line:65 Col:27 - Error 65: FF4 style pass value '[]' in older format found (corrected)
+Line:19 Col:3 - Warning 53: different game types stored in one file (may cause troubles with some applications)
+Line:45 Col:3 - Warning 45: different file formats stored in one file (may cause troubles with some applications)
 test-files/test.sgf: 54 error(s)  18 warning(s)  (critical:13)  

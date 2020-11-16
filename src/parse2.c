@@ -409,16 +409,16 @@ static void ReorderVariations(struct SGFInfo *sgfc, struct Node *r)
 *** Returns:	-
 **************************************************************************/
 
-static void DelEmptyNodes(struct SGFInfo *sgf, struct Node *n)
+static void DelEmptyNodes(struct SGFInfo *sgfc, struct Node *n)
 {
 	if(n->child)
-		DelEmptyNodes(sgf, n->child);
+		DelEmptyNodes(sgfc, n->child);
 
 	if(n->sibling)
-		DelEmptyNodes(sgf, n->sibling);
+		DelEmptyNodes(sgfc, n->sibling);
 
 	if(!n->prop)
-		DelNode(sgf, n, W_EMPTY_NODE_DELETED);
+		DelNode(sgfc, n, W_EMPTY_NODE_DELETED);
 }
 
 
@@ -589,7 +589,7 @@ static void CheckDoubleProp(struct SGFInfo *sgfc, struct Node *n)
 *** Returns:	true ... success / false ... erroneous property deleted
 **************************************************************************/
 
-static int GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
+static bool GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 					 int value, int *d, int def, char *err_action)
 {
 	char *v;
@@ -607,7 +607,7 @@ static int GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 	{
 		case 0: PrintError(E_BAD_ROOT_PROP, sgfc, p->value->row, p->value->col, p->idstr, err_action);
 				*d = def;
-			DelProperty(n, p);
+				DelProperty(n, p);
 				return false;
 
 		case -1: PrintError(E_BAD_VALUE_CORRECTED, sgfc, p->value->row, p->value->col,
@@ -629,19 +629,16 @@ static int GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 
 /**************************************************************************
 *** Function:	InitTreeInfo
-***				Creates new TreeInfo structure, inits it
-***				and set sgfc->info to the new structure
+***				Inits new TreeInfo structure base on root node "r"
 *** Parameters: sgfc ... pointer to SGFInfo structure
+***				ti	 ... pointer to tree info to initialize
 ***				r	 ... pointer to root node
 *** Returns:	-
 **************************************************************************/
 
-static void InitTreeInfo(struct SGFInfo *sgfc, struct Node *r)
+static void InitTreeInfo(struct SGFInfo *sgfc, struct TreeInfo *ti, struct Node *r)
 {
-	struct TreeInfo *ti;
 	struct Property *ff, *gm, *sz;
-
-	SaveMalloc(struct TreeInfo *, ti, sizeof(struct TreeInfo), "tree info structure")
 
 	ti->FF = 0;						/* Init structure */
 	ti->GM = 0;
@@ -652,10 +649,6 @@ static void InitTreeInfo(struct SGFInfo *sgfc, struct Node *r)
 	else
 		ti->num = 1;
 
-	AddTail(&sgfc->tree, ti);		/* add to SGFInfo */
-
-	sgfc->info = ti;				/* set as current tree info */
-
 	ff = FindProperty(r, TKN_FF);
 	if(!GetNumber(sgfc, r, ff, 1, &ti->FF, 1, "FF[1]"))
 		ff = NULL;
@@ -664,91 +657,116 @@ static void InitTreeInfo(struct SGFInfo *sgfc, struct Node *r)
 		PrintError(E_UNKNOWN_FILE_FORMAT, sgfc, ff->value->row, ff->value->col, ti->FF);
 
 	gm = FindProperty(r, TKN_GM);
-	if(!GetNumber(sgfc, r, gm, 1, &ti->GM, 1, "GM[1]"))
-		gm = NULL;
-
-	if(ti->GM == 1)		/* board size only of interest if Game == Go */
+	GetNumber(sgfc, r, gm, 1, &ti->GM, 1, "GM[1]");
+	if(ti->GM != 1)
 	{
-		sz = FindProperty(r, TKN_SZ);
-		if(sz)
-		{
-			if(GetNumber(sgfc, r, sz, 1, &ti->bwidth, 19, "19x19"))
-			{
-				if(ti->FF < 4 && (ti->bwidth > 19 || sz->value->value2))
-					PrintError(E_VERSION_CONFLICT, sgfc, sz->row, sz->col, ti->FF);
-
-				if(sz->value->value2)	/* rectangular board? */
-				{
-					if(!GetNumber(sgfc, r, sz, 2, &ti->bheight, 19, "19x19"))
-						ti->bwidth = 19;
-					else
-					{
-						if(ti->bwidth == ti->bheight)
-						{
-							PrintError(E_SQUARE_AS_RECTANGULAR, sgfc, sz->row, sz->col);
-							free(sz->value->value2);
-							sz->value->value2 = NULL;
-						}
-					}
-				}
-				else			/* square board */
-					ti->bheight = ti->bwidth;
-
-				if(ti->bheight > 52 || ti->bwidth > 52)	/* board too big? */
-				{
-					if(ti->bwidth > 52)
-					{
-						ti->bwidth = 52;
-						strcpy(sz->value->value, "52");
-					}
-
-					if(ti->bheight > 52)
-					{
-						ti->bheight = 52;
-						if(sz->value->value2)
-							strcpy(sz->value->value2, "52");
-					}
-
-					if(ti->bwidth == ti->bheight && sz->value->value2)
-					{
-						free(sz->value->value2);
-						sz->value->value2 = NULL;
-					}
-
-					PrintError(E_BOARD_TOO_BIG, sgfc, sz->row, sz->col, ti->bwidth, ti->bheight);
-				}
-			}
-			else			/* faulty SZ deleted */
-				ti->bheight = 19;
-		}
-		else
-			ti->bwidth = ti->bheight = 19;	/* default size */
-	}
-	else
 		PrintError(WCS_GAME_NOT_GO, sgfc, gm->row, gm->col, ti->num);
+		return;		/* board size only of interest if Game == Go */
+	}
 
-	if(ti->prev)
+	sz = FindProperty(r, TKN_SZ);
+	if(!sz)
 	{
-		U_LONG row, col;
+		ti->bwidth = ti->bheight = 19;	/* default size */
+		return;
+	}
+
+	if(!GetNumber(sgfc, r, sz, 1, &ti->bwidth, 19, "19x19"))
+	{
+		/* faulty SZ deleted, ti->bwidth set by GetNumber to default 19 */
+		ti->bheight = 19;
+		return;
+	}
+
+	if(ti->FF < 4 && (ti->bwidth > 19 || sz->value->value2))
+		PrintError(E_VERSION_CONFLICT, sgfc, sz->row, sz->col, ti->FF);
+
+	if(sz->value->value2)	/* rectangular board? */
+	{
+		if(!GetNumber(sgfc, r, sz, 2, &ti->bheight, 19, "19x19"))
+			ti->bwidth = 19;
+		else
+		{
+			if(ti->bwidth == ti->bheight)
+			{
+				PrintError(E_SQUARE_AS_RECTANGULAR, sgfc, sz->row, sz->col);
+				free(sz->value->value2);
+				sz->value->value2 = NULL;
+			}
+		}
+	}
+	else			/* square board */
+		ti->bheight = ti->bwidth;
+
+	if(ti->bheight > 52 || ti->bwidth > 52)	/* board too big? */
+	{
+		if(ti->bwidth > 52)
+		{
+			ti->bwidth = 52;
+			strcpy(sz->value->value, "52");
+		}
+
+		if(ti->bheight > 52)
+		{
+			ti->bheight = 52;
+			if(sz->value->value2)
+				strcpy(sz->value->value2, "52");
+		}
+
+		if(ti->bwidth == ti->bheight && sz->value->value2)
+		{
+			free(sz->value->value2);
+			sz->value->value2 = NULL;
+		}
+
+		PrintError(E_BOARD_TOO_BIG, sgfc, sz->row, sz->col, ti->bwidth, ti->bheight);
+	}
+}
+
+void InitAllTreeInfo(struct SGFInfo *sgfc)
+{
+	struct Node *root = sgfc->first;
+	struct TreeInfo *ti;
+
+	for(; root; root = root->sibling)
+	{
+		SaveMalloc(struct TreeInfo *, ti, sizeof(struct TreeInfo), "tree info structure")
+		InitTreeInfo(sgfc, ti, root);
+		AddTail(&sgfc->tree, ti);		/* add to SGFInfo */
+	}
+}
+
+void CheckDifferingFFAndGM(struct SGFInfo *sgfc)
+{
+	struct TreeInfo *ti = sgfc->tree->next;
+	struct Property *gm, *ff;
+	int gm_val, ff_val;
+	U_LONG row, col;
+
+	for(; ti; ti = ti->next)
+	{
+		ff = FindProperty(ti->root, TKN_FF);
+		GetNumber(sgfc, ti->root, ff, 1, &ff_val, 1, "FF[1]");
+		gm = FindProperty(ti->root, TKN_GM);
+		GetNumber(sgfc, ti->root, gm, 1, &gm_val, 1, "FF[1]");
 
 		if(ti->prev->FF != ti->FF)
 		{
-			if(ff)	{ row = ff->row;	col = ff->col; }
-			else	{ row = r->row;		col = r->col; }
+			if(ff)	{ row = ff->row;		col = ff->col; }
+			else	{ row = ti->root->row;	col = ti->root->col; }
 
 			PrintError(WS_FF_DIFFERS, sgfc, row, col);
 		}
 
 		if(ti->prev->GM != ti->GM)
 		{
-			if(gm)	{ row = gm->row;	col = gm->col; }
-			else	{ row = r->row;		col = r->col; }
+			if(gm)	{ row = gm->row;		col = gm->col; }
+			else	{ row = ti->root->row;	col = ti->root->col; }
 
 			PrintError(WS_GM_DIFFERS, sgfc, row, col);
 		}
 	}
 }
-
 
 /**************************************************************************
 *** Function:	CheckSGFTree
@@ -760,7 +778,7 @@ static void InitTreeInfo(struct SGFInfo *sgfc, struct Node *r)
 *** Returns:	-
 **************************************************************************/
 
-static void CheckSGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatus *old)
+static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatus *old)
 {
 	struct Node *n;
 	struct BoardStatus *st;
@@ -770,39 +788,16 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatu
 
 	while(r)
 	{
-		if(old)
+		memcpy(st, old, sizeof(struct BoardStatus));
+		area = old->bwidth * old->bheight;
+		if(st->board)
 		{
-			memcpy(st, old, sizeof(struct BoardStatus));
-			area = old->bwidth * old->bheight;
-
-			if(st->board)
-			{
-				SaveMalloc(unsigned char *, st->board, area * sizeof(char), "goban buffer")
-				memcpy(st->board, old->board, area * sizeof(char));
-			}
-
-			/* markup is reused (set to 0 for each new node) */
-			st->markup_changed = true;
-
-			/* path_board is reused (paths marked with different path_num) */
+			SaveMalloc(unsigned char *, st->board, area * sizeof(char), "goban buffer")
+			memcpy(st->board, old->board, area * sizeof(char));
 		}
-		else
-		{
-			InitTreeInfo(sgfc, r);		/* set TreeInfo */
-			memset(st, 0, sizeof(struct BoardStatus));
-			st->bwidth = sgfc->info->bwidth;
-			st->bheight = sgfc->info->bheight;
-			area = st->bwidth * st->bheight;
-			if(area)
-			{
-				SaveMalloc(unsigned char *, st->board, area * sizeof(char), "goban buffer")
-				memset(st->board, 0, area * sizeof(char));
-				SaveMalloc(U_SHORT *, st->markup, area * sizeof(U_SHORT), "markup buffer")
-				SaveMalloc(struct PathBoard *, st->paths, sizeof(struct PathBoard), "path_board buffer")
-				memset(st->paths, 0, sizeof(struct PathBoard));
-			}
-			st->markup_changed = true;
-		}
+		/* path_board is reused (paths marked with different path_num) */
+		/* markup is reused (set to 0 for each new node) */
+		st->markup_changed = true;
 
 		n = r;
 		while(n)
@@ -814,7 +809,7 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatu
 
 			if(n->sibling && n != r)		/* for n=r loop is done outside */
 			{
-				CheckSGFTree(sgfc, n, st);
+				CheckSGFSubTree(sgfc, n, st);
 				break;						/* did complete subtree -> break */
 			}
 
@@ -827,14 +822,48 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatu
 			n = n->child;
 		}
 
-		r = r->sibling;
 		if(st->board)
 			free(st->board);
-		if(!old)
+		if(!r->parent)
+			break;
+		r = r->sibling;
+	}
+
+	free(st);
+}
+
+static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
+{
+	struct Node *n;
+	struct BoardStatus *st;
+	int area;
+
+	SaveMalloc(struct BoardStatus *, st, sizeof(struct BoardStatus), "board status buffer")
+
+	while(ti)
+	{
+		sgfc->info = ti;
+		memset(st, 0, sizeof(struct BoardStatus));
+		st->bwidth = sgfc->info->bwidth;
+		st->bheight = sgfc->info->bheight;
+		area = st->bwidth * st->bheight;
+		if(area)
 		{
-			if(st->markup)	free(st->markup);
-			if(st->paths)	free(st->paths);
+			SaveMalloc(unsigned char *, st->board, area * sizeof(char), "goban buffer")
+			memset(st->board, 0, area * sizeof(char));
+			SaveMalloc(U_SHORT *, st->markup, area * sizeof(U_SHORT), "markup buffer")
+			SaveMalloc(struct PathBoard *, st->paths, sizeof(struct PathBoard), "path_board buffer")
+			memset(st->paths, 0, sizeof(struct PathBoard));
 		}
+		st->markup_changed = true;
+
+		CheckSGFSubTree(sgfc, ti->root, st);
+
+		ti = ti->next;
+
+		if(st->board)	free(st->board);
+		if(st->markup)	free(st->markup);
+		if(st->paths)	free(st->paths);
 	}
 
 	free(st);
@@ -850,7 +879,10 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatu
 
 void ParseSGF(struct SGFInfo *sgfc)
 {
-	CheckSGFTree(sgfc, sgfc->root, NULL);
+	InitAllTreeInfo(sgfc);
+
+	CheckSGFTree(sgfc, sgfc->tree);
+	CheckDifferingFFAndGM(sgfc);
 
 	if(sgfc->options->fix_variation)
 		CorrectVariations(sgfc, sgfc->root, sgfc->tree);
