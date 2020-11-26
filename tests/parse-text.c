@@ -11,7 +11,7 @@
 
 struct PropValue *prop_value;
 
-void parse_text_setup()
+void parse_text_setup(void)
 {
 	common_setup();
 	SaveMalloc(struct PropValue *, prop_value, sizeof(struct PropValue), "propval")
@@ -20,7 +20,7 @@ void parse_text_setup()
 	prop_value->col = 1;
 }
 
-void parse_text_teardown()
+void parse_text_teardown(void)
 {
 	common_teardown();
 	free(prop_value);

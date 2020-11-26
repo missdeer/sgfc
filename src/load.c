@@ -40,7 +40,7 @@
 *** Returns:	current position; row & col are updated accordingly
 **************************************************************************/
 
-const char *NextCharInBuffer(const char **c, const char *end, U_LONG step, U_LONG *row, U_LONG *col)
+static const char *NextCharInBuffer(const char **c, const char *end, U_LONG step, U_LONG *row, U_LONG *col)
 {
 	for(; step > 0 && *c < end; step--)
 	{
@@ -71,7 +71,7 @@ const char *NextCharInBuffer(const char **c, const char *end, U_LONG step, U_LON
 *** Returns:	current position; row & col are updated accordingly
 **************************************************************************/
 
-const char *NextChar(struct SGFInfo *sgfc)
+static const char *NextChar(struct SGFInfo *sgfc)
 {
 	return NextCharInBuffer(&sgfc->current, sgfc->b_end, 1, &sgfc->cur_row, &sgfc->cur_col);
 }
@@ -248,64 +248,6 @@ static bool SkipValues(struct SGFInfo *sgfc, bool print_error)
 
 
 /**************************************************************************
-*** Function:	AddPropValue
-***				Adds a value to the property (inits structure etc.)
-*** Parameters: sgfc	... pointer to SGFInfo structure
-***				p		... pointer to property
-***				row		... row number associated with property value (or 0)
-***				col		... column associated with property value (or 0)
-***				value	... pointer to first value
-***				size	... length of first value (excluding any 0 bytes)
-***				value2	... pointer to second value (or NULL)
-***				size2	... length of second value (excluding any 0 bytes)
-*** Returns:	pointer to PropValue structure
-***				(exits on fatal error)
-**************************************************************************/
-
-struct PropValue *AddPropValue(struct SGFInfo *sgfc,
-							   struct Property *p, U_LONG row, U_LONG col,
-							   const char *value, size_t size,
-							   const char *value2, size_t size2)
-{
-	struct PropValue *newv;
-
-	SaveMalloc(struct PropValue *, newv, sizeof(struct PropValue), "property value structure")
-	newv->row = row;
-	newv->col = col;
-
-	if(value)
-	{
-		/* +2 because Parse_Float may add 1 char and for trailing '\0' byte */
-		SaveMalloc(char *, newv->value, size+2, "property value buffer")
-		memcpy(newv->value, value, size);
-		*(newv->value + size) = 0;
-		newv->value_len = size;
-	}
-	else
-	{
-		newv->value = NULL;
-		newv->value_len = 0;
-	}
-
-	if(value2)
-	{
-		SaveMalloc(char *, newv->value2, size2+2, "property value2 buffer")
-		memcpy(newv->value2, value2, size2);
-		*(newv->value2 + size2) = 0;
-		newv->value2_len = size2;
-	}
-	else
-	{
-		newv->value2 = NULL;
-		newv->value2_len = 0;
-	}
-
-	AddTail(&p->value, newv);				/* add value to property */
-	return newv;
-}
-
-
-/**************************************************************************
 *** Function:	NewValue
 ***				Adds one property value to the given property
 *** Parameters: sgfc	... pointer to SGFInfo structure
@@ -349,40 +291,6 @@ static bool NewValue(struct SGFInfo *sgfc, struct Property *p, U_SHORT flags)
 		AddPropValue(sgfc, p, row, col, s, sgfc->current - s - 1, NULL, 0);
 
 	return true;
-}
-
-
-/**************************************************************************
-*** Function:	AddProperty
-***				Creates new property structure and adds it to the node
-*** Parameters: sgfc	... pointer to SGFInfo structure
-***				n		... node to which property belongs to
-***				id		... tokenized ID of property
-***				id_buf	... pointer to property ID string
-***				idstr	... ID string
-*** Returns:	pointer to new Property structure
-***				(exits on fatal error)
-**************************************************************************/
-
-struct Property *AddProperty(struct Node *n, token id, U_LONG row, U_LONG col, const char *id_str)
-{
-	struct Property *newp;
-	char *str;
-
-	SaveMalloc(struct Property *, newp, sizeof(struct Property), "property structure")
-	/* init property structure */
-	newp->id = id;
-	newp->idstr = SaveDupString(id_str, 0, "ID string");
-	newp->priority = sgf_token[id].priority;
-	newp->flags = sgf_token[id].flags;		/* local copy */
-	newp->row = row;
-	newp->col = col;
-	newp->value = NULL;
-	newp->valend = NULL;
-
-	if(n)
-		Enqueue(&n->prop, newp);				/* add to node (sorted!) */
-	return newp;
 }
 
 
@@ -586,77 +494,21 @@ static bool MakeProperties(struct SGFInfo *sgfc, struct Node *n)
 
 
 /**************************************************************************
-*** Function:	NewNode
-***				Inserts a new node into the current SGF tree
-*** Parameters: sgfc	  ... pointer to SGFInfo structure
-***				parent	  ... parent node
-***				new_child ... create a new child for parent node
-***							  (insert an empty node into the tree)
-*** Returns:	pointer to node or NULL (success / error)
-***				(exits on fatal error)
+*** Function:	NewNodeWithProperties
+***				Small helper function for creating node and parsing properties
+*** Parameters: sgfc 	... pointer to SGFInfo structure
+***				parent	... parent node
+*** Returns:	pointer to Node or NULL
 **************************************************************************/
 
-struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, bool new_child)
+static struct Node *NewNodeWithProperties(struct SGFInfo *sgfc, struct Node *parent)
 {
-	struct Node *newn, *hlp;
+	struct Node *n = NewNode(sgfc, parent, false);
 
-	SaveMalloc(struct Node *, newn, sizeof(struct Node), "node structure")
+	if(!MakeProperties(sgfc, n))
+		return NULL;
 
-	newn->parent	= parent;		/* init node structure */
-	newn->child		= NULL;
-	newn->sibling	= NULL;
-	newn->prop		= NULL;
-	newn->last		= NULL;
-	newn->row		= sgfc->cur_row;
-	newn->col		= sgfc->cur_col;
-
-	AddTail(sgfc, newn);
-
-	if(parent)						/* no parent -> root node */
-	{
-		if(new_child)				/* insert node as new child of parent */
-		{
-			newn->child = parent->child;
-			parent->child = newn;
-
-			hlp = newn->child;		/* set new parent of children */
-			while(hlp)
-			{
-				hlp->parent = newn;
-				hlp = hlp->sibling;
-			}
-		}
-		else
-		{
-			if(!parent->child)			/* parent has no child? */
-				parent->child = newn;
-			else						/* parent has a child already */
-			{							/* -> insert as sibling */
-				hlp = parent->child;
-				while(hlp->sibling)
-					hlp = hlp->sibling;
-				hlp->sibling = newn;
-			}
-		}
-	}
-	else							/* new root node */
-	{
-		if(!sgfc->root)				/* first root? */
-			sgfc->root = newn;
-		else
-		{
-			hlp = sgfc->root;		/* root sibling */
-			while(hlp->sibling)
-				hlp = hlp->sibling;
-			hlp->sibling = newn;
-		}
-	}
-
-	if(!new_child)
-		if(!MakeProperties(sgfc, newn))
-			return NULL;
-
-	return newn;
+	return n;
 }
 
 
@@ -688,7 +540,7 @@ static bool BuildSGFTree(struct SGFInfo *sgfc, struct Node *r, bool missing_semi
 						{
 							empty = 0;
 							NextChar(sgfc);
-							r = NewNode(sgfc, r, false);
+							r = NewNodeWithProperties(sgfc, r);
 							if(!r)
 								return false;
 						}
@@ -718,7 +570,7 @@ static bool BuildSGFTree(struct SGFInfo *sgfc, struct Node *r, bool missing_semi
 								PrintError(E_MISSING_NODE_START, sgfc,
 				   						   sgfc->cur_row, sgfc->cur_col - sgfc->lowercase);
 							empty = 0;
-							r = NewNode(sgfc, r, false);
+							r = NewNodeWithProperties(sgfc, r);
 							if(!r)
 								return false;
 						}

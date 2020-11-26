@@ -20,7 +20,7 @@ CFLAGS = $(OPTIMIZATION) $(OPTIONS)
 
 LIB = -lm
 OBJ = execute.o gameinfo.o load.o main.o parse.o parse2.o options.o\
-	properties.o save.o strict.o util.o encoding.o
+	properties.o save.o strict.o util.o error.o encoding.o
 
 sgfc: $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $@ $(LIB)

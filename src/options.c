@@ -376,7 +376,7 @@ struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options, struct SaveFileHandler
 	else			sgfc->sfh = SetupSaveFileIO();
 
 	sgfc->_save_c = SetupSaveC_internal();
-	sgfc->_util_c = SetupUtilC_internal();
+	sgfc->_error_c = SetupErrorC_internal();
 	return sgfc;
 }
 
@@ -425,7 +425,7 @@ void FreeSGFInfo(struct SGFInfo *sgf)
 		free(sgf->sfh);
 	if(sgf->_save_c)
 		free(sgf->_save_c);
-	if(sgf->_util_c)
-		free(sgf->_util_c);
+	if(sgf->_error_c)
+		free(sgf->_error_c);
 	free(sgf);
 }

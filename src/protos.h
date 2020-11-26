@@ -24,11 +24,6 @@ void FreeSGFInfo(struct SGFInfo *);
 
 /**** load.c ****/
 
-struct PropValue *AddPropValue(struct SGFInfo *, struct Property *, U_LONG, U_LONG,
-							   const char *, size_t, const char *, size_t);
-struct Property *AddProperty(struct Node *, token, U_LONG, U_LONG, const char *);
-struct Node *NewNode(struct SGFInfo *, struct Node *, bool);
-
 bool LoadSGF(struct SGFInfo *, const char *);
 bool LoadSGFFromFileBuffer(struct SGFInfo *);
 
@@ -41,7 +36,6 @@ bool DecodeWholeSGFBuffer(struct SGFInfo *);
 struct StreamReader *InitStreamReader(const char *, char *, char *);
 int StreamDecode(struct StreamReader *);
 int NextDecodedChar(struct StreamReader *);
-bool DecodeTextPropertyValues(struct SGFInfo *, struct Node *, iconv_t);
 
 
 char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
@@ -116,9 +110,9 @@ bool Do_View(struct SGFInfo *, struct Node *, struct Property *, struct BoardSta
 bool Check_GameInfo(struct SGFInfo *, struct Property *, struct PropValue *);
 
 
-/**** util.c ****/
+/**** error.c ****/
 
-struct UtilC_internal *SetupUtilC_internal(void);
+struct ErrorC_internal *SetupErrorC_internal(void);
 
 extern bool (*print_error_handler)(U_LONG, struct SGFInfo *, va_list);
 extern void (*print_error_output_hook)(struct SGFCError *);
@@ -129,6 +123,9 @@ void ExitWithOOMError(const char *);
 bool PrintErrorHandler(U_LONG, struct SGFInfo *, va_list);
 void PrintErrorOutputHook(struct SGFCError *);
 void CommonPrintErrorOutputHook(struct SGFCError *, FILE *);
+
+
+/**** util.c ****/
 
 int  DecodePosChar(char);
 char EncodePosChar(int);
@@ -145,10 +142,13 @@ U_LONG KillChars(char *, size_t *, U_SHORT, const char *);
 U_LONG TestChars(const char *, U_SHORT, const char *);
 
 struct Property *FindProperty(struct Node *, token);
-
+struct Property *AddProperty(struct Node *, token, U_LONG, U_LONG, const char *);
+struct Property *DelProperty(struct Node *, struct Property *);
+struct PropValue *AddPropValue(struct SGFInfo *, struct Property *, U_LONG, U_LONG,
+							   const char *, size_t, const char *, size_t);
 struct Property *NewPropValue(struct SGFInfo *, struct Node *, token, const char *, const char *, bool);
 struct PropValue *DelPropValue(struct Property *, struct PropValue *);
-struct Property *DelProperty(struct Node *, struct Property *);
+struct Node *NewNode(struct SGFInfo *, struct Node *, bool);
 void DelNode(struct SGFInfo *, struct Node *, U_LONG);
 
 bool CalcGameSig(struct TreeInfo *, char *);

@@ -439,7 +439,7 @@ struct SGFInfo
 	int ignored_count;
 
 	struct SaveC_internal *_save_c;
-	struct UtilC_internal *_util_c;
+	struct ErrorC_internal *_error_c;
 };
 
 /* for defining properties (see sgf_token[] in properties.c) */
