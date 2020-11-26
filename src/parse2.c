@@ -440,9 +440,7 @@ void SplitNode(struct SGFInfo *sgfc, struct Node *n, U_SHORT flags, token id, bo
 	struct Property *p, *hlp;
 	struct Node *newnode;
 
-	newnode = NewNode(sgfc, n, true);		/* create new child node */
-	newnode->row = n->row;
-	newnode->col = n->col;
+	newnode = NewNode(sgfc, n, n->row, n->col, true);		/* create new child node */
 
 	p = n->prop;
 	while(p)

@@ -425,10 +425,6 @@ struct SGFInfo
 	char *buffer;			/* file buffer */
 	const char *b_end;		/* file buffer end address */
 	const char *start;		/* start of SGF data within buffer */
-	const char *current;	/* actual read position (cursor) in buffer */
-	U_LONG cur_row;			/* row & column associated with *current */
-	U_LONG cur_col;
-	U_LONG lowercase;		/* load.c: number of lowercase chars in front of propID */
 
 	struct SGFCOptions *options;
 	struct SaveFileHandler *sfh;	/* used during SaveSGF() */

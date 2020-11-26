@@ -371,13 +371,15 @@ struct Property *DelProperty(struct Node *n, struct Property *p)
 ***				Inserts a new node into the current SGF tree
 *** Parameters: sgfc	  ... pointer to SGFInfo structure
 ***				parent	  ... parent node
+***				row		  ... row number to assign to node
+***				col		  ... column number to assign to node
 ***				new_child ... create a new child for parent node
 ***							  (insert an empty node into the tree)
 *** Returns:	pointer to node or NULL (success / error)
 ***				(exits on fatal error)
 **************************************************************************/
 
-struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, bool new_child)
+struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, U_LONG row, U_LONG col, bool new_child)
 {
 	struct Node *newn, *hlp;
 
@@ -388,8 +390,8 @@ struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, bool new_child)
 	newn->sibling	= NULL;
 	newn->prop		= NULL;
 	newn->last		= NULL;
-	newn->row		= sgfc->cur_row;
-	newn->col		= sgfc->cur_col;
+	newn->row		= row;
+	newn->col		= col;
 
 	AddTail(sgfc, newn);
 
