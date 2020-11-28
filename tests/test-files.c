@@ -118,6 +118,14 @@ START_TEST (test_reverse_reorder_sgf)
 END_TEST
 
 
+START_TEST (test_mixed_encoding_sgf)
+	sgfc->options->encoding = OPTION_ENCODING_TEXT_ONLY;
+	TestWithFile("../test-files/mixed-encoding.sgf",
+			     "../test-files/mixed-encoding-result.sgf",
+			     "../test-files/mixed-encoding-output.txt");
+END_TEST
+
+
 TCase *sgfc_tc_test_files(void)
 {
 	TCase *tc;
@@ -130,5 +138,6 @@ TCase *sgfc_tc_test_files(void)
 	tcase_add_test(tc, test_strict_sgf);
 	tcase_add_test(tc, test_reorder_sgf);
 	tcase_add_test(tc, test_reverse_reorder_sgf);
+	tcase_add_test(tc, test_mixed_encoding_sgf);
 	return tc;
 }

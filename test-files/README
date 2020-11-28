@@ -74,16 +74,26 @@ in the same level correction as before, but in addition the
 ordering of variations is reversed.
 
 
+test-files/mixed-encoding.sgf
+-----------------------------
+
+This file contains differrent character encodings within (simple)text values.
+It can safely be parsed with the E2 option. E1 fails with a fatal error,
+E3 replaces the 0x00 bytes of the UTF-16 encoding with spaces (hence destroying
+those text values.)
+
+
 test-files/*-result.sgf, test-files/*-output.txt
 ------------------------------------------------
 
 These are captures of the console output of SGFC (*-output.txt)
 and the resulting SGF files (*-result.sgf).
 
-Call to SGFC            Console output          Resulting SGF
----------------------   ----------------------  ---------------------
-sgfc test.sgf           test-output.txt         test-result.sgf
-sgfc -roun test.sgf     test-roun-output.txt    test-roun-result.sgf
-sgfc -r strict.sgf      strict-output.txt       strict-result.sgf
-sgfc -v reorder.sgf     reorder-output.txt      reorder-result.sgf
-sgfc -vz reorder.sgf    reorder-z-output.txt    reorder-z-result.sgf
+Call to SGFC                  Console output              Resulting SGF
+---------------------         ----------------------      ---------------------
+sgfc test.sgf                 test-output.txt             test-result.sgf
+sgfc -roun test.sgf           test-roun-output.txt        test-roun-result.sgf
+sgfc -r strict.sgf            strict-output.txt           strict-result.sgf
+sgfc -v reorder.sgf           reorder-output.txt          reorder-result.sgf
+sgfc -vz reorder.sgf          reorder-z-output.txt        reorder-z-result.sgf
+sgfc -E2 mixed-encoding.sgf   mixed-encoding-output.txt   mixed-encoding-result.sgf

@@ -295,6 +295,7 @@ static void CorrectVariation(struct SGFInfo *sgfc, struct Node *n)
 	}
 }
 
+
 /**************************************************************************
 *** Function:	CorrectVariations
 ***				Checks for wrong variation levels and corrects them
@@ -560,6 +561,16 @@ static void CheckDoubleProp(struct SGFInfo *sgfc, struct Node *n)
 	}
 }
 
+
+/**************************************************************************
+*** Function:	MergeDoubleText
+***				Merges text properties to single value, if possible
+***				Should only be called on safe encodings (e.g. UTF-8)
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				n	 ... pointer to Node
+*** Returns:	-
+**************************************************************************/
+
 static void MergeDoubleText(struct SGFInfo *sgfc, struct Node *n)
 {
 	struct Property *p, *q;
@@ -670,10 +681,10 @@ static bool GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				ti	 ... pointer to tree info to initialize
 ***				r	 ... pointer to root node
-*** Returns:	-
+*** Returns:	true/false (in case of encoding problems)
 **************************************************************************/
 
-static void InitTreeInfo(struct SGFInfo *sgfc, struct TreeInfo *ti, struct Node *r)
+static bool InitTreeInfo(struct SGFInfo *sgfc, struct TreeInfo *ti, struct Node *r)
 {
 	struct Property *ff, *gm, *sz, *ca;
 
@@ -693,28 +704,36 @@ static void InitTreeInfo(struct SGFInfo *sgfc, struct TreeInfo *ti, struct Node 
 	if(ti->FF > 4)
 		PrintError(E_UNKNOWN_FILE_FORMAT, sgfc, ff->value->row, ff->value->col, ti->FF);
 
-	ti->encoding = DetectTreeEncoding(sgfc, r);
+	ca = FindProperty(r, TKN_CA);
+	if(ca && !Check_Text(sgfc, ca, ca->value))
+		ca = NULL;
+	if(ca)	ti->encoding = OpenIconV(sgfc, ca->value->value, &ti->encoding_name);
+	else	ti->encoding = OpenIconV(sgfc, NULL, &ti->encoding_name);
 
 	gm = FindProperty(r, TKN_GM);
 	GetNumber(sgfc, r, gm, 1, &ti->GM, 1, "GM[1]");
+
+	if(!ti->encoding)		/* check here, so that ti->GM is always filled */
+		return false;
+
 	if(ti->GM != 1)
 	{
 		PrintError(WCS_GAME_NOT_GO, sgfc, gm->row, gm->col, ti->num);
-		return;		/* board size only of interest if Game == Go */
+		return true;		/* board size only of interest if Game == Go */
 	}
 
 	sz = FindProperty(r, TKN_SZ);
 	if(!sz)
 	{
 		ti->bwidth = ti->bheight = 19;	/* default size */
-		return;
+		return true;
 	}
 
 	if(!GetNumber(sgfc, r, sz, 1, &ti->bwidth, 19, "19x19"))
 	{
 		/* faulty SZ deleted, ti->bwidth set by GetNumber to default 19 */
 		ti->bheight = 19;
-		return;
+		return true;
 	}
 
 	if(ti->FF < 4 && (ti->bwidth > 19 || sz->value->value2))
@@ -764,34 +783,69 @@ static void InitTreeInfo(struct SGFInfo *sgfc, struct TreeInfo *ti, struct Node 
 
 		PrintError(E_BOARD_TOO_BIG, sgfc, sz->row, sz->col, ti->bwidth, ti->bheight);
 	}
+
+	return true;
 }
 
-void InitAllTreeInfo(struct SGFInfo *sgfc)
+
+/**************************************************************************
+*** Function:	InitAllTreeInfo
+***				Inits new TreeInfo structure for all game trees in collection
+*** Parameters: sgfc ... pointer to SGFInfo structure
+*** Returns:	true on success, false: no SGF error or encoding problems
+**************************************************************************/
+
+bool InitAllTreeInfo(struct SGFInfo *sgfc)
 {
 	struct Node *root = sgfc->first;
 	struct TreeInfo *ti;
 
+	if(!root)							/* safe guard */
+	{
+		PrintError(FE_NO_SGFDATA, sgfc);
+		return false;
+	}
+
 	for(; root; root = root->sibling)
 	{
 		SaveMalloc(struct TreeInfo *, ti, sizeof(struct TreeInfo), "tree info structure")
-		InitTreeInfo(sgfc, ti, root);
+		if(!InitTreeInfo(sgfc, ti, root))
+			return false;
 		AddTail(&sgfc->tree, ti);		/* add to SGFInfo */
 	}
+
+	return true;
 }
 
-void CheckDifferingFFAndGM(struct SGFInfo *sgfc)
+
+/**************************************************************************
+*** Function:	CheckDifferingRootProperties
+***				Emits warnings for different file formats, games,
+***				or character encodings within single game collections.
+*** Parameters: sgfc ... pointer to SGFInfo structure
+*** Returns:	true / false (in case of fatal encoding error)
+**************************************************************************/
+
+static bool CheckDifferingRootProperties(struct SGFInfo *sgfc)
 {
 	struct TreeInfo *ti = sgfc->tree->next;
-	struct Property *gm, *ff;
-	int gm_val, ff_val;
+	struct Property *gm, *ff, *ca;
 	U_LONG row, col;
+	const char *first_encoding = sgfc->tree->encoding_name;
+
+	if(sgfc->options->encoding == OPTION_ENCODING_EVERYTHING &&
+	   strnccmp(first_encoding, sgfc->global_encoding_name, 0))
+	{
+		/* Detection picked up wrong encoding; oh dear! */
+		PrintError(FE_WRONG_ENCODING, sgfc, sgfc->tree->root->row, sgfc->tree->root->col);
+		return false;
+	}
 
 	for(; ti; ti = ti->next)
 	{
 		ff = FindProperty(ti->root, TKN_FF);
-		GetNumber(sgfc, ti->root, ff, 1, &ff_val, 1, "FF[1]");
 		gm = FindProperty(ti->root, TKN_GM);
-		GetNumber(sgfc, ti->root, gm, 1, &gm_val, 1, "FF[1]");
+		ca = FindProperty(ti->root, TKN_CA);
 
 		if(ti->prev->FF != ti->FF)
 		{
@@ -808,11 +862,26 @@ void CheckDifferingFFAndGM(struct SGFInfo *sgfc)
 
 			PrintError(WS_GM_DIFFERS, sgfc, row, col);
 		}
+
+		if(ca)	{ row = ca->row;		col = ca->col; }
+		else	{ row = ti->root->row;	col = ti->root->col; }
+
+		if(sgfc->options->encoding == OPTION_ENCODING_EVERYTHING)
+		{
+			if(strnccmp(ti->encoding_name, first_encoding, 0))
+			{
+				PrintError(E_MULTIPLE_ENCODINGS, sgfc, row, col);
+				return false;
+			}
+		}
+		else if(strnccmp(ti->prev->encoding_name, ti->encoding_name, 0))
+			PrintError(WS_CA_DIFFERS, sgfc, row, col);
 	}
+	return true;
 }
 
 /**************************************************************************
-*** Function:	CheckSGFTree
+*** Function:	CheckSGFSubTree
 ***				Steps recursive through the SGF tree and
 ***				calls Check_Properties for each node
 *** Parameters: sgfc ... pointer to SGFInfo structure
@@ -858,6 +927,10 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 
 			CheckDoubleProp(sgfc, n);		/* remove/merge double properties */
 			Check_Properties(sgfc, n, st);	/* perform checks, update board status */
+			/* MergeDoubleText() needs to be after Check_Properties(), because
+			 * depending on OPTION_ENCODING, the decoding step only occurs in
+			 * Check_Properties() and merging unknown character encodings is
+			 * deemed to dangerous -> after decoding we have UTF-8, which is safe */
 			MergeDoubleText(sgfc, n);
 			if(SplitMoveSetup(sgfc, n))
 				n = n->child;				/* new child node already parsed */
@@ -874,6 +947,16 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 
 	free(st);
 }
+
+
+/**************************************************************************
+*** Function:	CheckSGFTree
+***				Steps recursive through the SGF tree and
+***				calls CheckSGFSubTree for each root node
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				ti   ... pointer to TreeInfo structure
+*** Returns:	-
+**************************************************************************/
 
 static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
 {
@@ -917,15 +1000,18 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
 *** Function:	ParseSGF
 ***				Calls the check routines one after another
 *** Parameters: sgfc ... pointer to SGFInfo structure
-*** Returns:	-
+*** Returns:	true on success, false on fatal error (no SGF data)
 **************************************************************************/
 
-void ParseSGF(struct SGFInfo *sgfc)
+bool ParseSGF(struct SGFInfo *sgfc)
 {
-	InitAllTreeInfo(sgfc);
+	if(!InitAllTreeInfo(sgfc))
+		return false;
 
 	CheckSGFTree(sgfc, sgfc->tree);
-	CheckDifferingFFAndGM(sgfc);
+
+	if(!CheckDifferingRootProperties(sgfc))
+		return false;
 
 	if(sgfc->options->fix_variation)
 		CorrectVariations(sgfc, sgfc->root, sgfc->tree);
@@ -938,4 +1024,6 @@ void ParseSGF(struct SGFInfo *sgfc)
 
 	if(sgfc->options->strict_checking)
 		StrictChecking(sgfc);
+
+	return true;
 }

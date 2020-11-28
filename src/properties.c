@@ -78,7 +78,7 @@ const struct SGFToken sgf_token[NUM_SGF_TOKENS] =
 	{ "OW",	30, FF34,	Check_Number,	NULL, TYPE_MOVE, 0 },
 
 	{ "FF",	96, FF1234,	Check_Number,	Do_Root,	TYPE_ROOT, 0 },
-	{ "CA",	95, FF4,	Check_Text,		Do_Root,	TYPE_ROOT|PVT_SIMPLETEXT, 0 },
+	{ "CA",	95, FF4,	Check_Text,		Do_Root,	TYPE_ROOT|PVT_SIMPLETEXT|PVT_NO_ENCODE, 0 },
 	{ "GM",	94, FF1234,	Check_Number,	Do_Root,	TYPE_ROOT, 0 },
 	{ "SZ",	93, FF1234,	Check_Number,	Do_Root,	TYPE_ROOT|PVT_WEAKCOMPOSE, 0 },
 	{ "ST",	92, FF4,	Check_Number,	Do_Root,	TYPE_ROOT, 0 },

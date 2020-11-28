@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <iconv.h>
 
 #include "all.h"
 #include "protos.h"
@@ -43,9 +44,10 @@ void PrintHelp(const enum option_help format)
 			 "    -c  ... write file even if a critical error occurs\n"
 			 "    -dn ... n = number : disable message number -n-\n"
 			 "    -e  ... expand compressed point lists\n"
-			 "    -Ex ... x = 1,2: charset encoding is applied to\n"
+			 "    -Ex ... x = 1,2,3: charset encoding is applied to\n"
 			 "              1 - to whole SGF file, _before_ parsing (unit=char; default)\n"
 			 "              2 - text property values only, _after_ parsing (unit=byte)\n"
+			 "              3 - no encoding applied (binary style; unit=byte)\n"
 			 "    -g  ... print game signature (Go GM[1] games only)\n"
 			 "    -i  ... interactive mode (faulty game-info values only)\n"
 			 "    -k  ... keep header in front of SGF data\n"
@@ -194,6 +196,27 @@ static int ParseIntArg(struct SGFInfo *sgfc, const char **str, int max)
 
 
 /**************************************************************************
+*** Function:	ValidateEncoding
+***				Helper function for ParseArgs(): checks if encoding is known to iconv
+*** Parameters: sgfc	 ... pointer to SGFInfo structure
+***				encoding ... name of encoding
+***				argname	 ... context for error message
+*** Returns:	*encoding or NULL
+**************************************************************************/
+
+static const char *ValidateEncoding(struct SGFInfo *sgfc, const char *encoding, const char *argname)
+{
+	iconv_t test = iconv_open("UTF-8", encoding);
+	if(test == (iconv_t)-1)
+	{
+		PrintError(FE_UNKNOWN_ENCODING, sgfc, argname, encoding);
+		return NULL;
+	}
+	iconv_close(test);
+	return encoding;
+}
+
+/**************************************************************************
 *** Function:	ParseArgs
 ***				Parses commandline options
 ***				Options are represented by one char and are preceded with
@@ -254,7 +277,7 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 							options->find_start = n;
 							break;
 						case 'E':
-							if(!(n = ParseIntArg(sgfc, &c, 2)))
+							if(!(n = ParseIntArg(sgfc, &c, 3)))
 								return false;
 							options->encoding = n;
 							break;
@@ -270,9 +293,17 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 							else if(!strcmp(c, "version"))
 								options->help = OPTION_HELP_VERSION;
 							else if(!strncmp(c, "encoding=", 9))
-								options->forced_encoding = &argv[i][9+2];
+							{
+								options->forced_encoding = ValidateEncoding(sgfc, &argv[i][9+2], "encoding");
+								if(!options->forced_encoding)
+									return false;
+							}
 							else if(!strncmp(c, "default-encoding=", 17))
-								options->default_encoding = &argv[i][17+2];
+							{
+								options->default_encoding = ValidateEncoding(sgfc, &argv[i][17+2], "default-encoding");
+								if(!options->default_encoding)
+									return false;
+							}
 							else
 							{
 								PrintError(FE_UNKNOWN_LONG_OPTION, sgfc, c);
@@ -344,7 +375,7 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 	options->strict_checking = false;
 	options->reorder_variations = false;
 	options->add_sgfc_ap_property = true;
-	options->encoding = OPTION_ENCODING_SPEC;
+	options->encoding = OPTION_ENCODING_EVERYTHING;
 	options->infile = NULL;
 	options->outfile = NULL;
 	options->forced_encoding = NULL;
@@ -385,28 +416,30 @@ struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options, struct SaveFileHandler
 *** Function:	FreeSGFInfo
 ***				Frees all memory and other resources of an SGFInfo structure
 ***				including(!) referenced sub structures and SGFInfo itself
-*** Parameters: sgf ... pointer to SGFInfo structure
+*** Parameters: sgfc ... pointer to SGFInfo structure
 *** Returns:	-
 **************************************************************************/
 
-void FreeSGFInfo(struct SGFInfo *sgf)
+void FreeSGFInfo(struct SGFInfo *sgfc)
 {
 	struct Node *n, *m;
 	struct Property *p;
 	struct TreeInfo *t, *hlp;
 
-	if(!sgf)							/* check just to be sure */
+	if(!sgfc)							/* check just to be sure */
 		return;
 
-	t = sgf->tree;						/* free TreeInfo's */
+	t = sgfc->tree;						/* free TreeInfo's */
 	while(t)
 	{
+		if(t->encoding)
+			iconv_close(t->encoding);
 		hlp = t->next;
 		free(t);
 		t = hlp;
 	}
 
-	n = sgf->first;						/* free Nodes */
+	n = sgfc->first;						/* free Nodes */
 	while(n)
 	{
 		m = n->next;
@@ -417,15 +450,17 @@ void FreeSGFInfo(struct SGFInfo *sgf)
 		n = m;
 	}
 
-	if(sgf->buffer)
-		free(sgf->buffer);
-	if(sgf->options)
-		free(sgf->options);
-	if(sgf->sfh)
-		free(sgf->sfh);
-	if(sgf->_save_c)
-		free(sgf->_save_c);
-	if(sgf->_error_c)
-		free(sgf->_error_c);
-	free(sgf);
+	if(sgfc->global_encoding_name)
+		free(sgfc->global_encoding_name);
+	if(sgfc->buffer)
+		free(sgfc->buffer);
+	if(sgfc->options)
+		free(sgfc->options);
+	if(sgfc->sfh)
+		free(sgfc->sfh);
+	if(sgfc->_save_c)
+		free(sgfc->_save_c);
+	if(sgfc->_error_c)
+		free(sgfc->_error_c);
+	free(sgfc);
 }

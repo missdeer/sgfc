@@ -405,7 +405,9 @@ static void SetRootProps(struct SGFInfo *sgfc, struct TreeInfo *info, struct Nod
 		return;
 
 	NewPropValue(sgfc, r, TKN_FF, "4", NULL, true);
-	NewPropValue(sgfc, r, TKN_CA, "UTF-8", NULL, true);
+
+	if(sgfc->options->encoding != OPTION_ENCODING_NONE)
+		NewPropValue(sgfc, r, TKN_CA, "UTF-8", NULL, true);
 
 	if(sgfc->options->add_sgfc_ap_property)
 		NewPropValue(sgfc, r, TKN_AP, "SGFC", "1.18", true);

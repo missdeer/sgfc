@@ -17,18 +17,14 @@
 
 
 /**************************************************************************
-*** Function:	Parse_Text
-***				Transforms any kind of linebreaks to '\n' (or ' ')
-***				and all WS to space. Cuts off trailing WS.
-*** Parameters: value	... pointer to property value
-***				len		... length of string
-***				flags	... PVT_SIMPLE (SimpleText type)
-***							PVT_COMPOSE (compose type)
-***				sgfc    ... pointer to SGFInfo
-*** Returns:	length of converted string (0 for empty string)
+*** Function:	ParseText_Unescape - helper function for Parse_Text
+***				Unescape text values, i.e. handling of '\'
+*** Parameters: s	... pointer to property value
+***				len	... length of string
+*** Returns:	-
 **************************************************************************/
 
-void ParseText_Unescape(char *s, size_t *len, U_SHORT flags)
+static void ParseText_Unescape(char *s, size_t *len)
 {
 	char *end = s + *len;
 	char *d = s;                        /* remove unnecessary '\' */
@@ -62,24 +58,45 @@ void ParseText_Unescape(char *s, size_t *len, U_SHORT flags)
 	*d = 0;
 }
 
-void ParseText_Decode(struct SGFInfo *sgfc, char **value_ptr, size_t *len)
+
+/**************************************************************************
+*** Function:	ParseText_Decode - helper function for Parse_Text
+***				Decoding in case of OPTION_ENCODING_TEXT_ONLY
+*** Parameters: value_ptr ... pointer to property value
+***				len		  ... length of string
+*** Returns:	true on success, false on fatal encoding error
+**************************************************************************/
+
+static bool ParseText_Decode(struct SGFInfo *sgfc, char **value_ptr, size_t *len)
 {
-	if(!sgfc->info || !sgfc->info->encoding)	/* short cut for unit tests */
-		return;
-
-	char *end;
-	char *decoded = DecodeBuffer(sgfc, sgfc->info->encoding, *value_ptr, *len, -1, -1, &end);
-	if(decoded)
+	const char *end;
+	char *decoded = DecodeBuffer(sgfc, sgfc->info->encoding, *value_ptr, *len, 0, &end);
+	if(!decoded)
 	{
-		free(*value_ptr);
-		*value_ptr = decoded;
-		*len = end - decoded;
+		**value_ptr = 0;		/* in case of error: delete property value */
+		*len = 0;
+		return false;
 	}
-	// FIXME: what to do in error case? delete Prop? or at least propvalue? additional PrintError?
 
+	free(*value_ptr); 			/* swap buffer for decoded buffer */
+	*value_ptr = decoded;
+	*len = end - decoded;
+	return true;
 }
 
-void ParseText_NormalizeWhitespace(struct SGFInfo *sgfc, char *s, size_t *len, U_LONG row, U_LONG col) {
+
+/**************************************************************************
+*** Function:	ParseText_NormalizeWhitespace - helper function for Parse_Text
+***				Normalize whitespace and linebreaks
+*** Parameters: s	... pointer to property value
+***				len		... length of string
+***				row		... row number of property value
+***				col		... column of property value
+*** Returns:	-
+**************************************************************************/
+
+static void ParseText_NormalizeWhitespace(struct SGFInfo *sgfc, char *s, size_t *len, U_LONG row, U_LONG col)
+{
 	char old = 0;
 	char *d = s;
 	char *end = s + *len;
@@ -117,7 +134,17 @@ void ParseText_NormalizeWhitespace(struct SGFInfo *sgfc, char *s, size_t *len, U
 	*d = 0;
 }
 
-void ParseText_ApplyLinebreakStyle(struct SGFInfo *sgfc, char *value, size_t *len, U_SHORT flags)
+
+/**************************************************************************
+*** Function:	ParseText_ApplyLinebreakStyle - helper function for Parse_Text
+***				Applies linebreak style according to specified options
+*** Parameters: value	... pointer to property value
+***				len		... length of string
+***				flags	... property flags for detecting SimpleText values
+*** Returns:	-
+**************************************************************************/
+
+static void ParseText_ApplyLinebreakStyle(struct SGFInfo *sgfc, char *value, size_t *len, U_SHORT flags)
 {
 	char *end = value + *len;
 	char *d = value, *s = value;
@@ -180,7 +207,16 @@ void ParseText_ApplyLinebreakStyle(struct SGFInfo *sgfc, char *value, size_t *le
 	*d = 0;
 }
 
-void ParseText_StripTrailingSpace(char *value, size_t *len)
+
+/**************************************************************************
+*** Function:	ParseText_StripTrailingSpace - helper function for Parse_Text
+***				Strips trailing whitespace
+*** Parameters: value	... pointer to property value
+***				len		... length of string
+*** Returns:	-
+**************************************************************************/
+
+static void ParseText_StripTrailingSpace(char *value, size_t *len)
 {
 	char *c = value + *len - 1;
 
@@ -189,6 +225,19 @@ void ParseText_StripTrailingSpace(char *value, size_t *len)
 
 	*len = c - value + 1;
 }
+
+
+/**************************************************************************
+*** Function:	Parse_Text
+***				Transforms any kind of linebreaks to '\n' (or ' ')
+***				and all WS to space. Cuts off trailing WS.
+*** Parameters: value	... pointer to property value
+***				len		... length of string
+***				flags	... PVT_SIMPLE (SimpleText type)
+***							PVT_COMPOSE (compose type)
+***				sgfc    ... pointer to SGFInfo
+*** Returns:	length of converted string (0 for empty string)
+**************************************************************************/
 
 int Parse_Text(struct SGFInfo *sgfc, struct PropValue *v, int prop_num, U_SHORT flags)
 {
@@ -200,8 +249,10 @@ int Parse_Text(struct SGFInfo *sgfc, struct PropValue *v, int prop_num, U_SHORT 
 		value_len = &v->value2_len;
 	}
 
-	ParseText_Unescape(*value_ptr, value_len, flags);
-	ParseText_Decode(sgfc, value_ptr, value_len);
+	ParseText_Unescape(*value_ptr, value_len);
+	if(sgfc->options->encoding == OPTION_ENCODING_TEXT_ONLY && !(flags & PVT_NO_ENCODE))
+		if(!ParseText_Decode(sgfc, value_ptr, value_len))
+			return 0;
 	ParseText_NormalizeWhitespace(sgfc, *value_ptr, value_len, v->row, v->col);
 	ParseText_ApplyLinebreakStyle(sgfc, *value_ptr, value_len, flags);
 	ParseText_StripTrailingSpace(*value_ptr, value_len);
@@ -456,7 +507,17 @@ int Parse_Float(char *value, size_t *len, ...)
 	return ret;
 }
 
-/* Wrapper for easier handling of calling Parse_Float() with an offset into the string */
+
+/**************************************************************************
+*** Function:	Parse_Float_Offset
+***				Wrapper for easier handling of calling Parse_Float()
+***				with an offset into the string
+*** Parameters: value	... pointer to value string
+***				len		... length of string
+***				offset  ... offset into string for parser start
+*** Returns:	see Parse_Float
+**************************************************************************/
+
 int Parse_Float_Offset(char *value, size_t *len, size_t offset)
 {
 	size_t len_offset = *len - offset;

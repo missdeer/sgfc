@@ -64,7 +64,8 @@ int main(const int argc, const char *argv[])
 	if(!LoadSGF(sgfc, sgfc->options->infile))
 		goto fatal_error;
 
-	ParseSGF(sgfc);
+	if(!ParseSGF(sgfc))
+		goto fatal_error;
 
 	if(sgfc->options->game_signature)
 		PrintGameSignatures(sgfc);

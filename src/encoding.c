@@ -17,27 +17,66 @@
 #include "all.h"
 #include "protos.h"
 
-#define STREAM_IN_CHUNK_SIZE 16
-#define STREAM_OUT_BUFFER_SIZE 65  /* must be at least 4*IN_CHUNK_SIZE */
 
-struct StreamReader
+/**************************************************************************
+*** Function:	OpenIconV
+***				Safely opens an iconv descriptor for the given encoding
+***				Falls back to default_encoding if specified encoding fails,
+***				forced_encoding overrides any provided encoding.
+*** Parameters: sgfc		  ... pointer to SGFInfo structure
+***				encoding	  ... name of desired encoding or NULL for default
+***				encoding_name ... output parameter: holds name of selected encoding
+*** Returns:	pointer to iconv descriptor
+**************************************************************************/
+
+iconv_t OpenIconV(struct SGFInfo *sgfc, const char *encoding, const char **encoding_name)
 {
 	iconv_t cd;
-	char *in_buffer;
-	char *in_pos;
-	char *in_end;
-	char out_buffer[STREAM_OUT_BUFFER_SIZE];
-	char *out_pos;
-	char *out_cursor;
-};
+
+	if(sgfc->options->forced_encoding)
+	{
+		cd = iconv_open("UTF-8", sgfc->options->forced_encoding);
+		if(encoding_name)
+			*encoding_name = sgfc->options->forced_encoding;
+	}
+	else
+	{
+		if(encoding)
+		{
+			cd = iconv_open("UTF-8", encoding);
+			if(encoding_name)
+				*encoding_name = encoding;
+			if(cd != (iconv_t)-1)
+				return cd;
+			PrintError(WS_ENCODING_FALLBACK, sgfc, encoding, sgfc->options->default_encoding);
+		}
+		cd = iconv_open("UTF-8", sgfc->options->default_encoding);
+		if(encoding_name)
+			*encoding_name = sgfc->options->default_encoding;
+	}
+
+	if(cd != (iconv_t)-1)
+		return cd;
+
+	PrintError(FE_ENCODING_ERROR, sgfc, 0);
+	return NULL;
+}
 
 
-char *DetectEncoding(struct SGFInfo *sgfc)
+/**************************************************************************
+*** Function:	DetectEncoding
+***				Searches for CA[] property in buffer; starts from sgfc->current
+***				Contains mini-parser which might pick up different CA[] than load.c
+*** Parameters: c	  ... start of buffer
+***				b_end ... end of buffer
+*** Returns:	pointer to encoding name (needs to be freed) or NULL
+**************************************************************************/
+
+char *DetectEncoding(const char *c, const char *b_end)
 {
-	const char *c = sgfc->buffer;
 	int state = 1, brace_state = 1;
 
-	if(c+3 >= sgfc->b_end)
+	if(c+3 >= b_end)
 		/* no encoding found (not even enough place for BOM) --> assume default */
 		return NULL;
 
@@ -56,11 +95,10 @@ char *DetectEncoding(struct SGFInfo *sgfc)
 		return SaveDupString("UTF-8", 0, "encoding");
 
 	/* assume that while not necessarily ASCII-safe, that the encoding
-	 * has ASCII characters at ASCII codepoints, i.e. we can search for (CA[].
+	 * has ASCII characters at ASCII codepoints, i.e. we can search for "(CA[]".
 	 * Note: this done _before_ FindStart() so this might pick up
 	 * text before the real SGF start. */
-
-	while(c < sgfc->b_end && state)
+	while(c < b_end && state)
 	{
 		switch(*c)
 		{
@@ -79,7 +117,7 @@ char *DetectEncoding(struct SGFInfo *sgfc)
 			default:
 				if(isupper(*c))
 					state = brace_state;
-				else if (isspace(*c))
+				else if(isspace(*c))
 				{
 					if(state != 4)
 						state = brace_state;
@@ -95,40 +133,56 @@ char *DetectEncoding(struct SGFInfo *sgfc)
 		return NULL;	/* no encoding found -> assume default */
 
 	/* c points to first char after "CA[" */
-	while(c < sgfc->b_end && isspace(*c))
+	while(c < b_end && isspace(*c))
 		c++;
 	const char *c_end = c;
-	while(c_end < sgfc->b_end && *c_end != ']')
+	while(c_end < b_end && *c_end != ']')
 		c_end++;
-
-	if(c_end == sgfc->b_end)
-		return NULL;	/* no encoding found -> assume default */
 
 	do {
 		c_end--;
 	} while(isspace(*c_end));
 	c_end++;
 
+	if(c_end == b_end || c >= c_end)
+		return NULL;	/* no encoding found -> assume default */
+
 	/* c: first non-space in CA[] value, c_end: last non-space inside CA[] */
 	return SaveDupString(c, c_end - c, "encoding");
 }
 
 
+/**************************************************************************
+*** Function:	DecodeBuffer
+***				Searches for CA[] property in buffer; starts from sgfc->current
+***				Contains mini-parser which might pick up different CA[] than load.c
+*** Parameters: sgfc		... pointer to SGFInfo structure
+***				cd			... iconv conversion descriptor
+***				buffer		... start of input buffer
+***				size		... size of input buffer
+***				err_offset	... byte offset for error reporting purposes
+***				buffer_end	... output variable: end of decoded buffer
+*** Returns:	pointer to decoded buffer or NULL
+**************************************************************************/
+
 char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
-				   char *in_buffer, size_t in_size,
-				   U_LONG row, U_LONG col,
-				   char **buffer_end)
+				   char *buffer, size_t size, U_LONG err_offset,
+				   const char **buffer_end)
 {
-	char *out_buffer, *out_pos;
+	char *out_buffer, *out_pos, *in_buffer;
 	size_t in_left, out_size, result, out_left, err_left = -1;
 	bool resize_out = false, add_replacement = false;
 	bool illegal_sequence_error = false;
 
-	out_size = in_left = in_size;
+	in_buffer = buffer;
+	out_size = in_left = size;
 	/* +1 for \0 termination of buffer */
 	SaveMalloc(char *, out_buffer, out_size + 1, "buffer for encoding conversion")
 	out_pos = out_buffer;
 	out_left = out_size;
+
+	iconv(cd, NULL, 0, NULL, 0);    /* reset internal iconv state */
+
 	while(in_left)
 	{
 		result = iconv(cd, &in_buffer, &in_left, &out_pos, &out_left);
@@ -139,14 +193,14 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 				if(!illegal_sequence_error)
 				{
 					illegal_sequence_error = true;
-					PrintError(WS_ENCODING_ERRORS, sgfc, in_buffer - sgfc->buffer); // FIXME: row/col??
+					PrintError(WS_ENCODING_ERRORS, sgfc, in_buffer - buffer + err_offset);
 				}
 				in_buffer++;
 				in_left--;
 				if(err_left != in_left+1)	 /* squash follow up errors */
 				{
 					add_replacement = true;
-					resize_out = out_left >= 3;
+					resize_out = out_left <= 3;
 				}
 				err_left = in_left;
 				if(!add_replacement)
@@ -186,7 +240,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 
 			free(out_buffer);
 			iconv_close(cd);
-			PrintError(FE_ENCODING_ERROR, sgfc);
+			PrintError(FE_ENCODING_ERROR, sgfc, in_buffer - buffer + err_offset);
 			return NULL;
 		}
 	}
@@ -197,189 +251,29 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 }
 
 
-bool DecodeWholeSGFBuffer(struct SGFInfo *sgfc)
+/**************************************************************************
+*** Function:	DecodeSGFBuffer
+***				Decodes complete SGF buffer
+*** Parameters: sgfc		  ... pointer to SGFInfo structure
+***				buffer_end	  ... output variable: end of decoded buffer
+***				encoding_name ... output variable: name of encoding used
+*** Returns:	pointer to decoded buffer or NULL in case of fatal error
+**************************************************************************/
+
+char *DecodeSGFBuffer(struct SGFInfo *sgfc, const char **encbuffer_end, char **encoding_name)
 {
-	char *encoding;
-	char *encoded_buffer, *encbuffer_end;
-
-	if(sgfc->options->forced_encoding)
-		encoding = SaveDupString(sgfc->options->forced_encoding, 0, "encoding name");
-	else
+	char *encoding = DetectEncoding(sgfc->buffer, sgfc->b_end);		/* might be NULL! */
+	iconv_t cd = OpenIconV(sgfc, encoding, (const char **)encoding_name);
+	if(encoding != *encoding_name)
 	{
-		encoding = DetectEncoding(sgfc);
-		if(!encoding)
-			encoding = SaveDupString(sgfc->options->default_encoding, 0, "encoding name");
+		free(encoding);
+		*encoding_name = SaveDupString(*encoding_name, 0, "encoding name");
 	}
-	// FIXME
-	//encoded_buffer = ConvertEncoding(sgfc, encoding, &encbuffer_end);
-	free(encoding);
-
-	if(!encoded_buffer)
-		return false;
-
-	free(sgfc->buffer);				/* switch buffers */
-	sgfc->buffer = encoded_buffer;
-	sgfc->b_end = encbuffer_end;
-	return true;
-}
-
-iconv_t DetectTreeEncoding(struct SGFInfo *sgfc, struct Node *n)
-{
-	const char *encoding;
-	struct Property *ca = NULL;
-
-	if(sgfc->options->forced_encoding)
-		encoding = sgfc->options->forced_encoding;
-	else
-	{
-		ca = FindProperty(n, TKN_CA);
-		if(ca)
-			encoding = ca->value->value;
-		else
-			encoding = sgfc->options->default_encoding;
-	}
-
-	iconv_t cd = iconv_open("UTF-8", encoding);
-	while(cd == (iconv_t)-1)	/* options have been verified, so it should be CA property */
-	{
-		if(ca)
-		{
-			cd = iconv_open("UTF-8", sgfc->options->default_encoding);
-			PrintError(0, sgfc);	// FIXME: error for unknown charset property, falling back to default CA
-			ca = NULL;
-			continue;
-		}
-		PrintError(0, sgfc); 	// FIXME: really unexpected: can no longer create cd (but verified!)
-		return NULL;
-	}
-	return cd;
-}
-
-
-bool DecodeTextPropertyValues(struct SGFInfo *sgfc, struct Node *n, iconv_t cd)
-{
-	struct Property *p;
-	struct PropValue *v;
-	bool is_root = !n->parent;
-
-	if(is_root)
-		cd = DetectTreeEncoding(sgfc, n);
 	if(!cd)
-		return false;	/* fatal error */
-
-	while(n)
-	{
-		if(n->sibling && !DecodeTextPropertyValues(sgfc, n->sibling, cd))
-			return false;
-
-		for(p = n->prop; p; p = p->next)
-		{
-			if(!(p->flags & PVT_TEXT))
-				continue;
-			if(!n->parent && p->id == TKN_CA) /* ignore CA[] property itself: will be replaced anyway */
-				continue;
-
-			for(v = p->value; v; v = v->next)
-			{
-				char *decoded = DecodeBuffer(sgfc, cd, p->value->value, v->value_len, v->row, v->col, NULL);
-				if(decoded)
-				{
-					free(p->value->value);
-					p->value->value = decoded;
-				}
-				// FIXME: what to do in error case? delete Prop? or at least propvalue? additional PrintError?
-				if(p->value->value2)
-				{
-					decoded = DecodeBuffer(sgfc, cd, p->value->value2, v->value2_len, v->row, v->col, NULL);
-					if(decoded)
-					{
-						free(p->value->value2);
-						p->value->value2 = decoded;
-					}
-				}
-			}
-		}
-
-		n = n->child;
-	}
-
-	if(is_root)
-		iconv_close(cd);
-
-	return true;
-}
-
-
-struct StreamReader *InitStreamReader(const char *encoding, char *in_buffer, char *in_end)
-{
-	struct StreamReader *sr;
-	iconv_t cd;
-
-	cd = iconv_open("UTF-8", encoding);
-	if(cd == (iconv_t)-1)
 		return NULL;
-	SaveMalloc(struct StreamReader *, sr, sizeof(struct StreamReader), "stream reader");
-	sr->cd = cd;
-	sr->in_buffer = in_buffer;
-	sr->in_pos = in_buffer;
-	sr->in_end = in_end;
-	sr->out_pos = sr->out_buffer;
-	sr->out_cursor = sr->out_buffer;
-	return sr;
-}
 
-
-int StreamDecode(struct StreamReader *sr)
-{
-	size_t in_left, result, out_left, err_left = -1;
-
-	sr->out_pos = sr->out_buffer;
-	out_left = STREAM_OUT_BUFFER_SIZE;
-	in_left = sr->in_end - sr->in_pos;
-	if(!in_left)
-		return 3;
-	if(in_left > STREAM_IN_CHUNK_SIZE)
-		in_left = STREAM_IN_CHUNK_SIZE;
-
-	while(in_left)
-	{
-		result = iconv(sr->cd, &sr->in_pos, &in_left, &sr->out_pos, &out_left);
-		if(result == (size_t)-1)
-		{
-			if(errno == EILSEQ)	/* illegal bytes found */
-			{
-				sr->in_pos++;
-				in_left--;
-				if(err_left != in_left+1)	 /* squash follow up errors */
-				{
-					*sr->out_pos++ = (char)0xEF; /* UTF-8 encoded replacement character */
-					*sr->out_pos++ = (char)0xBF; /* U+FFFD */
-					*sr->out_pos++ = (char)0xBD;
-					out_left -= 3;
-				}
-				err_left = in_left;
-				continue;
-			}
-			if(errno == EINVAL) /* incomplete sequence */
-			{
-				return 0;
-			}
-			return 2;
-		}
-	}
-	return 0;
-}
-
-int NextDecodedChar(struct StreamReader *sr)
-{
-	/* still bytes in the out_buffer? */
-	if(sr->out_cursor >= sr->out_pos) /* FIXME?? off-by-1 */
-	{
-		int result = StreamDecode(sr);
-		if(result == 3)
-			return EOF;
-		sr->out_cursor = sr->out_buffer;
-	}
-	/* read/decode next bytes from in_buffer */
-	return *sr->out_cursor++;
+	char *encoded_buffer = DecodeBuffer(sgfc, cd, sgfc->buffer, sgfc->b_end - sgfc->buffer,
+										0, encbuffer_end);
+	iconv_close(cd);
+	return encoded_buffer;
 }

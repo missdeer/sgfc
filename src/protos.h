@@ -30,19 +30,10 @@ bool LoadSGFFromFileBuffer(struct SGFInfo *);
 
 /**** encoding.c ****/
 
-char *DetectEncoding(struct SGFInfo *);
-char *ConvertEncoding(struct SGFInfo *, const char *, char **);
-bool DecodeWholeSGFBuffer(struct SGFInfo *);
-struct StreamReader *InitStreamReader(const char *, char *, char *);
-int StreamDecode(struct StreamReader *);
-int NextDecodedChar(struct StreamReader *);
-
-
-char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
-				   char *in_buffer, size_t in_size,
-				   U_LONG row, U_LONG col,
-				   char **buffer_end);
-iconv_t DetectTreeEncoding(struct SGFInfo *sgfc, struct Node *n);
+char *DetectEncoding(const char *, const char *);
+char *DecodeSGFBuffer(struct SGFInfo *, const char **, char **);
+char *DecodeBuffer(struct SGFInfo *, iconv_t, char *, size_t, U_LONG, const char **);
+iconv_t OpenIconV(struct SGFInfo *, const char *, const char **);
 
 /**** save.c ****/
 
@@ -88,8 +79,8 @@ bool ExpandPointList(struct SGFInfo *, struct Property *, struct PropValue *, bo
 void CompressPointList(struct SGFInfo *, struct Property *);
 
 void SplitNode(struct SGFInfo *, struct Node *, U_SHORT, token, bool);
-void InitAllTreeInfo(struct SGFInfo *);
-void ParseSGF(struct SGFInfo *);
+bool InitAllTreeInfo(struct SGFInfo *);
+bool ParseSGF(struct SGFInfo *);
 
 
 /**** execute.c ****/

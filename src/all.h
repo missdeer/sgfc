@@ -141,11 +141,16 @@ struct SGFCError {
 #define E_NODE_OUTSIDE_VAR		(66UL | E_ERROR | E_CRITICAL | E_SEARCHPOS)
 #define E_MISSING_NODE_START	(67UL | E_ERROR | E_CRITICAL | E_SEARCHPOS)
 #define FE_UNKNOWN_LONG_OPTION	(68UL | E_FATAL_ERROR)
-#define WS_UNKNOWN_ENCODING		(69UL | E_WARNING_STRICT | E_CRITICAL)
+#define FE_UNKNOWN_ENCODING		(69UL | E_FATAL_ERROR)
+
 #define FE_ENCODING_ERROR		(70UL | E_FATAL_ERROR)
 #define WS_ENCODING_ERRORS		(71UL | E_WARNING_STRICT | E_CRITICAL)
+#define WS_ENCODING_FALLBACK	(72UL | E_WARNING_STRICT | E_CRITICAL)
+#define FE_WRONG_ENCODING		(73UL | E_FATAL_ERROR | E_SEARCHPOS)
+#define WS_CA_DIFFERS			(74UL | E_WARNING_STRICT | E_SEARCHPOS | E_CRITICAL)
+#define E_MULTIPLE_ENCODINGS	(75UL | E_FATAL_ERROR | E_SEARCHPOS)
 
-#define MAX_ERROR_NUM	71UL
+#define MAX_ERROR_NUM	75UL
 
 
 /* order must match order in sgf_token[] !! */
@@ -185,6 +190,7 @@ typedef enum {
 #define PVT_DEL_EMPTY	0x0040u	/* empty values get removed */
 #define PVT_CHECK_EMPTY 0x0080u	/* empty values are checked by Check_xxx */
 #define PVT_TEXT		0x0100u	/* text value (simple or "complex") */
+#define PVT_NO_ENCODE	0x0200u	/* don't apply -E2 charset decoding (for CA[] itself) */
 #define SPLIT_SAVE		0x0400u	/* splitting with '\' (only text values) */
 #define DOUBLE_MERGE	0x0800u
 #define TYPE_MOVE		0x1000u
@@ -296,7 +302,9 @@ struct TreeInfo
 	int GM;				/* Type of game */
 	int bwidth;			/* Board width  */
 	int bheight;		/* Board height */
-	iconv_t encoding;
+
+	iconv_t encoding;	/* charset encoding for this tree */
+	const char *encoding_name;
 
 	struct Node *root;	/* root node of this tree */
 };
@@ -352,8 +360,9 @@ enum option_findstart {
 };
 
 enum option_encoding {
-	OPTION_ENCODING_SPEC=1,
-	OPTION_ENCODING_EVERYTHING
+	OPTION_ENCODING_EVERYTHING=1,	/* complete buffer, before escaping */
+	OPTION_ENCODING_TEXT_ONLY,		/* text values only, after escaping */
+	OPTION_ENCODING_NONE,			/* treat file as binary, no encoding/decoding takes place */
 };
 
 struct SGFCOptions
@@ -425,6 +434,7 @@ struct SGFInfo
 	char *buffer;			/* file buffer */
 	const char *b_end;		/* file buffer end address */
 	const char *start;		/* start of SGF data within buffer */
+	char *global_encoding_name;		/* only used in case of OPTION_ENCODING_EVERYTHING */
 
 	struct SGFCOptions *options;
 	struct SaveFileHandler *sfh;	/* used during SaveSGF() */

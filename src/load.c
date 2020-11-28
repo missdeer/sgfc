@@ -20,16 +20,21 @@
 #include "all.h"
 #include "protos.h"
 
-#define SGF_EOF			(load->current >= load->sgfc->b_end)
+#define SGF_EOF			(load->current >= load->b_end)
 
 struct LoadInfo
 {
 	struct SGFInfo *sgfc;
 
+	char *buffer;			/* either copy of sgfc->buffer OR decoded buffer */
+	const char *b_end;
+
 	const char *current;	/* actual read position (cursor) in buffer */
 	U_LONG cur_row;			/* row & column associated with current */
 	U_LONG cur_col;
 	U_LONG lowercase;		/* load.c: number of lowercase chars in front of propID */
+
+	bool is_utf8;			/* if buffer is already decoded, it's in UTF-8 */
 };
 
 
@@ -43,18 +48,27 @@ struct LoadInfo
 *** Function:	NextCharInBuffer
 ***				Advanced buffer pointer and keep track of row & column number
 ***				Counts \r\n or \n\r as single step.
-*** Parameters: c	 ... current position
-***				end  ... end position of buffer
-***				step ... how many steps to take
-***				row	 ... row number associated with c
-***				col	 ... column associated with c
+*** Parameters: c		 ... current position
+***				end		 ... end position of buffer
+***				step	 ... how many steps to take
+***				row		 ... row number associated with c
+***				col		 ... column associated with c
+***				is_utf8	 ... whether we should skip UTF-8 continuation bytes
 *** Returns:	current position; row & col are updated accordingly
 **************************************************************************/
 
-static const char *NextCharInBuffer(const char **c, const char *end, U_LONG step, U_LONG *row, U_LONG *col)
+static const char *NextCharInBuffer(const char **c, const char *end, U_LONG step,
+									U_LONG *row, U_LONG *col, bool is_utf8)
 {
 	for(; step > 0 && *c < end; step--)
 	{
+		if(is_utf8 && (**c & 0xc0) == 0x80)	/* skip UTF-8 continuation bytes */
+		{
+			while((**c & 0xc0) == 0x80 && *c < end)
+				(*c)++;
+			if(*c == end)
+				break;
+		}
 		if(**c == '\r' || **c == '\n')		/* linebreak char? */
 		{
 			if(row)
@@ -84,7 +98,8 @@ static const char *NextCharInBuffer(const char **c, const char *end, U_LONG step
 
 static const char *NextChar(struct LoadInfo *load)
 {
-	return NextCharInBuffer(&load->current, load->sgfc->b_end, 1, &load->cur_row, &load->cur_col);
+	return NextCharInBuffer(&load->current, load->b_end, 1,
+						 	&load->cur_row, &load->cur_col, load->is_utf8);
 }
 
 
@@ -123,11 +138,11 @@ static const char *SkipText(struct LoadInfo *load, const char *s, const char *e,
 		{
 			if(*s == '\\')		/* escaping */
 			{
-				NextCharInBuffer(&s, e, 2, row, col);
+				NextCharInBuffer(&s, e, 2, row, col, load->is_utf8);
 				continue;
 			}
 		}
-		NextCharInBuffer(&s, e, 1, row, col);
+		NextCharInBuffer(&s, e, 1, row, col, load->is_utf8);
 	}
 
 	if(mode & P_ERROR)
@@ -148,7 +163,7 @@ static const char *SkipText(struct LoadInfo *load, const char *s, const char *e,
 
 static bool SkipSGFText(struct LoadInfo *load, char brk, unsigned int mode)
 {
-	const char *pos = SkipText(load, load->current, load->sgfc->b_end,
+	const char *pos = SkipText(load, load->current, load->b_end,
 							   brk, mode, &load->cur_row, &load->cur_col);
 
 	load->lowercase = 0;		/* we are no longer parsing for GetNextSGFChar -> reset */
@@ -156,7 +171,7 @@ static bool SkipSGFText(struct LoadInfo *load, char brk, unsigned int mode)
 	/* Reached end of buffer? */
 	if (!pos)
 	{
-		load->current = load->sgfc->b_end;	/* row & col already updated by SkipText */
+		load->current = load->b_end;	/* row & col already updated by SkipText */
 		return false;
 	}
 
@@ -589,7 +604,7 @@ static bool BuildSGFTree(struct LoadInfo *load, struct Node *r, bool missing_sem
 						{
 							PrintError(E_ILLEGAL_OUTSIDE_CHARS, load->sgfc,
 				  					   load->cur_row, load->cur_col - load->lowercase,
-									   true, load->current, load->lowercase+1);
+									   true, load->current - load->lowercase, load->lowercase);
 							NextChar(load);
 						}
 						break;
@@ -617,7 +632,7 @@ static int FindStart(struct LoadInfo *load, bool first_time)
 	while(!SGF_EOF)
 	{
 		/* search for '[' (lc) (lc) ']' */
-		if((load->current + 4 <= load->sgfc->b_end) &&
+		if((load->current + 4 <= load->b_end) &&
 		  (*load->current == '['))
 			if(islower(*(load->current+1)) && islower(*(load->current+2)) &&
 			  (*(load->current+3) == ']'))
@@ -638,10 +653,10 @@ static int FindStart(struct LoadInfo *load, bool first_time)
 		if(*load->current == '(')	/* test for start mark '(;' */
 		{
 			tmp = load->current + 1;
-			while((tmp < load->sgfc->b_end) && isspace(*tmp))
+			while((tmp < load->b_end) && isspace(*tmp))
 				tmp++;
 
-			if(tmp == load->sgfc->b_end)
+			if(tmp == load->b_end)
 				break;
 
 			if(*tmp == ';')
@@ -652,7 +667,7 @@ static int FindStart(struct LoadInfo *load, bool first_time)
 			if(load->sgfc->options->find_start == OPTION_FINDSTART_SEARCH)
 			{		/* found a '(' but no ';' -> might be a missing ';' */
 				tmp = load->current + 1;
-				while((tmp != load->sgfc->b_end) && *tmp != ')' && *tmp != '(')
+				while((tmp != load->b_end) && *tmp != ')' && *tmp != '(')
 				{
 					if(*tmp == '[')		o++;
 					if(*tmp == ']')		c++;
@@ -747,20 +762,36 @@ load_error:
 bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 {
 	struct LoadInfo load;
+	char *decode_buffer = NULL;
 
 	load.sgfc = sgfc;
+	load.buffer = sgfc->buffer;
+	load.b_end = sgfc->b_end;
 	load.current = sgfc->buffer;
 	load.cur_row = 1;
 	load.cur_col = 1;
 	load.lowercase = 0;
+	load.is_utf8 = false;
+
+	if(sgfc->options->encoding == OPTION_ENCODING_EVERYTHING)
+	{
+		if(!(decode_buffer = DecodeSGFBuffer(sgfc, &load.b_end, &sgfc->global_encoding_name)))
+			return false;
+		load.buffer = decode_buffer;
+		load.current = decode_buffer;
+		load.is_utf8 = true;
+	}
 
 	int miss = FindStart(&load, true);	/* skip junk in front of '(;' */
 	if(miss == -1)
+	{
+		free(decode_buffer);
 		return false;
+	}
 
 	sgfc->start = load.current;
 
-	while(load.current < sgfc->b_end)
+	while(load.current < load.b_end)
 	{
 		if(!miss)
 			NextChar(&load);				/* skip '(' */
@@ -770,5 +801,6 @@ bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 	}
 
 	PrintError(E_NO_ERROR, sgfc);		/* flush accumulated messages */
+	free(decode_buffer);
 	return true;
 }

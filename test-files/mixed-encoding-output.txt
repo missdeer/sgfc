@@ -1,0 +1,6 @@
+Line:2 Col:8 - Warning 74 (critical): different charset encodings stored in one file (will cause troubles with applications)
+Line:3 Col:3 - Warning 45: different file formats stored in one file (may cause troubles with some applications)
+Line:3 Col:3 - Warning 74 (critical): different charset encodings stored in one file (will cause troubles with applications)
+Line:4 Col:8 - Warning 74 (critical): different charset encodings stored in one file (will cause troubles with applications)
+Line:7 Col:8 - Warning 74 (critical): different charset encodings stored in one file (will cause troubles with applications)
+test-files/mixed-encoding.sgf: 5 warning(s)  (critical:4)  

@@ -46,6 +46,7 @@ START_TEST (test_length_with_test_sgf)
 
 	ParseSGF(sgfc);
 	VerifyTreeValueLength(sgfc->root, 2);
+	free(sgfc->buffer);		/* common_teardown doesn't free buffer */
 END_TEST
 
 

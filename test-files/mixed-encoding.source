@@ -1,0 +1,36 @@
+# convert like: rg -v '^#' mixed-encoding.source | xxd -p -r >mixed-encoding.sgf
+
+# (;FF[4]CA[UTF-16LE]C[hallö! DÜ! ßüper dich zu s€h€n-])
+283b 4646 5b345d 4341 5b5554462d31364c455d
+43 5b 
+680061006c006c00f600210020004400dc0021002000df00fc0070006500
+72002000640069006300680020007a00750020007300ac206800ac206e002d00
+5d 290d0a
+
+# (;FF[4]CA[ISO-8859-15]C[hallö! DÜ! ßüper dich zu s€h€n-])
+283b 4646 5b345d 4341 5b 49534f2d383835392d3135 5d
+43 5b 6861 6c6c f621 2044 dc21 20df fc70 6572 2064 6963
+      6820 7a75 2073 a468 a46e 2d
+5d 290d0a
+
+# (;C[s¤h¤n-])
+283b 43 5b 73a468a46e 5d 290d0a
+
+# (;FF[4]CA[GB18030]C[Cho Chikun (Cho Chihun, Japanese: 趙 治勲, Korean: 조치훈)
+# 交通運輸  # enthält "\"-Byte im Multibyte --> \-escape within multibyte char
+# 指揮權])  # enthält "]"-Byte im Multibyte --> \-escape within multibyte char
+283b 4646 5b345d 4341 5b47 4231 3830 3330 5d
+43 5b
+43 68 6f 20 43 68 69 6b  75 6e 20 28 43 68 6f 20
+43 68 69 68 75 6e 2c 20  4a 61 70 61 6e 65 73 65
+3a 20 da 77 20 d6 ce 84  eb 2c 20 4b 6f 72 65 61
+6e 3a 20 83 33 b3 35 83  34 cc 37 83 36 a8 37 29
+0a bd bb cd a8 df 5c5c dd 94
+0a d6 b8 93 5c5d 99 e0
+5d 290d0a
+
+# (;FF[4]CA[SHIFT_JIS]C[Yen: \¥])
+283b 4646 5b345d 4341 5b53 4849 4654 5f4a 4953 5d
+43 5b  5965 6e3a 20 5c5c
+5d 290d0a
+
