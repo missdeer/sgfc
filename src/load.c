@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <limits.h>
 
 #include "all.h"
 #include "protos.h"
@@ -720,10 +721,10 @@ bool LoadSGF(struct SGFInfo *sgfc, const char *name)
 		return false;
 	}
 
-	fseek(file, 0, SEEK_END);
+	if(fseek(file, 0, SEEK_END) == -1)
+		goto load_error;
 	size = ftell(file);
-
-	if(size == -1L)
+	if(size == -1L || size == LONG_MAX) /* Linux may return LONG_MAX in some cases :o( */
 		goto load_error;
 
 	sgfc->buffer = (char *) malloc((size_t) size);
