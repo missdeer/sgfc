@@ -51,9 +51,7 @@ struct SaveC_internal {
 
 struct SaveC_internal *SetupSaveC_internal(void)
 {
-	struct SaveC_internal *savec;
-	SaveMalloc(struct SaveC_internal *, savec, sizeof(struct SaveC_internal), "static save.c struct")
-	savec->gi_written = false;
+	struct SaveC_internal *savec = SaveCalloc(sizeof(struct SaveC_internal), "static save.c struct");
 	return savec;
 }
 
@@ -83,8 +81,7 @@ static int SaveFileIO_putc(struct SaveFileHandler *sfh, int c)
 
 struct SaveFileHandler *SetupSaveFileIO(void)
 {
-	struct SaveFileHandler *sfh;
-	SaveMalloc(struct SaveFileHandler *, sfh, sizeof(struct SaveFileHandler), "file handler")
+	struct SaveFileHandler *sfh = SaveMalloc(sizeof(struct SaveFileHandler), "file handler");
 	sfh->open = SaveFileIO_open;
 	sfh->close = SaveFileIO_close;
 	sfh->putc = SaveFileIO_putc;
@@ -172,8 +169,7 @@ static int SaveBufferIO_putc(struct SaveFileHandler *sfh, int c)
 
 struct SaveFileHandler *SetupSaveBufferIO(int (*close)(struct SaveFileHandler *, U_LONG))
 {
-	struct SaveFileHandler *sfh;
-	SaveMalloc(struct SaveFileHandler *, sfh, sizeof(struct SaveFileHandler), "memory file handler")
+	struct SaveFileHandler *sfh = SaveMalloc(sizeof(struct SaveFileHandler), "memory file handler");
 	sfh->open = SaveBufferIO_open;
 	sfh->putc = SaveBufferIO_putc;
 	if(close)
@@ -486,11 +482,10 @@ bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 	struct Node *n;
 	struct TreeInfo *info;
 	const char *c;
-	char *name;
 	int nl = 0, i = 1;
 	size_t name_buffer_size = strlen(base_name) + 14; /* +14 == "_99999999.sgf" + \0 */
 
-	SaveMalloc(char *, name, name_buffer_size, "filename buffer")
+	char *name = SaveMalloc(name_buffer_size, "filename buffer");
 	if(sgfc->options->split_file)
 		snprintf(name, name_buffer_size, "%s_%03d.sgf", base_name, i);
 	else

@@ -2,7 +2,7 @@
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 encoding.c
 ***
-*** Copyright (C) 1996-2018 by Arno Hollosi
+*** Copyright (C) 1996-2020 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
 ***
 **************************************************************************/
@@ -177,7 +177,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 	in_buffer = buffer;
 	out_size = in_left = size;
 	/* +1 for \0 termination of buffer */
-	SaveMalloc(char *, out_buffer, out_size + 1, "buffer for encoding conversion")
+	out_buffer = SaveMalloc(out_size + 1, "buffer for encoding conversion");
 	out_pos = out_buffer;
 	out_left = out_size;
 
@@ -214,9 +214,8 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 				float needed = (float)in_left * (float)out_size / (float)(out_size - in_left + 1);
 				size_t increase = (size_t)(lrintf(needed*1.05)) + 12; /* +5% + 3x 4 byte wide chars */
 				size_t new_size = out_size + increase;
-				char *new_buffer;
 				/* +1 for \0 termination of buffer */
-				SaveMalloc(char *, new_buffer, new_size+1, "temporary buffer for encoding conversion")
+				char *new_buffer = SaveMalloc(new_size+1, "temporary buffer for encoding conversion");
 				memcpy(new_buffer, out_buffer, out_size);
 				out_pos = new_buffer + (out_pos - out_buffer);
 				out_left += increase;

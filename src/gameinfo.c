@@ -637,7 +637,7 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 			{
 				free(v->value);
 				v->value_len = strlen(inp);
-				SaveMalloc(char *, v->value, v->value_len+4, "game info value buffer")
+				v->value = SaveMalloc(v->value_len+4, "game info value buffer");
 				strcpy(v->value, inp);
 				break;
 			}
@@ -690,7 +690,7 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 	size = (v->value_len > 25-8) ? (v->value_len + 8) : (25+1);
 	/* correct functions may use up to 25 bytes; +8 because time in hours multiplies by 3600 and adds ".0" */
 
-	SaveMalloc(char *, val, size, "result value buffer")
+	val = SaveMalloc(size, "result value buffer");
 	strcpy(val, v->value);
 	size_t val_len = v->value_len;
 	res = (*parse)(val, &val_len);

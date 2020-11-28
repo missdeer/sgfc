@@ -351,7 +351,7 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 {
 	struct SGFCOptions *options;
 
-	SaveMalloc(struct SGFCOptions *, options, sizeof(struct SGFCOptions), "SGFC options")
+	options = SaveMalloc(sizeof(struct SGFCOptions), "SGFC options");
 	memset(options->error_enabled, true, sizeof(options->error_enabled));
 	memset(options->delete_property, false, sizeof(options->delete_property));
 	options->help = OPTION_HELP_NONE;
@@ -396,9 +396,7 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 
 struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options, struct SaveFileHandler *sfh)
 {
-	struct SGFInfo *sgfc;
-	SaveMalloc(struct SGFInfo *, sgfc, sizeof(struct SGFInfo), "SGFInfo structure")
-	memset(sgfc, 0, sizeof(struct SGFInfo));
+	struct SGFInfo *sgfc = SaveCalloc(sizeof(struct SGFInfo), "SGFInfo structure");
 
 	if(options)		sgfc->options = options;
 	else			sgfc->options = SGFCDefaultOptions();

@@ -728,9 +728,8 @@ bool Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	int error = 0;
 	bool result = false;
-	char *before;
 
-	SaveMalloc(char *, before, v->value_len+v->value2_len+2, "AR_LN value")
+	char *before = SaveMalloc(v->value_len+v->value2_len+2, "AR_LN value");
 	sprintf(before, "%s:%s", v->value, v->value2);
 
 	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc))
@@ -774,10 +773,9 @@ done:
 bool Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	int error = 0;
-	char *before;
 	bool result = false;
 
-	SaveMalloc(char *, before, v->value_len+v->value2_len+2, "AR_LN value")
+	char *before = SaveMalloc(v->value_len+v->value2_len+2, "AR_LN value");
 	sprintf(before, "%s:%s", v->value, v->value2);
 
 	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc))
@@ -831,7 +829,7 @@ bool Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 			else
 			{
 				v->value2 = v->value;
-				SaveMalloc(char *, v->value, 4, "new FG number value")
+				v->value = SaveMalloc(4, "new FG number value");
 				strcpy(v->value, "0");
 				PrintError(E_BAD_COMPOSE_CORRECTED, sgfc, v->row, v->col, v->value, "FG", v->value, v->value2);
 			}

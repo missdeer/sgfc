@@ -13,13 +13,10 @@ FILE *testout;
 
 static char *ReadTestFile(const char *path, size_t *length)
 {
-	FILE *file;
-	char *buffer;
-
-	file = fopen(path, "rb");
+	FILE *file = fopen(path, "rb");
 	ck_assert_msg(!!file, "could not open file %s", path);
 	/* being lazy: we know that all files are smaller than 10000 bytes */
-	SaveMalloc(char *, buffer, 10000, "test file buffer")
+	char *buffer = SaveMalloc(10000, "test file buffer");
 	*length = fread(buffer, 1, 10000, file);
 	fclose(file);
 	return buffer;
@@ -64,8 +61,7 @@ static void TestWithFile(const char *path, const char *expected, char *output)
 	*(expected_output+explen) = 0;
 	long actual_size = ftell(testout);
 	ck_assert_int_gt(actual_size, explen - 70); /* longest summary line ~63 bytes */
-	char *outbuf;
-	SaveMalloc(char *, outbuf, actual_size, "stdout buffer")
+	char *outbuf = SaveMalloc(actual_size, "stdout buffer");
 	ck_assert_int_ne(-1, fseek(testout, 0, SEEK_SET));
 	ck_assert_int_eq(actual_size, fread(outbuf, 1, (size_t)actual_size, testout));
 	/* by only comparing up to actual_size we do not compare summary line */

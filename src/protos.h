@@ -125,10 +125,13 @@ void f_AddTail(struct ListHead *, struct ListNode *);
 void f_Enqueue(struct ListHead *, struct ListNode *);
 void f_Delete(struct ListHead *, struct ListNode *);
 
+char *SaveDupString(const char *, size_t, const char *);
+void *SaveMalloc(size_t , const char *);
+void *SaveCalloc(size_t , const char *);
+
 bool strnccmp(const char *, const char *, size_t);
 bool stridcmp(const char *, const char *);
 void strnpcpy(char *, const char *, size_t);
-char *SaveDupString(const char *, size_t, const char *);
 U_LONG KillChars(char *, size_t *, U_SHORT, const char *);
 U_LONG TestChars(const char *, U_SHORT, const char *);
 
@@ -155,11 +158,3 @@ void StrictChecking(struct SGFInfo *);
 #define AddTail(h,n) f_AddTail((struct ListHead *)(h), (struct ListNode *)(n))
 #define Enqueue(h,n) f_Enqueue((struct ListHead *)(h), (struct ListNode *)(n))
 #define Delete(h,n) f_Delete((struct ListHead *)(h), (struct ListNode *)(n))
-
-#define SaveMalloc(type, v, sz, err)  {	v = (type)malloc((size_t)(sz)); \
-										if(!(v)) { \
-											(*oom_panic_hook)(err); /* function will not return */ \
-                                            /* will never be reached; safe-guard and hint for linting */ \
-											exit(20); \
-										} \
-									  }

@@ -599,7 +599,7 @@ static void MergeDoubleText(struct SGFInfo *sgfc, struct Node *n)
 			v = p->value;
 			w = q->value;
 
-			SaveMalloc(char *, c, v->value_len + w->value_len + 3, "new property value")
+			c = SaveMalloc(v->value_len + w->value_len + 3, "new property value");
 			memcpy(c, v->value, v->value_len);
 			c[v->value_len]   = '\n';
 			c[v->value_len+1] = '\n';
@@ -808,7 +808,7 @@ bool InitAllTreeInfo(struct SGFInfo *sgfc)
 
 	for(; root; root = root->sibling)
 	{
-		SaveMalloc(struct TreeInfo *, ti, sizeof(struct TreeInfo), "tree info structure")
+		ti = SaveMalloc(sizeof(struct TreeInfo), "tree info structure");
 		if(!InitTreeInfo(sgfc, ti, root))
 			return false;
 		AddTail(&sgfc->tree, ti);		/* add to SGFInfo */
@@ -893,10 +893,9 @@ static bool CheckDifferingRootProperties(struct SGFInfo *sgfc)
 static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatus *old)
 {
 	struct Node *n;
-	struct BoardStatus *st;
 	int area;
 
-	SaveMalloc(struct BoardStatus *, st, sizeof(struct BoardStatus), "board status buffer")
+	struct BoardStatus *st = SaveMalloc(sizeof(struct BoardStatus), "board status buffer");
 
 	while(r)
 	{
@@ -904,7 +903,7 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 		area = old->bwidth * old->bheight;
 		if(st->board)
 		{
-			SaveMalloc(unsigned char *, st->board, area * sizeof(char), "goban buffer")
+			st->board = SaveMalloc(area * sizeof(char), "goban buffer");
 			memcpy(st->board, old->board, area * sizeof(char));
 		}
 		/* path_board is reused (paths marked with different path_num) */
@@ -961,10 +960,9 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
 {
 	struct Node *n;
-	struct BoardStatus *st;
 	int area;
 
-	SaveMalloc(struct BoardStatus *, st, sizeof(struct BoardStatus), "board status buffer")
+	struct BoardStatus *st = SaveMalloc(sizeof(struct BoardStatus), "board status buffer");
 
 	while(ti)
 	{
@@ -975,11 +973,9 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
 		area = st->bwidth * st->bheight;
 		if(area)
 		{
-			SaveMalloc(unsigned char *, st->board, area * sizeof(char), "goban buffer")
-			memset(st->board, 0, area * sizeof(char));
-			SaveMalloc(U_SHORT *, st->markup, area * sizeof(U_SHORT), "markup buffer")
-			SaveMalloc(struct PathBoard *, st->paths, sizeof(struct PathBoard), "path_board buffer")
-			memset(st->paths, 0, sizeof(struct PathBoard));
+			st->board = SaveCalloc(area * sizeof(char), "goban buffer");
+			st->markup = SaveMalloc(area * sizeof(U_SHORT), "markup buffer");
+			st->paths = SaveCalloc(sizeof(struct PathBoard), "path_board buffer");
 		}
 		st->markup_changed = true;
 

@@ -122,10 +122,72 @@ void f_Delete(struct ListHead *h, struct ListNode *n)
 
 
 /**************************************************************************
+*** Function:	SaveMalloc
+***				malloc() + error handling (i.e. printing error + failing)
+*** Parameters: size ... size of memory to allocate
+***				err	 ... error message
+*** Returns:	pointer to memory (or termination in case of error)
+**************************************************************************/
+
+void *SaveMalloc(size_t size, const char *err)
+{
+	void *mem = malloc(size);
+	if(!mem)
+	{
+		(*oom_panic_hook)(err); /* function will not return */
+		/* exit() will never be reached; safe-guard and hint for linting */
+		exit(20);
+	}
+	return mem;
+}
+
+
+/**************************************************************************
+*** Function:	SaveCalloc
+***				calloc() + error handling (i.e. printing error + failing)
+*** Parameters: size ... size of memory to allocate
+***				err	 ... error message
+*** Returns:	pointer to memory (or termination in case of error)
+**************************************************************************/
+
+void *SaveCalloc(size_t size, const char *err)
+{
+	void *mem = calloc(size, 1);
+	if(!mem)
+	{
+		(*oom_panic_hook)(err); /* function will not return */
+		/* exit() will never be reached; safe-guard and hint for linting */
+		exit(20);
+	}
+	return mem;
+}
+
+
+/**************************************************************************
+*** Function:	SaveDupString
+***				Safely duplicate a string (possibly not \0 terminated)
+*** Parameters: src ... source buffer
+***				len	 ... size of buffer
+***				err	 ... error message
+*** Returns:	pointer to \0-terminated duplicate (or termination in case of error)
+**************************************************************************/
+
+char *SaveDupString(const char *src, size_t len, const char *err)
+{
+	if(!len)
+		len = strlen(src);
+	char *dst = SaveMalloc(len+1, err);
+	memcpy(dst, src, len);
+	*(dst+len) = 0;	/* 0-terminate */
+	return dst;
+}
+
+
+/**************************************************************************
 *** Function:	strnccmp
 ***				String compare, not case sensitive
 *** Parameters: a, b ... strings to be compared
-***				len  ... number of bytes to compare or 0
+***				len  ... number of bytes to compare or 0 (=use strlen)
 *** Returns:	true=strings not equal, false= equal
 **************************************************************************/
 
@@ -150,6 +212,13 @@ bool strnccmp(const char *a, const char *b, size_t len)
 }
 
 
+/**************************************************************************
+*** Function:	stridcmp
+***				Compare property ID strings, i.e. disregarding lowercase characters
+*** Parameters: a, b ... strings to be compared
+*** Returns:	true=strings not equal, false= equal
+**************************************************************************/
+
 bool stridcmp(const char *a, const char *b)
 {
 	while(*a && *b)
@@ -171,6 +240,18 @@ bool stridcmp(const char *a, const char *b)
 	return false;
 }
 
+
+/**************************************************************************
+*** Function:	strnpcpy
+***				Copy string, but replace whitespace with space and
+***				and control characters with '.' for safe printing.
+***				Destination is _not_ \0 terminated.
+*** Parameters: dst ... destination buffer
+***				src ... source buffer
+***				len ... length
+*** Returns:	-
+**************************************************************************/
+
 void strnpcpy(char *dst, const char *src, size_t len)
 {
 	for(; len>0; len--)
@@ -184,18 +265,6 @@ void strnpcpy(char *dst, const char *src, size_t len)
 		dst++;
 		src++;
 	}
-}
-
-// FIXME: do we need to skip 0-bytes?
-char *SaveDupString(const char *src, size_t len, const char *err)
-{
-	char *dst;
-	if(!len)
-		len = strlen(src);
-	SaveMalloc(char *, dst, len+1, err)
-	memcpy(dst, src, len);
-	*(dst+len) = 0;	/* 0-terminate */
-	return dst;
 }
 
 
@@ -319,10 +388,7 @@ struct Property *FindProperty(struct Node *n, token id)
 
 struct Property *AddProperty(struct Node *n, token id, U_LONG row, U_LONG col, const char *id_str)
 {
-	struct Property *newp;
-	char *str;
-
-	SaveMalloc(struct Property *, newp, sizeof(struct Property), "property structure")
+	struct Property *newp = SaveMalloc(sizeof(struct Property), "property structure");
 	/* init property structure */
 	newp->id = id;
 	newp->idstr = SaveDupString(id_str, 0, "ID string");
@@ -383,7 +449,7 @@ struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, U_LONG row, U_LO
 {
 	struct Node *newn, *hlp;
 
-	SaveMalloc(struct Node *, newn, sizeof(struct Node), "node structure")
+	newn = SaveMalloc(sizeof(struct Node), "node structure");
 
 	newn->parent	= parent;		/* init node structure */
 	newn->child		= NULL;
@@ -583,16 +649,14 @@ struct PropValue *AddPropValue(struct SGFInfo *sgfc,
 							   const char *value, size_t size,
 							   const char *value2, size_t size2)
 {
-	struct PropValue *newv;
-
-	SaveMalloc(struct PropValue *, newv, sizeof(struct PropValue), "property value structure")
+	struct PropValue *newv = SaveMalloc(sizeof(struct PropValue), "property value structure");
 	newv->row = row;
 	newv->col = col;
 
 	if(value)
 	{
 		/* +2 because Parse_Float may add 1 char and for trailing '\0' byte */
-		SaveMalloc(char *, newv->value, size+2, "property value buffer")
+		newv->value = SaveMalloc(size+2, "property value buffer");
 		memcpy(newv->value, value, size);
 		*(newv->value + size) = 0;
 		newv->value_len = size;
@@ -605,7 +669,7 @@ struct PropValue *AddPropValue(struct SGFInfo *sgfc,
 
 	if(value2)
 	{
-		SaveMalloc(char *, newv->value2, size2+2, "property value2 buffer")
+		newv->value2 = SaveMalloc(size2+2, "property value2 buffer");
 		memcpy(newv->value2, value2, size2);
 		*(newv->value2 + size2) = 0;
 		newv->value2_len = size2;

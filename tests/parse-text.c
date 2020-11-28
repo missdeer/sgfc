@@ -14,8 +14,7 @@ struct PropValue *prop_value;
 void parse_text_setup(void)
 {
 	common_setup();
-	SaveMalloc(struct PropValue *, prop_value, sizeof(struct PropValue), "propval")
-	memset(prop_value, 0, sizeof(struct PropValue));
+	prop_value = SaveCalloc(sizeof(struct PropValue), "propval");
 	prop_value->row = 3;
 	prop_value->col = 1;
 }
