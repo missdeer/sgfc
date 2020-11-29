@@ -390,21 +390,16 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 ***             default values for ->options, ->sfh, and internal structures.
 *** Parameters: options ... pointer to SGFCOptions;
 ***							if NULL filled with SGFCDefaultOptions()
-***				sfh     ... SaveFileHandler; if NULL filled with SetupSaveFileIO()
 *** Returns:	pointer to SGFInfo structure ready for use in LoadSGF etc.
 **************************************************************************/
 
-struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options, struct SaveFileHandler *sfh)
+struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options)
 {
 	struct SGFInfo *sgfc = SaveCalloc(sizeof(struct SGFInfo), "SGFInfo structure");
 
 	if(options)		sgfc->options = options;
 	else			sgfc->options = SGFCDefaultOptions();
 
-	if(sfh)			sgfc->sfh = sfh;
-	else			sgfc->sfh = SetupSaveFileIO();
-
-	sgfc->_save_c = SetupSaveC_internal();
 	sgfc->_error_c = SetupErrorC_internal();
 	return sgfc;
 }
@@ -454,10 +449,6 @@ void FreeSGFInfo(struct SGFInfo *sgfc)
 		free(sgfc->buffer);
 	if(sgfc->options)
 		free(sgfc->options);
-	if(sgfc->sfh)
-		free(sgfc->sfh);
-	if(sgfc->_save_c)
-		free(sgfc->_save_c);
 	if(sgfc->_error_c)
 		free(sgfc->_error_c);
 	free(sgfc);

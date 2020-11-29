@@ -21,10 +21,14 @@ int Test_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 	return SaveBufferIO_close(sfh, E_NO_ERROR);
 }
 
+struct SaveFileHandler *SetupSaveTestIO(void)
+{
+	return SetupSaveBufferIO(Test_BufferIO_Close);
+}
+
 void common_setup(void)
 {
-	struct SaveFileHandler *sfh = SetupSaveBufferIO(Test_BufferIO_Close);
-	sgfc = SetupSGFInfo(NULL, sfh);
+	sgfc = SetupSGFInfo(NULL);
 	sgfc->options->add_sgfc_ap_property = false;
 	/* run tests without PrintError (makes setup easier) */
 	print_error_handler = NULL;

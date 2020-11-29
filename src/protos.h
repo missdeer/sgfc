@@ -18,7 +18,7 @@ void PrintGameSignatures(const struct SGFInfo *);
 bool ParseArgs(struct SGFInfo *, int, const char *[]);
 struct SGFCOptions *SGFCDefaultOptions(void);
 
-struct SGFInfo *SetupSGFInfo(struct SGFCOptions *, struct SaveFileHandler *);
+struct SGFInfo *SetupSGFInfo(struct SGFCOptions *);
 void FreeSGFInfo(struct SGFInfo *);
 
 
@@ -41,9 +41,8 @@ int SaveBufferIO_close(struct SaveFileHandler *, U_LONG);
 
 struct SaveFileHandler *SetupSaveFileIO(void);
 struct SaveFileHandler *SetupSaveBufferIO(int (*)(struct SaveFileHandler *, U_LONG));
-struct SaveC_internal *SetupSaveC_internal(void);
 
-bool SaveSGF(struct SGFInfo *, const char *);
+bool SaveSGF(struct SGFInfo *, struct SaveFileHandler *(*)(void), const char *);
 
 
 /**** properties.c ****/

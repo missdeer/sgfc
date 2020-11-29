@@ -45,7 +45,7 @@ static void trigger_error(U_LONG type, char *buffer, char *expected)
 	int ret = LoadSGFFromFileBuffer(sgfc);
 	ck_assert_int_eq(ret, true);
 	ParseSGF(sgfc);
-	ret = SaveSGF(sgfc, "outfile");
+	ret = SaveSGF(sgfc, SetupSaveTestIO, "outfile");
 	ck_assert_int_eq(ret, true);
 	ck_assert_msg(expected_error_occurred);
 }

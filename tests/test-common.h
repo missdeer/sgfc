@@ -21,7 +21,7 @@
 extern struct SGFInfo *sgfc;
 extern char *expected_output;
 
-int Test_BufferIO_Close(struct SaveFileHandler *, U_LONG );
+struct SaveFileHandler *SetupSaveTestIO(void);
 void common_setup(void);
 void common_teardown(void);
 

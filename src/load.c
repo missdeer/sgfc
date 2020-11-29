@@ -23,6 +23,7 @@
 
 #define SGF_EOF			(load->current >= load->b_end)
 
+/* Internal data structure for load.c functions */
 struct LoadInfo
 {
 	struct SGFInfo *sgfc;

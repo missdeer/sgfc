@@ -29,8 +29,7 @@ static void FileTestOutput(struct SGFCError *error)
 
 static void FileTestSetup(void)
 {
-	struct SaveFileHandler *sfh = SetupSaveBufferIO(Test_BufferIO_Close);
-	sgfc = SetupSGFInfo(NULL, sfh);
+	sgfc = SetupSGFInfo(NULL);
 	testout = tmpfile();
 	print_error_output_hook = FileTestOutput;
 }
@@ -52,7 +51,7 @@ static void TestWithFile(const char *path, const char *expected, char *output)
 	expected_output = ReadTestFile(expected, &explen);
 	ck_assert_int_gt(explen, 150); /* smallest file ~ 190 byte */
 	*(expected_output+explen) = 0;
-	ret = SaveSGF(sgfc, "outfile");
+	ret = SaveSGF(sgfc, SetupSaveTestIO, "outfile");
 	ck_assert_int_eq(ret, true);
 	free(expected_output);
 

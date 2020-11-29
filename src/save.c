@@ -28,32 +28,21 @@
 
 #define saveputc(s,c) { if(!WriteChar((s), (c), false))	return false;	}
 
-#define CheckLineLen(s) { if((s)->_save_c->linelen > MAX_LINELEN) \
+#define CheckLineLen(s) { if((s)->linelen > MAX_LINELEN) \
 						{ saveputc(s, '\n')	} }
 
 
-/* internal data for save.c functions. */
-/* Used instead of local static variables */
-struct SaveC_internal {
+/* internal data structure for save.c functions */
+struct SaveInfo
+{
+	struct SGFInfo *sgfc;
+	struct SaveFileHandler *sfh;
+	
 	int linelen;		/* used for line breaking algorithm */
 	int chars_in_node;
 	int eol_in_node;
 	bool gi_written;	/* used by WriteProperty for newlines after gameinfo properties */
 };
-
-
-/**************************************************************************
-*** Function:	SetupSaveC_internal
-***				Allocate and initialize internal data structure local to save.c
-*** Parameters: -
-*** Returns:	pointer to internal structure
-**************************************************************************/
-
-struct SaveC_internal *SetupSaveC_internal(void)
-{
-	struct SaveC_internal *savec = SaveCalloc(sizeof(struct SaveC_internal), "static save.c struct");
-	return savec;
-}
 
 
 /**************************************************************************
@@ -71,7 +60,11 @@ static int SaveFileIO_open(struct SaveFileHandler *sfh, const char *path, const 
 
 static int SaveFileIO_close(struct SaveFileHandler *sfh, U_LONG error)
 {
-	return fclose(sfh->fh.file);
+	FILE *file = sfh->fh.file;
+	if(!file)
+		return 0;
+	sfh->fh.file = NULL;
+	return fclose(file);
 }
 
 static int SaveFileIO_putc(struct SaveFileHandler *sfh, int c)
@@ -194,32 +187,32 @@ struct SaveFileHandler *SetupSaveBufferIO(int (*close)(struct SaveFileHandler *,
 *** Returns:	true or false
 **************************************************************************/
 
-static int WriteChar(struct SGFInfo *sgfc, char c, U_SHORT spc)
+static int WriteChar(struct SaveInfo *save, char c, U_SHORT spc)
 {
-	sgfc->_save_c->chars_in_node++;
+	save->chars_in_node++;
 
-	if(spc && isspace(c) && (sgfc->_save_c->linelen >= MAXTEXT_LINELEN))
+	if(spc && isspace(c) && (save->linelen >= MAXTEXT_LINELEN))
 		c = '\n';
 
 	if(c != '\n')
 	{
-		sgfc->_save_c->linelen++;
+		save->linelen++;
 
-		if((*sgfc->sfh->putc)(sgfc->sfh, c) == EOF)
+		if((*save->sfh->putc)(save->sfh, c) == EOF)
 			return false;
 	}
 	else
 	{
-		sgfc->_save_c->eol_in_node = 1;
-		sgfc->_save_c->linelen = 0;
+		save->eol_in_node = 1;
+		save->linelen = 0;
 
 #if EOLCHAR
-		if((*sgfc->sfh->putc)(sgfc->sfh, EOLCHAR) == EOF)
+		if((*save->sfh->putc)(save->sfh, EOLCHAR) == EOF)
 			return false;
 #else
-		if((*sgfc->sfh->putc)(sgfc->sfh, '\r') == EOF)		/* MSDOS EndOfLine */
+		if((*save->sfh->putc)(save->sfh, '\r') == EOF)		/* MSDOS EndOfLine */
 			return false;
-		if((*sgfc->sfh->putc)(sgfc->sfh, '\n') == EOF)
+		if((*save->sfh->putc)(save->sfh, '\n') == EOF)
 			return false;
 #endif
 	}
@@ -239,29 +232,29 @@ static int WriteChar(struct SGFInfo *sgfc, char c, U_SHORT spc)
 *** Returns:	true or false
 **************************************************************************/
 
-static int WritePropValue(struct SGFInfo *sgfc, const char *v, bool second, U_SHORT flags)
+static int WritePropValue(struct SaveInfo *save, const char *v, bool second, U_SHORT flags)
 {
 	U_SHORT fl;
 
 	if(!v)	return true;
 
 	if(second)
-		saveputc(sgfc, ':')
+		saveputc(save, ':')
 
-	fl = sgfc->options->soft_linebreaks && (flags & SPLIT_SAVE);
+	fl = save->sgfc->options->soft_linebreaks && (flags & SPLIT_SAVE);
 
 	while(*v)
 	{
 		if(*v == '\\' || *v == ']' || (flags & PVT_COMPOSE && *v == ':'))
-			saveputc(sgfc, '\\');
+			saveputc(save, '\\');
 
-		if(!WriteChar(sgfc, *v, flags & PVT_SIMPLE))
+		if(!WriteChar(save, *v, flags & PVT_SIMPLE))
 			return false;
 
-		if(fl && (sgfc->_save_c->linelen > MAXTEXT_LINELEN)) /* soft linebreak */
+		if(fl && (save->linelen > MAXTEXT_LINELEN)) /* soft linebreak */
 		{
-			saveputc(sgfc, '\\')	/* insert soft linebreak */
-			saveputc(sgfc, '\n')
+			saveputc(save, '\\')	/* insert soft linebreak */
+			saveputc(save, '\n')
 		}
 
 		v++;
@@ -280,7 +273,7 @@ static int WritePropValue(struct SGFInfo *sgfc, const char *v, bool second, U_SH
 *** Returns:	true or false
 **************************************************************************/
 
-static int WriteProperty(struct SGFInfo *sgfc, struct TreeInfo *info, struct Property *prop)
+static int WriteProperty(struct SaveInfo *save, struct TreeInfo *info, struct Property *prop)
 {
 	struct PropValue *v;
 	char *p;
@@ -288,15 +281,15 @@ static int WriteProperty(struct SGFInfo *sgfc, struct TreeInfo *info, struct Pro
 
 	if(prop->flags & TYPE_GINFO)
 	{
-		if(!sgfc->_save_c->gi_written)
+		if(!save->gi_written)
 		{
-			saveputc(sgfc, '\n')
-			saveputc(sgfc, '\n')
+			saveputc(save, '\n')
+			saveputc(save, '\n')
 		}
-		sgfc->_save_c->gi_written = true;
+		save->gi_written = true;
 	}
 	else
-		sgfc->_save_c->gi_written = false;
+		save->gi_written = false;
 
 
 	p = prop->idstr;			/* write property ID */
@@ -304,11 +297,11 @@ static int WriteProperty(struct SGFInfo *sgfc, struct TreeInfo *info, struct Pro
 	{
 		/* idstr is original from file -> may contain lowercase too */
 		if(isupper(*p))
-			saveputc(sgfc, *p)
+			saveputc(save, *p)
 		p++;
 	}
 
-	do_tt = (info->GM == 1 && sgfc->options->pass_tt &&
+	do_tt = (info->GM == 1 && save->sgfc->options->pass_tt &&
 			(info->bwidth <= 19) && (info->bheight <= 19) &&
 			(prop->id == TKN_B || prop->id == TKN_W));
 
@@ -316,31 +309,31 @@ static int WriteProperty(struct SGFInfo *sgfc, struct TreeInfo *info, struct Pro
 
 	while(v)
 	{
-		saveputc(sgfc, '[')
+		saveputc(save, '[')
 
 		if(do_tt && !v->value_len)
-			WritePropValue(sgfc, "tt", false, prop->flags);
+			WritePropValue(save, "tt", false, prop->flags);
 		else
 		{
-			WritePropValue(sgfc, v->value, false, prop->flags);
-			WritePropValue(sgfc, v->value2, true, prop->flags);
+			WritePropValue(save, v->value, false, prop->flags);
+			WritePropValue(save, v->value2, true, prop->flags);
 		}
-		saveputc(sgfc, ']')
+		saveputc(save, ']')
 
-		CheckLineLen(sgfc)
+		CheckLineLen(save)
 		v = v->next;
 	}
 
 	if(prop->flags & TYPE_GINFO)
 	{
-		saveputc(sgfc, '\n')
+		saveputc(save, '\n')
 		if(prop->next)
 		{
 			if(!(prop->next->flags & TYPE_GINFO))
-				saveputc(sgfc, '\n')
+				saveputc(save, '\n')
 		}
 		else
-			saveputc(sgfc, '\n')
+			saveputc(save, '\n')
 	}
 
 	return true;
@@ -356,31 +349,31 @@ static int WriteProperty(struct SGFInfo *sgfc, struct TreeInfo *info, struct Pro
 *** Returns:	true or false
 **************************************************************************/
 
-static int WriteNode(struct SGFInfo *sgfc, struct TreeInfo *info, struct Node *n)
+static int WriteNode(struct SaveInfo *save, struct TreeInfo *info, struct Node *n)
 {
 	struct Property *p;
-	sgfc->_save_c->chars_in_node = 0;
-	sgfc->_save_c->eol_in_node = 0;
-	saveputc(sgfc, ';')
+	save->chars_in_node = 0;
+	save->eol_in_node = 0;
+	saveputc(save, ';')
 
 	p = n->prop;
 	while(p)
 	{
-		if((sgf_token[p->id].flags & PVT_CPLIST) && !sgfc->options->expand_cpl &&
+		if((sgf_token[p->id].flags & PVT_CPLIST) && !save->sgfc->options->expand_cpl &&
 		   (info->GM == 1))
-			CompressPointList(sgfc, p);
+			CompressPointList(save->sgfc, p);
 
-		if(!WriteProperty(sgfc, info, p))
+		if(!WriteProperty(save, info, p))
 			return false;
 
 		p = p->next;
 	}
 
-	if(sgfc->options->node_linebreaks &&
-	   ((sgfc->_save_c->eol_in_node && sgfc->_save_c->linelen > 0) ||
-		(!sgfc->_save_c->eol_in_node &&
-		  sgfc->_save_c->linelen > MAX_PREDICTED_LINELEN - sgfc->_save_c->chars_in_node)))
-		saveputc(sgfc, '\n')
+	if(save->sgfc->options->node_linebreaks &&
+	   ((save->eol_in_node && save->linelen > 0) ||
+		(!save->eol_in_node &&
+		  save->linelen > MAX_PREDICTED_LINELEN - save->chars_in_node)))
+		saveputc(save, '\n')
 
 	return true;
 }
@@ -395,24 +388,24 @@ static int WriteNode(struct SGFInfo *sgfc, struct TreeInfo *info, struct Node *n
 *** Returns:	-
 **************************************************************************/
 
-static void SetRootProps(struct SGFInfo *sgfc, struct TreeInfo *info, struct Node *r)
+static void SetRootProps(struct SaveInfo *save, struct TreeInfo *info, struct Node *r)
 {
 	if(r->parent)	/* isn't REAL root node */
 		return;
 
-	NewPropValue(sgfc, r, TKN_FF, "4", NULL, true);
+	NewPropValue(save->sgfc, r, TKN_FF, "4", NULL, true);
 
-	if(sgfc->options->encoding != OPTION_ENCODING_NONE)
-		NewPropValue(sgfc, r, TKN_CA, "UTF-8", NULL, true);
+	if(save->sgfc->options->encoding != OPTION_ENCODING_NONE)
+		NewPropValue(save->sgfc, r, TKN_CA, "UTF-8", NULL, true);
 
-	if(sgfc->options->add_sgfc_ap_property)
-		NewPropValue(sgfc, r, TKN_AP, "SGFC", "1.18", true);
+	if(save->sgfc->options->add_sgfc_ap_property)
+		NewPropValue(save->sgfc, r, TKN_AP, "SGFC", "1.18", true);
 
 	if(info->GM == 1)
 	{
-		NewPropValue(sgfc, r, TKN_GM, "1", NULL, true);
+		NewPropValue(save->sgfc, r, TKN_GM, "1", NULL, true);
 		if(info->bwidth == 19 && info->bheight == 19)
-			NewPropValue(sgfc, r, TKN_SZ, "19", NULL, true);
+			NewPropValue(save->sgfc, r, TKN_SZ, "19", NULL, true);
 	}
 }
 
@@ -427,16 +420,16 @@ static void SetRootProps(struct SGFInfo *sgfc, struct TreeInfo *info, struct Nod
 *** Returns:	true: success / false error
 **************************************************************************/
 
-static int WriteTree(struct SGFInfo *sgfc, struct TreeInfo *info,
+static int WriteTree(struct SaveInfo *save, struct TreeInfo *info,
 					 struct Node *n, int newlines)
 {
-	if(newlines && sgfc->_save_c->linelen > 0)
-		saveputc(sgfc, '\n')
+	if(newlines && save->linelen > 0)
+		saveputc(save, '\n')
 
-	SetRootProps(sgfc, info, n);
+	SetRootProps(save, info, n);
 
-	saveputc(sgfc, '(')
-	if(!WriteNode(sgfc, info, n))
+	saveputc(save, '(')
+	if(!WriteNode(save, info, n))
 		return false;
 
 	n = n->child;
@@ -447,23 +440,23 @@ static int WriteTree(struct SGFInfo *sgfc, struct TreeInfo *info,
 		{
 			while(n)					/* write child + variations */
 			{
-				if(!WriteTree(sgfc, info, n, 1))
+				if(!WriteTree(save, info, n, 1))
 					return false;
 				n = n->sibling;
 			}
 		}
 		else
 		{
-			if(!WriteNode(sgfc, info, n))	/* write child */
+			if(!WriteNode(save, info, n))	/* write child */
 				return false;
 			n = n->child;
 		}
 	}
 
-	saveputc(sgfc, ')')
+	saveputc(save, ')')
 
 	if(newlines != 1)
-		saveputc(sgfc, '\n')
+		saveputc(save, '\n')
 
 	return true;
 }
@@ -473,17 +466,22 @@ static int WriteTree(struct SGFInfo *sgfc, struct TreeInfo *info,
 *** Function:	SaveSGF
 ***				writes the complete SGF tree to a file
 *** Parameters: sgfc      ... pointer to SGFInfo structure
+***				setup_sfh ... handler for writing to file or buffer
 ***				base_name ... filename/path of destination file
 *** Returns:	true on success, false on error while writing file(s)
 **************************************************************************/
 
-bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
+bool SaveSGF(struct SGFInfo *sgfc, struct SaveFileHandler *(*setup_sfh)(void), const char *base_name)
 {
+	struct SaveInfo save = {sgfc, NULL, 0,0,0, false};
 	struct Node *n;
 	struct TreeInfo *info;
 	const char *c;
 	int nl = 0, i = 1;
 	size_t name_buffer_size = strlen(base_name) + 14; /* +14 == "_99999999.sgf" + \0 */
+
+	if(!(save.sfh = setup_sfh()))
+		return false;
 
 	char *name = SaveMalloc(name_buffer_size, "filename buffer");
 	if(sgfc->options->split_file)
@@ -491,32 +489,31 @@ bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 	else
 		strcpy(name, base_name);
 
-	if(!(*sgfc->sfh->open)(sgfc->sfh, name, "wb"))
+	if(!(*save.sfh->open)(save.sfh, name, "wb"))
 	{
 		PrintError(FE_DEST_FILE_OPEN, sgfc, name);
-		free(name);
-		return false;
+		goto free_and_return_false;
 	}
 
 	if(sgfc->options->keep_head)
 	{
 		for(c = sgfc->buffer; c < sgfc->start; c++)
-			if((*sgfc->sfh->putc)(sgfc->sfh, *c) == EOF)
+			if((*save.sfh->putc)(save.sfh, *c) == EOF)
 				goto write_error;
-		if((*sgfc->sfh->putc)(sgfc->sfh, '\n') == EOF)
+		if((*save.sfh->putc)(save.sfh, '\n') == EOF)
 			goto write_error;
 	}
 
-	sgfc->_save_c->linelen = 0;
-	sgfc->_save_c->chars_in_node = 0;
-	sgfc->_save_c->eol_in_node = 0;
+	save.linelen = 0;
+	save.chars_in_node = 0;
+	save.eol_in_node = 0;
 
 	n = sgfc->root;
 	info = sgfc->tree;
 
 	while(n)
 	{
-		if(!WriteTree(sgfc, info, n, nl))
+		if(!WriteTree(&save, info, n, nl))
 			goto write_error;
 
 		nl = 2;
@@ -525,26 +522,28 @@ bool SaveSGF(struct SGFInfo *sgfc, const char *base_name)
 
 		if(sgfc->options->split_file && n)
 		{
-			(*sgfc->sfh->close)(sgfc->sfh, E_NO_ERROR);
+			(*save.sfh->close)(save.sfh, E_NO_ERROR);
 			i++;
 			snprintf(name, name_buffer_size, "%s_%03d.sgf", base_name, i);
 
-			if(!(*sgfc->sfh->open)(sgfc->sfh, name, "wb"))
+			if(!(*save.sfh->open)(save.sfh, name, "wb"))
 			{
 				PrintError(FE_DEST_FILE_OPEN, sgfc, name);
-				free(name);
-				return false;
+				goto free_and_return_false;
 			}
 		}
 	}
 
-	(*sgfc->sfh->close)(sgfc->sfh, E_NO_ERROR);
+	(*save.sfh->close)(save.sfh, E_NO_ERROR);
 	free(name);
+	free(save.sfh);
 	return true;
 
 write_error:
-	(*sgfc->sfh->close)(sgfc->sfh, FE_DEST_FILE_WRITE);
+	(*save.sfh->close)(save.sfh, FE_DEST_FILE_WRITE);
 	PrintError(FE_DEST_FILE_WRITE, sgfc, name);
+free_and_return_false:
 	free(name);
+	free(save.sfh);
 	return false;
 }

@@ -437,14 +437,12 @@ struct SGFInfo
 	char *global_encoding_name;		/* only used in case of OPTION_ENCODING_EVERYTHING */
 
 	struct SGFCOptions *options;
-	struct SaveFileHandler *sfh;	/* used during SaveSGF() */
 
 	int error_count;	/* message count filled during parsing */
 	int critical_count;
 	int warning_count;
 	int ignored_count;
 
-	struct SaveC_internal *_save_c;
 	struct ErrorC_internal *_error_c;
 };
 

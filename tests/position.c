@@ -20,7 +20,7 @@ START_TEST (test_add_has_no_effect)
 	ParseSGF(sgfc);
 
 	expected_output = "(;FF[4]CA[UTF-8]GM[1]SZ[19]B[aa];W[ab];)\n";
-	ret = SaveSGF(sgfc, "outfile");
+	ret = SaveSGF(sgfc, SetupSaveTestIO, "outfile");
 	ck_assert_int_eq(ret, true);
 END_TEST
 
@@ -35,7 +35,7 @@ START_TEST (test_add_effect_across_variations)
 	ParseSGF(sgfc);
 
 	expected_output = "(;FF[4]CA[UTF-8]GM[1]SZ[19]\n(;W[aa])\n(;W[aa]\n(;B[bb])\n(;AE[aa])))\n";
-	ret = SaveSGF(sgfc, "outfile");
+	ret = SaveSGF(sgfc, SetupSaveTestIO, "outfile");
 	ck_assert_int_eq(ret, true);
 END_TEST
 

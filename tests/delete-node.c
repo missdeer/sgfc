@@ -64,7 +64,7 @@ START_TEST (test_delete_with_sibling)
 	DelNode(sgfc, sgfc->root->child, E_NO_ERROR);
 
 	expected_output = "(;FF[4]CA[UTF-8]GM[1]SZ[19]N[a]\n(;N[c])\n(;N[d]))\n";
-	SaveSGF(sgfc, "outfile");
+	SaveSGF(sgfc, SetupSaveTestIO, "outfile");
 END_TEST
 
 
@@ -79,7 +79,7 @@ START_TEST (test_delete_replace_with_sibling)
 	DelNode(sgfc, sgfc->root->child, E_NO_ERROR);
 
 	expected_output = "(;FF[4]CA[UTF-8]GM[1]SZ[19]N[a];N[d])\n";
-	SaveSGF(sgfc, "outfile");
+	SaveSGF(sgfc, SetupSaveTestIO, "outfile");
 END_TEST
 
 
@@ -94,7 +94,7 @@ START_TEST (test_delete_fails)
 	DelNode(sgfc, sgfc->root->child, E_NO_ERROR);
 
 	expected_output = "(;FF[4]CA[UTF-8]GM[1]SZ[19]N[a]\n(;N[b]\n(;N[c1])\n(;N[c2]))\n(;N[d]))\n";
-	SaveSGF(sgfc, "outfile");
+	SaveSGF(sgfc, SetupSaveTestIO, "outfile");
 END_TEST
 
 

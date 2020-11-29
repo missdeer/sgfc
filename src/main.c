@@ -43,7 +43,7 @@ int main(const int argc, const char *argv[])
 		return 0;
 	}
 
-	sgfc = SetupSGFInfo(NULL, NULL);
+	sgfc = SetupSGFInfo(NULL);
 
 	if(!ParseArgs(sgfc, argc, argv))
 		goto fatal_error;
@@ -73,7 +73,7 @@ int main(const int argc, const char *argv[])
 	if(sgfc->options->outfile)
 	{
 		if(sgfc->options->write_critical || !sgfc->critical_count)
-			SaveSGF(sgfc, sgfc->options->outfile);
+			SaveSGF(sgfc, SetupSaveFileIO, sgfc->options->outfile);
 		else
 			PrintError(E_CRITICAL_NOT_SAVED, sgfc);
 	}
