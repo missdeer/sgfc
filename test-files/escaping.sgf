@@ -1,0 +1,14 @@
+(;FF[4]CA[UTF-8]GM[19]
+;C[Text \: value 中\: with \中 \u\n\n\e\c\c\e\s\s\a\r\y \: escape \: characters中]
+;C[中Text : value with [neces\\sary\] escape : characters中]
+;N[SimpleText \: value \中 with \: \u\n\n\e\c\c\e\s\s\a\r\y \: escape \: characters中]
+;N[SimpleText value : with [neces\\sary\] : escape characters]
+;B[Move \: value \中 with \: \u\n\n\e\c\c\e\s\s\a\r\y \: escape \: characters]
+;W[Move value : with [neces\\sary\] : escape characters中]
+;CR[Point \: value \: with \: \u\n\n\e\c\c\e\s\s\a\r\y \: escape \中 characters]
+;CR[Point value : with [neces\\sary\] : escape 中 characters中]
+;AB[Stone \: value \: with \: \u\n\n\e\c\c\e\s\s\a\r\y \: escape \中 characters]
+;AW[Stone value : with [neces\\sary\] : escape characters中]
+;AR[First \: Point \: value \: in \: composed \: value 中 with \: [neces\\sary\] \: escape \: \
+characters中:中Second \: Point \: value \[ in \: composed \: value \] with \: \u\n\n\e\c\c\e\s\s\a\r\y \: escape \: characters中]
+)

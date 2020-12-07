@@ -22,6 +22,7 @@ test-files: src/sgfc
 	src/sgfc -rc test-files/strict.sgf test-files/strict-result.sgf >test-files/strict-output.txt || true
 	src/sgfc -v test-files/reorder.sgf test-files/reorder-result.sgf >test-files/reorder-output.txt || true
 	src/sgfc -vz test-files/reorder.sgf test-files/reorder-z-result.sgf >test-files/reorder-z-output.txt || true
+	src/sgfc -ct test-files/escaping.sgf test-files/escaping-result.sgf >test-files/escaping-output.txt || true
 
 all: clean sgfc tests
 

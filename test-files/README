@@ -83,6 +83,13 @@ E3 replaces the 0x00 bytes of the UTF-16 encoding with spaces (hence destroying
 those text values.)
 
 
+test-files/escaping.sgf
+-----------------------------
+
+This file tests escaping property values in games other than Go.
+Based on Patrick Näf's test file for libsgfcplusplus.
+
+
 test-files/*-result.sgf, test-files/*-output.txt
 ------------------------------------------------
 
@@ -97,3 +104,4 @@ sgfc -r strict.sgf            strict-output.txt           strict-result.sgf
 sgfc -v reorder.sgf           reorder-output.txt          reorder-result.sgf
 sgfc -vz reorder.sgf          reorder-z-output.txt        reorder-z-result.sgf
 sgfc -E2 mixed-encoding.sgf   mixed-encoding-output.txt   mixed-encoding-result.sgf
+sgfc -t escaping.sgf          escaping-output.txt         escaping-result.sgf

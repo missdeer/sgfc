@@ -330,7 +330,10 @@ int Parse_Move(char *value, size_t *len, ...)
 	va_end(arglist);
 
 	if(sgfc->info->GM != 1)			/* game != GO ? */
+	{
+		ParseText_Unescape(value, len);
 		return 1;
+	}
 
 	/* At first only delete space so that we can distinguish
 	 * FF4 pass move from erroneous property values */

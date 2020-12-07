@@ -249,7 +249,7 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 						case 'e':	options->expand_cpl = true;				break;
 						case 'k':	options->keep_head = true;				break;
 						case 't':	options->soft_linebreaks = false;		break;
-						case 'L':	options->node_linebreaks = true;			break;
+						case 'L':	options->node_linebreaks = true;		break;
 						case 'p':	options->pass_tt = true;				break;
 						case 's':	options->split_file = true;				break;
 						case 'n':	options->del_empty_nodes = true;		break;

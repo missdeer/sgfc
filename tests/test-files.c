@@ -56,7 +56,7 @@ static void TestWithFile(const char *path, const char *expected, char *output)
 	free(expected_output);
 
 	expected_output = ReadTestFile(output, &explen);
-	ck_assert_int_gt(explen, 300); /* smallest output ~ 340 byte */
+	ck_assert_int_gt(explen, 190); /* smallest output ~ 190 byte */
 	*(expected_output+explen) = 0;
 	long actual_size = ftell(testout);
 	ck_assert_int_gt(actual_size, explen - 70); /* longest summary line ~63 bytes */
@@ -121,6 +121,14 @@ START_TEST (test_mixed_encoding_sgf)
 END_TEST
 
 
+START_TEST (test_escaping_sgf)
+	sgfc->options->soft_linebreaks = false;
+	TestWithFile("../test-files/escaping.sgf",
+			     "../test-files/escaping-result.sgf",
+			     "../test-files/escaping-output.txt");
+END_TEST
+
+
 TCase *sgfc_tc_test_files(void)
 {
 	TCase *tc;
@@ -134,5 +142,6 @@ TCase *sgfc_tc_test_files(void)
 	tcase_add_test(tc, test_reorder_sgf);
 	tcase_add_test(tc, test_reverse_reorder_sgf);
 	tcase_add_test(tc, test_mixed_encoding_sgf);
+	tcase_add_test(tc, test_escaping_sgf);
 	return tc;
 }

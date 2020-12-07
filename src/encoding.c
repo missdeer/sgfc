@@ -262,12 +262,15 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 char *DecodeSGFBuffer(struct SGFInfo *sgfc, const char **encbuffer_end, char **encoding_name)
 {
 	char *encoding = DetectEncoding(sgfc->buffer, sgfc->b_end);		/* might be NULL! */
-	iconv_t cd = OpenIconV(sgfc, encoding, (const char **)encoding_name);
-	if(encoding != *encoding_name)
+	const char *selected_encoding;
+	iconv_t cd = OpenIconV(sgfc, encoding, &selected_encoding);
+	if(encoding != selected_encoding)
 	{
 		free(encoding);
-		*encoding_name = SaveDupString(*encoding_name, 0, "encoding name");
+		*encoding_name = SaveDupString(selected_encoding, 0, "encoding name");
 	}
+	else
+		*encoding_name = encoding;
 	if(!cd)
 		return NULL;
 

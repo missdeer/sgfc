@@ -1,0 +1,2 @@
+Line:1 Col:17 - Warning 19 (critical): game stored in tree 1 is not Go. Cannot check move & position type -> errors will not get corrected!
+test-files/escaping.sgf: 1 warning(s)  (critical:1)  
