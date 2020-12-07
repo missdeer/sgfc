@@ -64,12 +64,14 @@ static const char *NextCharInBuffer(const char **c, const char *end, U_LONG step
 {
 	for(; step > 0 && *c < end; step--)
 	{
+		bool skip_step = false;
 		if(is_utf8 && (**c & 0xc0) == 0x80)	/* skip UTF-8 continuation bytes */
 		{
 			while((**c & 0xc0) == 0x80 && *c < end)
 				(*c)++;
 			if(*c == end)
 				break;
+			skip_step = true;				/* because we skipped at least 1 byte already */
 		}
 		if(**c == '\r' || **c == '\n')		/* linebreak char? */
 		{
@@ -83,9 +85,10 @@ static const char *NextCharInBuffer(const char **c, const char *end, U_LONG step
 				(*c)++;						/* ->yes: skip, no real linebreak */
 		}
 		else								/* no linebreak char */
-			if(col)
+			if(col && !skip_step)			/* because otherwise 1st follow-up byte is counted */
 				(*col)++;
-		(*c)++;
+		if(!skip_step)
+			(*c)++;
 	}
 	return (*c);
 }

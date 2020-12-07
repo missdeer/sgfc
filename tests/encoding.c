@@ -182,6 +182,47 @@ START_TEST (test_buffer_overflow_conversion)
 END_TEST
 
 
+START_TEST (test_8bit_value_in_middle)
+	print_error_handler = PrintErrorHandler;	/* count errors */
+	print_error_output_hook = NULL;
+	sgfc->options->forced_encoding = "UTF-8";
+	sgfc->options->encoding = OPTION_ENCODING_EVERYTHING;
+	/* UTF-8 of U+4E2D (中) */
+	char buffer[] = "(;AP[abc\xE4\xB8\xADxyz:def\xE4\xB8\xADuvw]C[ab\xE4\xB8\xADxyz])";
+	sgfc->buffer = buffer;
+	sgfc->b_end = buffer + strlen(buffer);
+	int ret = LoadSGFFromFileBuffer(sgfc);
+	ck_assert_int_eq(ret, true);
+	ck_assert_str_eq("abc\xE4\xB8\xADxyz", sgfc->root->prop->value->value);
+	ck_assert_str_eq("def\xE4\xB8\xADuvw", sgfc->root->prop->value->value2);
+	ck_assert_str_eq("ab\xE4\xB8\xADxyz", sgfc->root->prop->next->value->value);
+	ck_assert_int_eq(3, sgfc->root->prop->col);
+	ck_assert_int_eq(22, sgfc->root->prop->next->col);
+	ck_assert_int_eq(0, sgfc->error_count);
+	ck_assert_int_eq(0, sgfc->warning_count);
+END_TEST
+
+
+START_TEST (test_8bit_value_at_end)
+	print_error_handler = PrintErrorHandler;	/* count errors */
+	print_error_output_hook = NULL;
+	sgfc->options->forced_encoding = "UTF-8";
+	sgfc->options->encoding = OPTION_ENCODING_EVERYTHING;
+
+	char buffer[] = "(;AP[\xE4\xB8\xAD:\xE5\xB8\xAE]C[ab\xE4\xB8\xAD])";	/* only 8-Bit & at end */
+	sgfc->buffer = buffer;
+	sgfc->b_end = buffer + strlen(buffer);
+	int ret = LoadSGFFromFileBuffer(sgfc);
+	ck_assert_int_eq(ret, true);
+	ck_assert_str_eq("\xE4\xB8\xAD", sgfc->root->prop->value->value);
+	ck_assert_str_eq("\xE5\xB8\xAE", sgfc->root->prop->value->value2);
+	ck_assert_str_eq("ab\xE4\xB8\xAD", sgfc->root->prop->next->value->value);
+	ck_assert_int_eq(3, sgfc->root->prop->col);
+	ck_assert_int_eq(10, sgfc->root->prop->next->col);
+	ck_assert_int_eq(0, sgfc->error_count);
+	ck_assert_int_eq(0, sgfc->warning_count);
+END_TEST
+
 
 TCase *sgfc_tc_encoding(void)
 {
@@ -196,5 +237,7 @@ TCase *sgfc_tc_encoding(void)
 	tcase_add_test(tc, test_basic_conversion);
 	tcase_add_test(tc, test_bad_char_conversion);
 	tcase_add_test(tc, test_buffer_overflow_conversion);
+	tcase_add_test(tc, test_8bit_value_in_middle);
+	tcase_add_test(tc, test_8bit_value_at_end);
 	return tc;
 }

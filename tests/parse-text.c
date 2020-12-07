@@ -39,7 +39,7 @@ START_TEST (test_soft_linebreak)
     char text[] = "soft\\\nbreak";
 	prop_value->value = text;
 	prop_value->value_len = strlen(text);
-	int len = Parse_Text(sgfc, prop_value, 1, 0);
+	Parse_Text(sgfc, prop_value, 1, 0);
 	ck_assert_str_eq(text, "softbreak");
 
     char text2[] = "soft\\\nbreak:SIMPLE";

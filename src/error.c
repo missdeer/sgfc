@@ -376,7 +376,8 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 		error.lib_errno = errno;
 
 	error.error = type;
-	(*print_error_output_hook)(&error);		/* call output hook function */
+	if(print_error_output_hook)
+		(*print_error_output_hook)(&error);		/* call output hook function */
 	free(error_msg_buffer);
 	return true;
 }
