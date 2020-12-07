@@ -92,7 +92,7 @@ struct SaveFileHandler *SetupSaveFileIO(void)
 *** Returns:	true on success, false on error (out of memory)
 **************************************************************************/
 
-static int SaveBufferIO_open(struct SaveFileHandler *sfh, const char *path, const char *mode)
+int SaveBufferIO_open(struct SaveFileHandler *sfh, const char *path, const char *mode)
 {
 	/* Start with ~5kb buffer which suffices in many cases */
 	sfh->fh.memh.buffer = (char *)malloc((size_t)5000);
@@ -160,15 +160,17 @@ static int SaveBufferIO_putc(struct SaveFileHandler *sfh, int c)
 *** Returns:	pointer to SaveFileHandler
 **************************************************************************/
 
-struct SaveFileHandler *SetupSaveBufferIO(int (*close)(struct SaveFileHandler *, U_LONG))
+struct SaveFileHandler *SetupSaveBufferIO(
+	int (*open)(struct SaveFileHandler *, const char *, const char *),
+	int (*close)(struct SaveFileHandler *, U_LONG))
 {
 	struct SaveFileHandler *sfh = SaveMalloc(sizeof(struct SaveFileHandler), "memory file handler");
 	sfh->open = SaveBufferIO_open;
 	sfh->putc = SaveBufferIO_putc;
-	if(close)
-		sfh->close = close;
-	else
-		sfh->close = SaveBufferIO_close;
+	if(open)	sfh->open = open;
+	else		sfh->open = SaveBufferIO_open;
+	if(close)	sfh->close = close;
+	else		sfh->close = SaveBufferIO_close;
 	sfh->fh.memh.buffer = NULL;
 	sfh->fh.memh.pos = NULL;
 	sfh->fh.memh.buffer_size = 0;

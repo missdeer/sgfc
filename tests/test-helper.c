@@ -23,7 +23,7 @@ int Test_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 
 struct SaveFileHandler *SetupSaveTestIO(void)
 {
-	return SetupSaveBufferIO(Test_BufferIO_Close);
+	return SetupSaveBufferIO(SaveBufferIO_open, Test_BufferIO_Close);
 }
 
 void common_setup(void)

@@ -37,10 +37,13 @@ iconv_t OpenIconV(struct SGFInfo *, const char *, const char **);
 
 /**** save.c ****/
 
+int SaveBufferIO_open(struct SaveFileHandler *, const char *, const char *);
 int SaveBufferIO_close(struct SaveFileHandler *, U_LONG);
 
 struct SaveFileHandler *SetupSaveFileIO(void);
-struct SaveFileHandler *SetupSaveBufferIO(int (*)(struct SaveFileHandler *, U_LONG));
+struct SaveFileHandler *SetupSaveBufferIO(
+		int (*)(struct SaveFileHandler *, const char *, const char *),
+		int (*)(struct SaveFileHandler *, U_LONG));
 
 bool SaveSGF(struct SGFInfo *, struct SaveFileHandler *(*)(void), const char *);
 
