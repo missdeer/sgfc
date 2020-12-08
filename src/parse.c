@@ -250,7 +250,7 @@ int Parse_Text(struct SGFInfo *sgfc, struct PropValue *v, int prop_num, U_SHORT 
 	}
 
 	ParseText_Unescape(*value_ptr, value_len);
-	if(sgfc->options->encoding == OPTION_ENCODING_TEXT_ONLY && !(flags & PVT_NO_ENCODE))
+	if(sgfc->options->encoding == OPTION_ENCODING_TEXT_ONLY)
 		if(!ParseText_Decode(sgfc, value_ptr, value_len))
 			return 0;
 	ParseText_NormalizeWhitespace(sgfc, *value_ptr, value_len, v->row, v->col);
@@ -604,6 +604,29 @@ int Parse_Triple(char *value, size_t *len, ...)
 		ret = -1;
 	}
 
+	return ret;
+}
+
+
+/**************************************************************************
+*** Function:	Parse_Charset
+***				Checks & corrects charset values
+*** Parameters: value	... pointer to value string
+***				len		... length of string
+*** Returns:	-1/0/1	for corrected error / error / OK
+**************************************************************************/
+
+int Parse_Charset(char *value, size_t *len, ...)
+{
+	int ret = 1;
+
+	if(KillChars(value, len, C_NOTinSET, "-_:.0123456789"
+										 "abcdefghijklmnopqrstuvwxyz"
+										 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+		ret = -1;
+
+	if(!*len)
+		return 0;
 	return ret;
 }
 

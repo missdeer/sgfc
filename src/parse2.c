@@ -705,7 +705,7 @@ static bool InitTreeInfo(struct SGFInfo *sgfc, struct TreeInfo *ti, struct Node 
 		PrintError(E_UNKNOWN_FILE_FORMAT, sgfc, ff->value->row, ff->value->col, ti->FF);
 
 	ca = FindProperty(r, TKN_CA);
-	if(ca && !Check_Text(sgfc, ca, ca->value))
+	if(ca && !Check_Value(sgfc, ca, ca->value, ca->flags, Parse_Charset))
 		ca = NULL;
 	if(ca)	ti->encoding = OpenIconV(sgfc, ca->value->value, &ti->encoding_name);
 	else	ti->encoding = OpenIconV(sgfc, NULL, &ti->encoding_name);

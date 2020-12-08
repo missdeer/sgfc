@@ -74,11 +74,13 @@ iconv_t OpenIconV(struct SGFInfo *sgfc, const char *encoding, const char **encod
 
 char *DetectEncoding(const char *c, const char *b_end)
 {
-	int state = 1, brace_state = 1;
+	int state = 1, brace_state = 1, brace_count = 0;
 
 	if(c+3 >= b_end)
 		/* no encoding found (not even enough place for BOM) --> assume default */
 		return NULL;
+	if(c+1000 < b_end)
+		b_end = c+1000;	/* limit search to first 1000 bytes */
 
 	/* check for Unicode BOM */
 	if(*c == (char)0xFE && *(c+1) == (char)0xFF)
@@ -104,6 +106,7 @@ char *DetectEncoding(const char *c, const char *b_end)
 		{
 			case '(':	state = 2;
 						brace_state = 2;
+						brace_count++;
 						break;
 			case 'C':	if(state == 2) state = 3;
 						else		   state = brace_state;
@@ -129,26 +132,25 @@ char *DetectEncoding(const char *c, const char *b_end)
 		c++;
 	}
 
-	if(state)
+	/* if we found more than three open braces, chances are that the CA[] property
+	 * is not part of current game tree, but some game tree afterwards. So we
+	 * ignore the CA[] property in this case.
+	 */
+	if(state || brace_count >= 3)
 		return NULL;	/* no encoding found -> assume default */
 
 	/* c points to first char after "CA[" */
-	while(c < b_end && isspace(*c))
-		c++;
 	const char *c_end = c;
 	while(c_end < b_end && *c_end != ']')
 		c_end++;
-
-	do {
-		c_end--;
-	} while(isspace(*c_end));
-	c_end++;
-
-	if(c_end == b_end || c >= c_end)
-		return NULL;	/* no encoding found -> assume default */
-
-	/* c: first non-space in CA[] value, c_end: last non-space inside CA[] */
-	return SaveDupString(c, c_end - c, "encoding");
+	size_t len = c_end - c;
+	char *ca_value = SaveDupString(c, len, "encoding");
+	if(!Parse_Charset(ca_value, &len) || !len)
+	{
+		free(ca_value);
+		return NULL;
+	}
+	return ca_value;
 }
 
 

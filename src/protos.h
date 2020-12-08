@@ -60,6 +60,7 @@ int Parse_Move(char *, size_t *, ...);
 int Parse_Float(char *, size_t *, ...);
 int Parse_Color(char *, size_t *, ...);
 int Parse_Triple(char *, size_t *, ...);
+int Parse_Charset(char *, size_t *, ...);
 
 int Parse_Float_Offset(char *, size_t *, size_t);
 int Parse_Text(struct SGFInfo *, struct PropValue *, int prop_num, U_SHORT flags);
