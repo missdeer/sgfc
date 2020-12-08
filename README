@@ -178,21 +178,25 @@ Hence, a conforming SGF parser would first use ISO-8859-1 in order to
 parse the structure (skeleton) of the SGF tree (nodes, properties, and
 property value boundaries), including(!) escaping with '\', before parsing
 the text inside the property values according to the supplied encoding.
+Some 30 years later this approach looks antiquated. It also breaks the notion
+of SGF as text files.
 
-Some 30 years later this approach looks arcane. SGFC is not aware of any
-charset, so unless the SGF file is encoded in an ASCII-safe encoding,
-parsing may fail for unspecified reasons. Thankfully, Unicode UTF-8 is
-ASCII-safe, but e.g. Unicode UTF-16, GB 18030, or Shift JIS are not.
-
-SGFC assumes an ASCII-safe encoding! If you have a file in a non-ASCII-safe
-encoding, then you should *not* use SGFC to parse it. Change the encoding
-to Unicode UTF-8 first, then you can run SGFC on it.
+With V2.0 SGFC is aware of charset encodings and tries to strike a balance
+between de-facto usage and specification conformity. While files are now
+always saved as UTF-8, it supports three encoding modes while parsing a file
+(see detailed description of -E option). Note that all three modes can deal with
+almost all input files, as thankfully, most common encodings today are
+ASCII-compatible (i.e. ASCII characters do have an ASCII byte value encoding).
+But if encodings are not ASCII-safe (i.e. ASCII characters may appear as part
+of multi-byte sequence encodings, like in e.g. GB18030 or Shift_JIS),
+then results might differ depending on the encoding mode used and some characters
+might be broken in the output file.
 
 
 4.2 Option summary (alphabetical):
 ----------------------------------
 
-    -h  ... print a short help message
+    -h  ... print a help message with all options
     -bx ... Beginning of SGF data is detected by
                 1 - advanced search algorithm (default)
                 2 - first occurrence of '(;'
@@ -200,6 +204,10 @@ to Unicode UTF-8 first, then you can run SGFC on it.
     -c  ... write file even if a critical error occurs
     -dn ... n = number : disable message number -n-
     -e  ... expand compressed point lists
+    -Ex ... x = 1,2,3: charset encoding is applied to
+              1 - to whole SGF file, _before_ parsing (unit=char; default)
+              2 - text property values only, _after_ parsing (unit=byte)
+              3 - no encoding applied (binary style; unit=byte)
     -g  ... print game signature (Go GM[1] games only)
     -i  ... interactive mode (faulty game-info values only)
     -k  ... keep header in front of SGF data
@@ -217,13 +225,16 @@ to Unicode UTF-8 first, then you can run SGFC on it.
     -s  ... split game collection into single files
     -t  ... do not insert any soft linebreaks into text values
     -u  ... delete unknown properties
+    -U  ... alias for '--default-encoding=UTF-8'
     -v  ... correct variation level and root moves
     -w  ... disable warning messages
     -yP ... delete property P (P = property id)
     -z  ... reverse ordering of variations
 
-    --help ... print a short help message (same as -h)
+    --help    ... print a help message (same as -h)
     --version ... print version number
+    --default-encoding=name ... set default encoding to 'name' (CA[] has priority)
+    --encoding=name         ... override encoding specified in SGF file with 'name'
 
 
 4.3 Examples:
@@ -301,6 +312,16 @@ Warning 40: property not part of FF[x] (e.g. FF[3] file without FF[] property)
 To disable these messages specify: -d24d29d40
 
 
+Option --default-encoding=name:
+-------------------------------
+Set default encoding to provided name.
+
+Allows setting the desired default encoding if no CA[] property is specified.
+On the flip side, if a CA[] property is specified, it overrides this option.
+The default encoding (if this option is not specified) is ISO-8859-1.
+The option -U is a handy alias for '--default-encoding=UTF-8'.
+
+
 Option -e:
 ----------
 Expand compressed point lists
@@ -311,6 +332,54 @@ If you are concerned about compatibility with old applications you
 should avoid the new format and specify this option.
 
 The new format only affects point lists and not single moves (e.g. B or W).
+
+
+Option -E:
+----------
+Encoding mode used during reading/parsing a file
+
+SGFC provides three different modes while parsing an SGF file. Depending
+on how the SGF file was encoded, parsing SGF might result in some broken
+characters in text values, or even missin properties in pathological cases.
+
+The three modes are:
+    1 - apply encoding to whole SGF file, _before_ parsing (default)
+    2 - text property values only, _after_ parsing
+    3 - no encoding applied (binary style)
+
+Mode -E1 (default):
+In this mode SGFC treats the whole file (including the SGF skeleton and all
+property values) as having a single encoding. This is what you most likely
+encounter on the internet. It treats the SGF file like a text file with
+the given encoding. Strictly, speaking, this mode does not conform to the
+SGF specification. It has the limitation, that only a single encoding is
+allowed for the whole file. On the upside, '\'-escaping does not occur
+within multi-byte characters.
+
+Mode -E2 (specification conformant):
+In this mode SGFC parses SGF files according to the spec: only text
+property values are decoded according to the charset given. Note that in
+this mode escaping is done first, i.e. in non-ASCII-safe encodings
+'\'-escaping could occur *within* multi-byte characters. In this mode,
+SGFC is able to handle different encodings of game trees within a
+collection (i.e. multiple encodings in a single file, see
+test-files/mixed-encoding.sgf)
+
+Mode -E3 (binary/legacy):
+In this mode SGFC ignores all encoding rules, and treats the values as binary,
+which basically means, it treats the file as ASCII-compatible without applying
+any decoding whatsoever. Again, escaping could occur within multi-byte
+characters. This is how SGFC prior to V2.0 treated SGF files. Note that in this
+mode SGFC will *not* save files in UTF-8, but keep the property values as is.
+
+
+Option --encoding=name:
+-----------------------
+Override encoding specified in SGF file with 'name'.
+
+This option can be used to forcefully override any encoding value specified
+within the SGF file. It is helpful, when SGFC is unable to detect the correct
+encoding of the file.
 
 
 Option -g:
@@ -330,6 +399,11 @@ The output looks like:
 "Game signature - tree 1: 'onqsrq lporke'" (ear reddening move game)
 or
 "Game signature - tree 2: contains GM[12] - cannot calculate signature"
+
+
+Option -h / --help:
+-------------------
+Print help message with all available options.
 
 
 Option -i:
@@ -488,6 +562,11 @@ If you are concerned about compatibility to old applications you should
 avoid soft linebreaks and specify this option.
 
 
+Option -U:
+----------
+Alias for '--default-encoding=UTF-8'. See there.
+
+
 Option -v:
 ----------
 Correct variation level and root moves.
@@ -509,6 +588,11 @@ And it corrects another bad style: root nodes containing the first move
 
 Example: >>(;GM[1]C[first move in root node]GC[bad style]B[aa])<<
 Correct: >>(;GM[1]GC[good style];B[aa]C[first move not in root node])<<
+
+
+Option --version:
+-----------------
+Print version number of SGFC and exit.
 
 
 Option -w:
@@ -867,7 +951,7 @@ Classes:
         Example: >>bla[aa] (;GM[1];B[cc];)<<
         Note: searches for '[(lc)(lc)]'
 
- 7:FE   "could not find start mark '(;' - no SGF data found"
+ 7:FE   "no SGF data found - start mark '(;' missing?"
         Example: simple text file
 
  8:E-C  "illegal char(s) found: "
@@ -887,13 +971,13 @@ Classes:
 12:E    "empty variation found (ignored)"
         Example: >>(;B[cc]())<<
 
-13:E-C  "property <%s> may have only ONE value (other values skipped)"
+13:E-C  "property <%s> may have only ONE value (other values deleted)"
         Example: >>(;B[cc][dd])<< or >>(;B[cc;AW[dd][ee])<<
 
-14:E    "illegal <%s> deleted: " (i.e. illegal property value)
+14:E    "illegal <%s> value deleted: " (i.e. illegal property value)
         Example: >>(;B[111];PL[r])<<
 
-15:E/E4 "illegal <%s> corrected; new value: [%s], old value: "
+15:E/E4 "illegal <%s> value corrected; new value: [%s], old value: "
         Example: >>(;B[a a];DM[1  kk]BL[30.])<<
 
 16:E    "lowercase char not allowed in property identifier"
@@ -903,14 +987,14 @@ Classes:
 17:W/E  "empty <%s> value %s (deleted)" (found/not allowed)
         Example: >>(;PL[]AB[];C[])<<
 
-18:E    "illegal root property <%s> found (%s)" (action taken)
+18:E    "illegal root property <%s> found (assuming %s)" (action taken)
         Example: >>(;FF[four]GM[Go]SZ[-12])<<
 
 19:W-C  "game stored in tree %d is not Go. Cannot check move & position type"
         " -> errors will not get corrected!"
         Example: >>(;GM[12])<<
 
-20:E-C  "property <%s> without any values (ignored)"
+20:E-C  "property <%s> without any values found (ignored)"
         Example: >>(;B[cc]PL;W[aa];AB)<< or >>(;B[aa] B  L[321.0])<<
         Note: the second case ('BL' -> 'B L') causes loss of
               timing information
@@ -918,7 +1002,7 @@ Classes:
 21:E-C  "illegal variation start found (ignored)"
         Example: >>(;B[cc]((;W[dd])<<
 
-22:W    "$00 byte deleted - binary file?"
+22:W    "$00 byte detected (replaced with space) - binary file?"
         Note: SGFC cannot handle $00 bytes in property values
 
 23:E    "property <%s> expects compose type value (value deleted): "
@@ -927,19 +1011,19 @@ Classes:
 24:W    "move in root node found (split node into two)"
         Example: >>(;GM[1]B[dd])<<
 
-25:E    "illegal <%s> corrected; new value: [%s:%s], old value: "
+25:E    "illegal <%s> value corrected; new value: [%s:%s], old value: "
         Example: >>(;LB[a a: text])<<
 
 26:FE   "could not open destination file '%s'"
 27:FE   "could not write destination file '%s'"
 
-28:E    "property <%s> already exists %s" (merged/deleted)
+28:E    "property <%s> already exists (%s)" (merged/deleted)
         Example: >>(;C[text1][text2]LB[aa:1]LB[bb:2];W[aa]W[bb])<<
 
 29:W    "property <%s> deleted"
         Example: >>(;FF[1]BS[1]RG[aa][cc])<< - invoke SGFC with option '-o'
 
-30:E4   "setup and move properties mixed within a node %s"
+30:E4   "setup and move properties mixed within a node (%s)"
         Example: >>(;B[cc]AW[dd])<< or >>(;B[cc]PL[B])<<
 
 31:W    "property identifier consists of more than 2 uppercase letters: <%s>"
@@ -958,17 +1042,16 @@ Classes:
 35:W    "unknown property <%s> %s" (found/deleted)
         Example: >>(;KK[txt])<<
 
-36:E-C  "missing semicolon at start of game-tree"
+36:E-C  "missing semicolon at start of game-tree (detection might be wrong [try -b2])"
         Example: >>( GM[1]FF[3][SZ[19])<<
-        Note: Detection might be wrong (use option -b2 in that case)
 
 37:E    "black and white move within a node (split into two nodes)"
         Example: >>(;B[cc]W[dd])<<
 
-38:E    "%s <%s> position not unique ([partially] deleted) - value: "
+38:E    "%s <%s> position not unique ([partially] deleted) - value(s): "
         Example: >>(;AB[aa][aa];MA[kk]TR[kk])<<
 
-39:W    "AddStone <%s> has no effect (deleted) - value: "
+39:W    "AddStone <%s> has no effect ([partially] deleted) - value(s): "
         Example: >>(;B[cc];AB[cc])<<
 
 40:W    "property <%s> is not defined in FF[%d] (%s)" (ok/converted/deleted)
@@ -981,7 +1064,7 @@ Classes:
         Note: combinations of TE & BM get converted to DO & IT
         Example: >>(;B[cc]TE[1]BM[1];W[dd]BM[1]TE[1])<<
 
-43:E    "move annotation <%s> without a move in the node (deleted)"
+43:E    "move annotation <%s> without a move in same node (deleted)"
         Example: >>(;TE[2])<<
 
 44:E4   "game info entry <%s> outside game-info node (line:%d col:%d) (deleted)"
@@ -990,16 +1073,16 @@ Classes:
 45:W    "different file formats stored in one file (may cause troubles with some applications)"
         Example: >>(;GN[1])  (;FF[3]GN[2])<<
 
-46:FE   "unknown file format (only able to handle files up to FF[4])"
+46:E-C  "unknown file format FF[%d] (only able to handle files up to FF[4])"
         Example: >>(;FF[5])<<
 
 47:E    "square board size in rectangular definition (corrected)"
         Example: >>(;SZ[19:19])<<
 
-48:FE   "no source file specified (-? for help)"
+48:FE   "no source file specified (-h for help)"
         Example: 'sgfc -u'
 
-49:FE   "bad command line option parameter '%s'"
+49:FE   "bad command line option parameter '%s' (-h for help)"
         Example: 'sgfc -lr'
 
 50:E    "board size too big (corrected to %dx%d)"
@@ -1058,3 +1141,24 @@ Classes:
 
 68:FE   "unknown command line option '%s' (-h for help)"
         Example: 'sgfc --versi'
+
+69:FE   "unknown or inconvertible encoding given as parameter in %s: '%s'"
+        Example: 'sgfc --default-encoding=xyz123'
+
+70:FE   "unknown iconv error during encoding phase encountered - byte offset: %ld"
+        Note: internal error which cannot be handled gracefully
+
+71:W-C  "encoding errors detected (faulty bytes ignored) - byte offset: %ld"
+        Example: illegal byte sequence according to specified encoding
+
+72:W-C  "unknown encoding '%s' - falling back to default encoding '%s'"
+        Example: >>(;FF[4]CA[xyz-123])<<
+
+73:FE   "charset encoding detection went wrong! Please use --encoding to override."
+        Example: >>CA[UTF-8](;FF[4]CA[ISO-8859-3])<<
+
+74:W-C  "different charset encodings stored in one file (will cause troubles with applications)"
+        Example: >>(;FF[4]CA[Shift_JIS])(;FF[4]CA[GB18030])<< when using -E2 or -E3
+
+75:FE   "different encodings in one file detected. Use option -E2/3 to parse this file"
+        Example same as in #74; using default option of -E1

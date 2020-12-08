@@ -154,8 +154,9 @@ char *DetectEncoding(const char *c, const char *b_end)
 
 /**************************************************************************
 *** Function:	DecodeBuffer
-***				Searches for CA[] property in buffer; starts from sgfc->current
-***				Contains mini-parser which might pick up different CA[] than load.c
+***				Decodes specified buffer using provided iconv descriptor.
+***				Scales output buffer incrementally, but might
+***				might allocate more memory than strictly necessary.
 *** Parameters: sgfc		... pointer to SGFInfo structure
 ***				cd			... iconv conversion descriptor
 ***				buffer		... start of input buffer
@@ -254,7 +255,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 *** Function:	DecodeSGFBuffer
 ***				Decodes complete SGF buffer
 *** Parameters: sgfc		  ... pointer to SGFInfo structure
-***				buffer_end	  ... output variable: end of decoded buffer
+***				encbuffer_end ... output variable: end of decoded buffer
 ***				encoding_name ... output variable: name of encoding used
 *** Returns:	pointer to decoded buffer or NULL in case of fatal error
 **************************************************************************/

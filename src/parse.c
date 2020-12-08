@@ -87,7 +87,7 @@ static bool ParseText_Decode(struct SGFInfo *sgfc, char **value_ptr, size_t *len
 
 /**************************************************************************
 *** Function:	ParseText_NormalizeWhitespace - helper function for Parse_Text
-***				Normalize whitespace and linebreaks
+***				Normalize whitespace and linebreaks; replace $00 bytes with space
 *** Parameters: s	... pointer to property value
 ***				len		... length of string
 ***				row		... row number of property value
@@ -231,11 +231,11 @@ static void ParseText_StripTrailingSpace(char *value, size_t *len)
 *** Function:	Parse_Text
 ***				Transforms any kind of linebreaks to '\n' (or ' ')
 ***				and all WS to space. Cuts off trailing WS.
-*** Parameters: value	... pointer to property value
-***				len		... length of string
-***				flags	... PVT_SIMPLE (SimpleText type)
-***							PVT_COMPOSE (compose type)
-***				sgfc    ... pointer to SGFInfo
+*** Parameters: sgfc	 ... pointer to SGFInfo
+***				v		 ... pointer to property value structure
+***				prop_num ... prop value 1 or prop value 2
+***				flags	 ... PVT_SIMPLE (SimpleText type)
+***							 PVT_COMPOSE (compose type)
 *** Returns:	length of converted string (0 for empty string)
 **************************************************************************/
 
@@ -332,6 +332,8 @@ int Parse_Move(char *value, size_t *len, ...)
 	if(sgfc->info->GM != 1)			/* game != GO ? */
 	{
 		ParseText_Unescape(value, len);
+		if (KillChars(value, len, C_inSET, "\x00"))
+			return -1;
 		return 1;
 	}
 
@@ -936,11 +938,12 @@ static void CheckID_Lowercase(struct SGFInfo *sgfc, struct Property *p)
 void Check_Properties(struct SGFInfo *sgfc, struct Node *n, struct BoardStatus *st)
 {
 	struct Property *p, *hlp;
+	int capped_ff = sgfc->info->FF <= 4 ? sgfc->info->FF : 4;
 
 	p = n->prop;
 	while(p)						/* property loop */
 	{
-		if((!(sgf_token[p->id].ff & (1 << (sgfc->info->FF - 1)))) &&
+		if((!(sgf_token[p->id].ff & (1 << (capped_ff - 1)))) &&
 			 (p->id != TKN_KI))
 		{
 			if(sgf_token[p->id].data & ST_OBSOLETE)

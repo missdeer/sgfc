@@ -16,10 +16,10 @@ tests/test.sgf
 test.sgf compromises almost all errors known to SGFC.
 
 Invoking SGFC without any parameters and input file test.sgf should yield:
-54 errors and 18 warnings - 13 messages are critical.
+55 errors and 19 warnings - 15 messages are critical.
 
 Invoking SGFC with 'sgfc -roun test.sgf' should yield:
-68 error and  11 warnings - 13 messages are critical.
+70 error and  11 warnings - 15 messages are critical.
 
 Following errors cannot be tested from within the test file:
 
@@ -33,10 +33,15 @@ Error 9: variation nesting incomplete: add ']' to the end of test.sgf
 Fatal error 26: could not open destination file
 Fatal error 27: could not write destination file
 Error 34: file not saved due to critical errors: e.g. 'sgfc test.sgf out.sgf'
-Fatal error 46: unknown file format: create a file consisting of "(;FF[5])"
 Fatal error 48: no source file specified: e.g. 'sgfc -u'
 Fatal error 49: error in commandline: e.g. 'sgfc -ld'
-Fatal error 68: error in commandline: e.g. 'sgfc -ld'
+Fatal error 68: error in commandline: e.g. 'sgfc --enco'
+Fatal error 69: error in commandline: e.g. 'sgfc --encoding=xyz123'
+Fatal error 70: internal charset decoding error which cannot be handled gracefully
+Warning 71: illegal byte sequence. Parse with -U option, e.g. 'sgfc -U test.sgf'
+Fatal error 73: charset encoding detection went wrong
+Warning 74: different charset encodings in file. Use 'sgfc -E2 test-file/mixed-encoding.sgf'
+Fatal error 75: different charset encodings in file. Use 'sgfc test-file/mixed-encoding.sgf'
 
 Every line yields one or more errors/warnings.
 test.sgf is compiled in a way that error/warning x occurs in line x, e.g.

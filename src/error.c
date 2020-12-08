@@ -67,7 +67,7 @@ static const char *error_mesg[] =
 		"file not saved (because of critical errors)\n",
 		"unknown property <%s> %s\n",
 /* 35 */
-		"missing semicolon at start of game-tree (detection might be wrong [use -b2 in that case])\n",
+		"missing semicolon at start of game-tree (detection might be wrong [try -b2])\n",
 		"black and white move within a node (split into two nodes)\n",
 		"%s <%s> position not unique ([partially] deleted) - value(s): ",
 		"AddStone <%s> has no effect ([partially] deleted) - value(s): ",
@@ -75,7 +75,7 @@ static const char *error_mesg[] =
 /* 40 */
 		"annotation property <%s> contradicts previous property (deleted)\n",
 		"combination of <%s> found (converted to <%s>)\n",
-		"move annotation <%s> without a move in node (deleted)\n",
+		"move annotation <%s> without a move in same node (deleted)\n",
 		"game info entry <%s> outside game-info node (line:%d col:%d) (deleted)\n",
 		"different file formats stored in one file (may cause troubles with some applications)\n",
 /* 45 */

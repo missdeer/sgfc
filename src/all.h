@@ -190,8 +190,7 @@ typedef enum {
 #define PVT_DEL_EMPTY	0x0040u	/* empty values get removed */
 #define PVT_CHECK_EMPTY 0x0080u	/* empty values are checked by Check_xxx */
 #define PVT_TEXT		0x0100u	/* text value (simple or "complex") */
-#define PVT_NO_ENCODE	0x0200u	/* don't apply -E2 charset decoding (for CA[] itself) */
-#define SPLIT_SAVE		0x0400u	/* splitting with '\' (only text values) */
+#define SPLIT_SAVE		0x0200u	/* splitting with '\' soft linebreaks during save (only text values) */
 #define DOUBLE_MERGE	0x0800u
 #define TYPE_MOVE		0x1000u
 #define TYPE_SETUP		0x2000u
