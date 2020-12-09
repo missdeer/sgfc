@@ -221,8 +221,9 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 		sgfc->_error_c->error_seen[(type & M_ERROR_NUM) - 1] = true;
 	}
 
-	if((!sgfc->options->error_enabled[(type & M_ERROR_NUM)-1] && !(type & E_FATAL_ERROR)
-		&& type != E_NO_ERROR) || (!sgfc->options->warnings && (type & E_WARNING)))
+	if((type != E_NO_ERROR && !(type & E_FATAL_ERROR)
+		&& !sgfc->options->error_enabled[(type & M_ERROR_NUM)-1])
+		|| (!sgfc->options->warnings && (type & E_WARNING)))
 	{								/* error message enabled? */
 		sgfc->ignored_count++;
 		return false;
