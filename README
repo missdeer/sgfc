@@ -305,7 +305,7 @@ Fatal error messages cannot be disabled.
 
 Hint: there are messages which can be printed up to 100 times, but which
 are not really critical. These messages are
-Warning 24: removed empty value (e.g. 'C[]')
+Warning 17: removed empty value (e.g. 'C[]')
 Warning 29: deleted property <x> (when specifying -o or -yXX)
 Warning 40: property not part of FF[x] (e.g. FF[3] file without FF[] property)
 
@@ -340,7 +340,7 @@ Encoding mode used during reading/parsing a file
 
 SGFC provides three different modes while parsing an SGF file. Depending
 on how the SGF file was encoded, parsing SGF might result in some broken
-characters in text values, or even missin properties in pathological cases.
+characters in text values, or even missing properties in some cases.
 
 The three modes are:
     1 - apply encoding to whole SGF file, _before_ parsing (default)
@@ -352,9 +352,9 @@ In this mode SGFC treats the whole file (including the SGF skeleton and all
 property values) as having a single encoding. This is what you most likely
 encounter on the internet. It treats the SGF file like a text file with
 the given encoding. Strictly, speaking, this mode does not conform to the
-SGF specification. It has the limitation, that only a single encoding is
-allowed for the whole file. On the upside, '\'-escaping does not occur
-within multi-byte characters.
+SGF specification. It currently has the limitation, that only a single
+encoding is allowed for the whole file. On the upside, '\'-escaping does
+not occur within multi-byte characters.
 
 Mode -E2 (specification conformant):
 In this mode SGFC parses SGF files according to the spec: only text
@@ -362,7 +362,7 @@ property values are decoded according to the charset given. Note that in
 this mode escaping is done first, i.e. in non-ASCII-safe encodings
 '\'-escaping could occur *within* multi-byte characters. In this mode,
 SGFC is able to handle different encodings of game trees within a
-collection (i.e. multiple encodings in a single file, see
+collection (i.e. multiple encodings in a single file, for an example see
 test-files/mixed-encoding.sgf)
 
 Mode -E3 (binary/legacy):
@@ -1022,6 +1022,7 @@ Classes:
 
 29:W    "property <%s> deleted"
         Example: >>(;FF[1]BS[1]RG[aa][cc])<< - invoke SGFC with option '-o'
+        Example 2: >>(;B[aa]BL[309.0])<< - invoke SGFC with option '-yBL'
 
 30:E4   "setup and move properties mixed within a node (%s)"
         Example: >>(;B[cc]AW[dd])<< or >>(;B[cc]PL[B])<<
@@ -1055,7 +1056,7 @@ Classes:
         Example: >>(;B[cc];AB[cc])<<
 
 40:W    "property <%s> is not defined in FF[%d] (%s)" (ok/converted/deleted)
-        Example: >>(;FF[4];L[aa][bb][cc])BS[1])<<
+        Example: >>(;FF[4];L[aa][bb];BS[1])<<
 
 41:E    "annotation property <%s> contradicts previous property (deleted)"
         Example: >>(;GB[2]GW[1])<<
