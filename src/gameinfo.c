@@ -200,7 +200,7 @@ static int Parse_Result(char *value, size_t *len, ...)
 					value[0] = 'B';
 		case 'b':
 		case 'w':	err = -1;
-					value[0] = toupper(value[0]);
+					value[0] = (char)toupper(value[0]);
 		case 'B':
 		case 'W':	charpoints = GetFraction(value);
 
@@ -296,7 +296,7 @@ static int Parse_Result(char *value, size_t *len, ...)
 							case 'r':
 							case 't':
 							case 'f':	err = -1;
-										value[2] = toupper(value[2]);
+										value[2] = (char)toupper(value[2]);
 							case 'R':
 							case 'T':
 							case 'F':	if(*len > 3)
@@ -355,7 +355,7 @@ static int Parse_Result(char *value, size_t *len, ...)
 
 static int CorrectDate(char *value, size_t *len)
 {
-	int year = -1, month = -1, day = -1, day2 = -1;
+	long year = -1, month = -1, day = -1, day2 = -1;
 	int i;
 	bool char_month = false;
 	long n;
@@ -415,15 +415,15 @@ static int CorrectDate(char *value, size_t *len)
 	if(day > 0 && month > 0)
 	{
 		if(day2 > 0)
-			sprintf(value, "%04d-%02d-%02d,%02d", year, month, day, day2);
+			sprintf(value, "%04ld-%02ld-%02ld,%02ld", year, month, day, day2);
 		else
-			sprintf(value, "%04d-%02d-%02d", year, month, day);
+			sprintf(value, "%04ld-%02ld-%02ld", year, month, day);
 	}
 	else
 		if(month > 0)
-			sprintf(value, "%04d-%02d", year, month);
+			sprintf(value, "%04ld-%02ld", year, month);
 		else
-			sprintf(value, "%04d", year);
+			sprintf(value, "%04ld", year);
 
 	*len = strlen(value);
 	return -1;

@@ -127,7 +127,7 @@ struct ErrorC_internal {
 	U_LONG last_type;
 
 	char accumulate[ACCUMULATE_SIZE];
-	U_LONG acc_count;
+	size_t acc_count;
 	U_LONG acc_row;		/* type & position of last accumulate error */
 	U_LONG acc_col;
 	U_LONG acc_type;
@@ -200,7 +200,7 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 	struct SGFCError error = {0, NULL, 0, 0, 0};
 	char *error_msg_buffer = NULL, *val_pos = NULL, *illegal = NULL;
 	U_LONG row = 0, col = 0;
-	int illegal_count;
+	size_t illegal_count;
 	va_list argtmp;
 
 	if(type & E_ERROR4)
@@ -340,7 +340,7 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 	}
 
 	va_copy(argtmp, arglist);
-	size_t size = vsnprintf(NULL, 0, error_mesg[(type & M_ERROR_NUM)-1], argtmp);
+	size_t size = (size_t)vsnprintf(NULL, 0, error_mesg[(type & M_ERROR_NUM)-1], argtmp);
 	va_end(argtmp);
 	malloc_size += size;
 

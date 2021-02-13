@@ -150,13 +150,18 @@ static int ParsePropertyArg(struct SGFInfo *sgfc, const char **str)
 
 	c++; /* first char after initial option letter */
 	/* count uppercase */
-	for(n = 0; isupper(*c); c++, n++);
+	for(n = 0; isupper(*c) && n < 102; c++, n++);
+	if (n == 101) /* limit length of propIDs in argument */
+	{
+		PrintError(FE_BAD_PARAMETER, sgfc, c - n);
+		return -1;
+	}
 	c -= n;
 	if(n)
 	{
 		/* check for known property name */
 		for(m = 1; sgf_token[m].id; m++)
-			if(!strnccmp(c, sgf_token[m].id, n))
+			if(!strnccmp(c, sgf_token[m].id, (size_t)n))
 				break;
 	}
 	/* no property specified or unknown property -> error */
@@ -269,17 +274,17 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 						case 'l':
 							if(!(n = ParseIntArg(sgfc, &c, 4)))
 								return false;
-							options->linebreaks = n;
+							options->linebreaks = (enum option_linebreaks)n;
 							break;
 						case 'b':
 							if(!(n = ParseIntArg(sgfc, &c, 3)))
 								return false;
-							options->find_start = n;
+							options->find_start = (enum option_findstart)n;
 							break;
 						case 'E':
 							if(!(n = ParseIntArg(sgfc, &c, 3)))
 								return false;
-							options->encoding = n;
+							options->encoding = (enum option_encoding)n;
 							break;
 						case 'y':
 							if((n = ParsePropertyArg(sgfc, &c)) == -1)

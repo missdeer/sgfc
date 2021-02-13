@@ -453,6 +453,6 @@ struct SGFToken
 	U_CHAR ff;		/* file format */
 	bool (*CheckValue)(struct SGFInfo *, struct Property *, struct PropValue *);
 	bool (*Execute_Prop)(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
-	U_INT flags;
+	U_SHORT flags;
 	U_SHORT data;	/* for Do_XXX */
 };

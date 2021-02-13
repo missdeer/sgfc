@@ -139,7 +139,7 @@ bool Do_Move(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 	CaptureStones(st, color, x + 1, y);
 	CaptureStones(st, color, x, y - 1);
 	CaptureStones(st, color, x, y + 1);
-	CaptureStones(st, ~color, x, y);		/* check for suicide */
+	CaptureStones(st, (unsigned char)~color, x, y);		/* check for suicide */
 
 	if(sgfc->options->del_move_markup)		/* if del move markup, then */
 	{										/* mark move position as markup */

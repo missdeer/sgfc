@@ -307,19 +307,19 @@ static bool NewValue(struct LoadInfo *load, struct Property *p, U_SHORT flags)
 		if(!t)
 		{
 			if(flags & PVT_WEAKCOMPOSE)	/* no compose -> parse as normal */
-				AddPropValue(load->sgfc, p, row, col, s, load->current - s - 1, NULL, 0);
+				AddPropValue(load->sgfc, p, row, col, s, (size_t)(load->current - s - 1), NULL, 0);
 			else						/* not weak -> error */
 			{
-				char *val = SaveDupString(s, load->current - s - 1, "compose error value");
+				char *val = SaveDupString(s, (size_t)(load->current - s - 1), "compose error value");
 				PrintError(E_COMPOSE_EXPECTED, load->sgfc, row, col, val, p->idstr);
 				free(val);
 			}
 		}
 		else	/* composed value */
-			AddPropValue(load->sgfc, p, row, col, s, t - s, t + 1, load->current - t - 2);
+			AddPropValue(load->sgfc, p, row, col, s, (size_t)(t - s), t + 1, (size_t)(load->current - t - 2));
 	}
 	else
-		AddPropValue(load->sgfc, p, row, col, s, load->current - s - 1, NULL, 0);
+		AddPropValue(load->sgfc, p, row, col, s, (size_t)(load->current - s - 1), NULL, 0);
 
 	return true;
 }
@@ -340,7 +340,7 @@ static bool NewProperty(struct LoadInfo *load, struct Node *n, token id, U_LONG 
 {
 	struct Property *newp;
 	bool ret = true;
-	U_LONG tooMany_row = 0, tooMany_col;
+	U_LONG tooMany_row = 0, tooMany_col = 0;
 
 	if(!n)	return true;
 
@@ -400,8 +400,7 @@ static bool NewProperty(struct LoadInfo *load, struct Node *n, token id, U_LONG 
 static bool MakeProperties(struct LoadInfo *load, struct Node *n)
 {
 	char propid[100], full_propid[300];
-	U_LONG id_row, id_col;
-	int pi, pi_lc;
+	U_LONG id_row, id_col, pi, pi_lc;
 
 	while(true)
 	{

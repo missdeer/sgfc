@@ -520,9 +520,7 @@ static int SplitMoveSetup(struct SGFInfo *sgfc, struct Node *n)
 static void CheckDoubleProp(struct SGFInfo *sgfc, struct Node *n)
 {
 	struct Property *p, *q;
-	struct PropValue *v, *w;
-	char *c;
-	size_t l;
+	struct PropValue *v;
 
 	p = n->prop;
 	while(p)
@@ -893,17 +891,17 @@ static bool CheckDifferingRootProperties(struct SGFInfo *sgfc)
 static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatus *old)
 {
 	struct Node *n;
-	int area;
+	unsigned int area;
 
 	struct BoardStatus *st = SaveMalloc(sizeof(struct BoardStatus), "board status buffer");
 
 	while(r)
 	{
 		memcpy(st, old, sizeof(struct BoardStatus));
-		area = old->bwidth * old->bheight;
+		area = (unsigned int)(old->bwidth * old->bheight);
 		if(st->board)
 		{
-			st->board = SaveMalloc(area * sizeof(char), "goban buffer");
+			st->board = SaveMalloc(sizeof(char) * area, "goban buffer");
 			memcpy(st->board, old->board, area * sizeof(char));
 		}
 		/* path_board is reused (paths marked with different path_num) */
@@ -959,8 +957,7 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 
 static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
 {
-	struct Node *n;
-	int area;
+	unsigned int area;
 
 	struct BoardStatus *st = SaveMalloc(sizeof(struct BoardStatus), "board status buffer");
 
@@ -970,7 +967,7 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
 		memset(st, 0, sizeof(struct BoardStatus));
 		st->bwidth = sgfc->info->bwidth;
 		st->bheight = sgfc->info->bheight;
-		area = st->bwidth * st->bheight;
+		area = (unsigned int)(st->bwidth * st->bheight);
 		if(area)
 		{
 			st->board = SaveCalloc(area * sizeof(char), "goban buffer");

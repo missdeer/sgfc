@@ -9,11 +9,20 @@
 CC = gcc
 #CC = /home/arno/development/sgfc/afl-2.52b/afl-gcc
 
-OPTIONS = -pedantic -W -Wimplicit -Wreturn-type -Wswitch -Wformat\
-	  -Wuninitialized -Wparentheses -Wpointer-arith -Wbad-function-cast\
-	  -Wcast-qual -Wcast-align -Waggregate-return -Wstrict-prototypes\
-	  -Wnested-externs -Wshadow -Wchar-subscripts -std=c99\
-	  -Wimplicit-fallthrough=0
+OPTIONS = -std=c99 -pedantic -W -Wimplicit -Wreturn-type -Wswitch -Wformat \
+	  -Wuninitialized -Wparentheses -Wpointer-arith -Wbad-function-cast \
+	  -Wcast-qual -Wcast-align -Waggregate-return -Wstrict-prototypes \
+	  -Wnested-externs -Wshadow -Wchar-subscripts \
+	  -Wimplicit-fallthrough=0 -Wconversion -Wsign-conversion
+
+# clang
+#CC = clang
+#OPTIONS = -std=c99 -Weverything -Wno-padded -Wno-unused-parameter \
+		  -Wno-format-nonliteral -Wno-disabled-macro-expansion \
+		  -Wno-documentation-unknown-command -Wno-switch-enum \
+		  -Wno-conditional-uninitialized
+#OPTIONS = -W -Wall -pedantic -std=c99 -Wno-unused-parameter -Wmicrosoft \
+		  -Wsign-conversion -Wshorten-64-to-32 -Wconversion
 
 OPTIMIZATION = -O1
 CFLAGS = $(OPTIMIZATION) $(OPTIONS)

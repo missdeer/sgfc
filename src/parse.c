@@ -80,7 +80,7 @@ static bool ParseText_Decode(struct SGFInfo *sgfc, char **value_ptr, size_t *len
 
 	free(*value_ptr); 			/* swap buffer for decoded buffer */
 	*value_ptr = decoded;
-	*len = end - decoded;
+	*len = (size_t)(end - decoded);
 	return true;
 }
 
@@ -223,7 +223,7 @@ static void ParseText_StripTrailingSpace(char *value, size_t *len)
 	while(c >= value && isspace(*c))
 		*c-- = 0;
 
-	*len = c - value + 1;
+	*len = (size_t)(c - value + 1);
 }
 
 
@@ -321,7 +321,7 @@ int Parse_Move(char *value, size_t *len, ...)
 	int ret = 1, c;
 	bool emptyOrSpace = false;
 	struct SGFInfo *sgfc;
-	U_SHORT flags;
+	U_INT flags;
 	va_list arglist;
 
 	va_start(arglist, len);
@@ -408,10 +408,9 @@ int Parse_Float(char *value, size_t *len, ...)
 {
 	int ret = 1, where = 0;
 	/* where (bits): 0-minus / 1-int / 2-fraction / 3-'.' / 4-plus */
-	U_LONG i;
 	char *s, *d;
 	char *allowed;
-	U_SHORT flags;
+	U_INT flags;
 	va_list arglist;
 
 	va_start(arglist, len);
@@ -464,8 +463,8 @@ int Parse_Float(char *value, size_t *len, ...)
 	{
 		if((where & 8) && !(where & 2))		/* missing '0' in front of '.' */
 		{
+			size_t i = *len;
 			ret = -1;
-			i = *len;
 			d = value + i;
 			s = d - 1;
 

@@ -143,7 +143,7 @@ char *DetectEncoding(const char *c, const char *b_end)
 	const char *c_end = c;
 	while(c_end < b_end && *c_end != ']')
 		c_end++;
-	size_t len = c_end - c;
+	size_t len = (size_t)(c_end - c);
 	char *ca_value = SaveDupString(c, len, "encoding");
 	if(!Parse_Charset(ca_value, &len) || !len)
 	{
@@ -173,7 +173,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 				   const char **buffer_end)
 {
 	char *out_buffer, *out_pos, *in_buffer;
-	size_t in_left, out_size, result, out_left, err_left = -1;
+	size_t in_left, out_size, result, out_left, err_left = 0;
 	bool resize_out = false, add_replacement = false;
 	bool illegal_sequence_error = false;
 
@@ -196,7 +196,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 				if(!illegal_sequence_error)
 				{
 					illegal_sequence_error = true;
-					PrintError(WS_ENCODING_ERRORS, sgfc, in_buffer - buffer + err_offset);
+					PrintError(WS_ENCODING_ERRORS, sgfc, (size_t)(in_buffer - buffer) + err_offset);
 				}
 				in_buffer++;
 				in_left--;
@@ -215,7 +215,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 				/* bytes needed are estimated based on encoding progress so far
 				 * +1 because of edge case of out_size==in_left */
 				float needed = (float)in_left * (float)out_size / (float)(out_size - in_left + 1);
-				size_t increase = (size_t)(lrintf(needed*1.05)) + 12; /* +5% + 3x 4 byte wide chars */
+				size_t increase = (size_t)(lrintf(needed*1.05f)) + 12; /* +5% + 3x 4 byte wide chars */
 				size_t new_size = out_size + increase;
 				/* +1 for \0 termination of buffer */
 				char *new_buffer = SaveMalloc(new_size+1, "temporary buffer for encoding conversion");
@@ -242,7 +242,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 
 			free(out_buffer);
 			iconv_close(cd);
-			PrintError(FE_ENCODING_ERROR, sgfc, in_buffer - buffer + err_offset);
+			PrintError(FE_ENCODING_ERROR, sgfc, (size_t)(in_buffer - buffer) + err_offset);
 			return NULL;
 		}
 	}
@@ -277,7 +277,7 @@ char *DecodeSGFBuffer(struct SGFInfo *sgfc, const char **encbuffer_end, char **e
 	if(!cd)
 		return NULL;
 
-	char *encoded_buffer = DecodeBuffer(sgfc, cd, sgfc->buffer, sgfc->b_end - sgfc->buffer,
+	char *encoded_buffer = DecodeBuffer(sgfc, cd, sgfc->buffer, (size_t)(sgfc->b_end - sgfc->buffer),
 										0, encbuffer_end);
 	iconv_close(cd);
 	return encoded_buffer;
