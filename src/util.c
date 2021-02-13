@@ -33,9 +33,9 @@ char EncodePosChar(int c)
 
 int DecodePosChar(char c)
 {
-	if(islower(c))
+	if(islower((unsigned char)c))
 		return c-'a'+1;
-	if(isupper(c))
+	if(isupper((unsigned char)c))
 		return c-'A'+27;
 	return false;
 }
@@ -198,7 +198,7 @@ bool strnccmp(const char *a, const char *b, size_t len)
 
 	while(*a && *b && len)
 	{
-		if(toupper(*a) != toupper(*b))
+		if(toupper((unsigned char)*a) != toupper((unsigned char)*b))
 			return true;
 		a++;
 		b++;
@@ -223,16 +223,16 @@ bool stridcmp(const char *a, const char *b)
 {
 	while(*a && *b)
 	{
-		if(islower(*a)) { a++; continue; }
-		if(islower(*b)) { b++; continue; }
+		if(islower((unsigned char)*a)) { a++; continue; }
+		if(islower((unsigned char)*b)) { b++; continue; }
 		if(*a != *b)
 			return true;
 		a++;
 		b++;
 	}
 
-	while(islower(*a))	a++;
-	while(islower(*b))	b++;
+	while(islower((unsigned char)*a))	a++;
+	while(islower((unsigned char)*b))	b++;
 
 	if(*a || *b)
 		return true;
@@ -256,9 +256,9 @@ void strnpcpy(char *dst, const char *src, size_t len)
 {
 	for(; len>0; len--)
 	{
-		if(isspace(*src))
+		if(isspace((unsigned char)*src))
 			*dst = ' ';
-		else if(iscntrl(*src))
+		else if(iscntrl((unsigned char)*src))
 			*dst = '.';
 		else
 			*dst = *src;
@@ -288,7 +288,7 @@ U_LONG KillChars(char *value, size_t *len, U_SHORT kill, const char *cset)
 
 	for(c = d = value; i; c++, i--)
 	{
-		if(((kill & C_ISSPACE) && isspace(*c)) ||
+		if(((kill & C_ISSPACE) && isspace((unsigned char)*c)) ||
 		   ((kill & C_NOT_ISALPHA) && !isalpha(*c)))
 			err = 1;
 		else
@@ -333,7 +333,7 @@ U_LONG TestChars(const char *value, U_SHORT test, const char *cset)
 
 	for(c = value; *c; c++)
 	{
-		if(isspace(*c))		/* WhiteSpace are ignored !! */
+		if(isspace((unsigned char)*c))		/* WhiteSpace are ignored !! */
 			continue;
 
 		if((test & C_ISALPHA) && isalpha(*c))

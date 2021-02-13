@@ -136,7 +136,7 @@ static const char *SkipText(struct LoadInfo *load, const char *s, const char *e,
 
 		if(mode & OUTSIDE)		/* '.. [] ..' */
 		{
-			if(!isspace(*s))
+			if(!isspace((unsigned char)*s))
 				PrintError(E_ILLEGAL_OUTSIDE_CHAR, load->sgfc, *row, *col, true, s);
 		}
 		else					/* '[ .... ]' */
@@ -215,12 +215,12 @@ static bool GetNextSGFChar(struct LoadInfo *load, bool print_error, U_LONG error
 						load->lowercase = 0;
 						return true;
 
-			default:	if(isupper(*load->current))
+			default:	if(isupper((unsigned char)*load->current))
 						{
 							load->lowercase += lc;
 							return true;
 						}
-						if(islower(*load->current))
+						if(islower((unsigned char)*load->current))
 							lc++;
 						else		/* !islower && !isupper */
 						{
@@ -229,7 +229,7 @@ static bool GetNextSGFChar(struct LoadInfo *load, bool print_error, U_LONG error
 								if(lc)
 									PrintError(E_ILLEGAL_OUTSIDE_CHARS, load->sgfc, load->cur_row, load->cur_col-lc,
 											   true, load->current-lc, lc);
-								if(!isspace(*load->current))
+								if(!isspace((unsigned char)*load->current))
 									PrintError(E_ILLEGAL_OUTSIDE_CHAR, load->sgfc, load->cur_row, load->cur_col,
 											   true, load->current);
 							}
@@ -436,7 +436,7 @@ static bool MakeProperties(struct LoadInfo *load, struct Node *n)
 
 				while(!SGF_EOF)
 				{
-					if(islower(*load->current))
+					if(islower((unsigned char)*load->current))
 					{
 						if(pi_lc < 200)
 						{
@@ -444,7 +444,7 @@ static bool MakeProperties(struct LoadInfo *load, struct Node *n)
 							pi_lc++;
 						}
 					}
-					else if(isupper(*load->current))
+					else if(isupper((unsigned char)*load->current))
 					{
 						if(pi < 100)						/* max. 100 uc chars */
 						{
@@ -638,7 +638,7 @@ static int FindStart(struct LoadInfo *load, bool first_time)
 		/* search for '[' (lc) (lc) ']' */
 		if((load->current + 4 <= load->b_end) &&
 		  (*load->current == '['))
-			if(islower(*(load->current+1)) && islower(*(load->current+2)) &&
+			if(islower((unsigned char)*(load->current+1)) && islower((unsigned char)*(load->current+2)) &&
 			  (*(load->current+3) == ']'))
 			{
 				if(!warn)		/* print warning only once */
@@ -657,7 +657,7 @@ static int FindStart(struct LoadInfo *load, bool first_time)
 		if(*load->current == '(')	/* test for start mark '(;' */
 		{
 			tmp = load->current + 1;
-			while((tmp < load->b_end) && isspace(*tmp))
+			while((tmp < load->b_end) && isspace((unsigned char)*tmp))
 				tmp++;
 
 			if(tmp == load->b_end)
@@ -687,7 +687,7 @@ static int FindStart(struct LoadInfo *load, bool first_time)
 			}
 		}
 		else
-			if(!first_time && !isspace(*load->current))
+			if(!first_time && !isspace((unsigned char)*load->current))
 				PrintError(E_ILLEGAL_OUTSIDE_CHAR, load->sgfc, load->cur_row, load->cur_col, true, load->current);
 
 		NextChar(load);

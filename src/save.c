@@ -193,7 +193,7 @@ static int WriteChar(struct SaveInfo *save, char c, U_SHORT spc)
 {
 	save->chars_in_node++;
 
-	if(spc && isspace(c) && (save->linelen >= MAXTEXT_LINELEN))
+	if(spc && isspace((unsigned char)c) && (save->linelen >= MAXTEXT_LINELEN))
 		c = '\n';
 
 	if(c != '\n')
@@ -299,7 +299,7 @@ static int WriteProperty(struct SaveInfo *save, struct TreeInfo *info, struct Pr
 	while(*p)
 	{
 		/* idstr is original from file -> may contain lowercase too */
-		if(isupper(*p))
+		if(isupper((unsigned char)*p))
 			saveputc(save, *p)
 		p++;
 	}

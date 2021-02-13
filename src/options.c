@@ -150,7 +150,7 @@ static int ParsePropertyArg(struct SGFInfo *sgfc, const char **str)
 
 	c++; /* first char after initial option letter */
 	/* count uppercase */
-	for(n = 0; isupper(*c) && n < 102; c++, n++);
+	for(n = 0; isupper((unsigned char)*c) && n < 102; c++, n++);
 	if (n == 101) /* limit length of propIDs in argument */
 	{
 		PrintError(FE_BAD_PARAMETER, sgfc, c - n);

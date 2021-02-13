@@ -118,14 +118,14 @@ char *DetectEncoding(const char *c, const char *b_end)
 						else		   state = brace_state;
 						break;
 			default:
-				if(isupper(*c))
+				if(isupper((unsigned char)*c))
 					state = brace_state;
-				else if(isspace(*c))
+				else if(isspace((unsigned char)*c))
 				{
 					if(state != 4)
 						state = brace_state;
 				}
-				else if(!islower(*c))
+				else if(!islower((unsigned char)*c))
 					state = brace_state;
 				break;
 		}

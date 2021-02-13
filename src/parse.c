@@ -119,7 +119,7 @@ static void ParseText_NormalizeWhitespace(struct SGFInfo *sgfc, char *s, size_t 
 		else							/* other chars than \r,\n */
 		{
 			old = 0;
-			if(isspace(*s))				/* transform all WS to space */
+			if(isspace((unsigned char)*s))				/* transform all WS to space */
 				*d++ = ' ';
 			else if(!*s)				/* replace \0 bytes with space, so that we can use NULL terminated strings */
 			{
@@ -220,7 +220,7 @@ static void ParseText_StripTrailingSpace(char *value, size_t *len)
 {
 	char *c = value + *len - 1;
 
-	while(c >= value && isspace(*c))
+	while(c >= value && isspace((unsigned char)*c))
 		*c-- = 0;
 
 	*len = (size_t)(c - value + 1);
@@ -937,7 +937,7 @@ static void CheckID_Lowercase(struct SGFInfo *sgfc, struct Property *p)
 
 	while(isalpha(*id))
 	{
-		if(islower(*id))
+		if(islower((unsigned char)*id))
 		{
 			PrintError(E_LC_IN_PROPID, sgfc, p->row, p->col, p->idstr);
 			break;		/* print error only once */

@@ -200,7 +200,7 @@ static int Parse_Result(char *value, size_t *len, ...)
 					value[0] = 'B';
 		case 'b':
 		case 'w':	err = -1;
-					value[0] = (char)toupper(value[0]);
+					value[0] = (char)toupper((unsigned char)value[0]);
 		case 'B':
 		case 'W':	charpoints = GetFraction(value);
 
@@ -296,7 +296,7 @@ static int Parse_Result(char *value, size_t *len, ...)
 							case 'r':
 							case 't':
 							case 'f':	err = -1;
-										value[2] = (char)toupper(value[2]);
+										value[2] = (char)toupper((unsigned char)value[2]);
 							case 'R':
 							case 'T':
 							case 'F':	if(*len > 3)
@@ -385,7 +385,7 @@ static int CorrectDate(char *value, size_t *len)
 	s = value;
 	while(*s)
 	{
-		if(isdigit(*s))
+		if(isdigit((unsigned char)*s))
 		{
 			n = strtol(s, &s, 10);
 
@@ -461,10 +461,10 @@ static int Parse_Date(char *value, size_t *len, ...)
 	c = d = value;
 	while(*c)				/* remove spaces, and unnecessary '-', ',' */
 	{
-		if(isspace(*c))		/* keep spaces in between numbers */
+		if(isspace((unsigned char)*c))		/* keep spaces in between numbers */
 		{
 			if(ret)	ret = -1;
-			if((d != value) && isdigit(*(d-1)) && isdigit(*(c+1)))
+			if((d != value) && isdigit((unsigned char)*(d-1)) && isdigit((unsigned char)*(c+1)))
 			{
 				*d++ = *c++;	/* space between two numbers */
 				ret = 0;
@@ -475,7 +475,7 @@ static int Parse_Date(char *value, size_t *len, ...)
 		else
 		if(*c == '-')		/* remove all '-' not in between two numbers */
 		{
-			if((d != value) && isdigit(*(d-1)) && (isdigit(*(c+1)) || isspace(*(c+1))))
+			if((d != value) && isdigit((unsigned char)*(d-1)) && (isdigit((unsigned char)*(c+1)) || isspace((unsigned char)*(c+1))))
 				*d++ = *c++;
 			else
 			{
@@ -486,7 +486,7 @@ static int Parse_Date(char *value, size_t *len, ...)
 		else
 		if(*c == ',')		/* remove all ',' not preceeded by a number */
 		{
-			if((d != value) && isdigit(*(d-1)) && *(c+1))
+			if((d != value) && isdigit((unsigned char)*(d-1)) && *(c+1))
 				*d++ = *c++;
 			else
 			{
