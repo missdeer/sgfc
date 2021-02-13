@@ -1,5 +1,5 @@
 # Makefile for SGFC
-# Copyright (C) 1996-2018 by Arno Hollosi
+# Copyright (C) 1996-2021 by Arno Hollosi
 # (see 'COPYING' for more copyright information)
 
 sgfc:
@@ -23,6 +23,7 @@ test-files: src/sgfc
 	src/sgfc -v test-files/reorder.sgf test-files/reorder-result.sgf >test-files/reorder-output.txt || true
 	src/sgfc -vz test-files/reorder.sgf test-files/reorder-z-result.sgf >test-files/reorder-z-output.txt || true
 	src/sgfc -ct test-files/escaping.sgf test-files/escaping-result.sgf >test-files/escaping-output.txt || true
+	src/sgfc -cE2 test-files/mixed-encoding.sgf test-files/mixed-encoding-result.sgf >test-files/mixed-encoding-output.txt || true
 
 all: clean sgfc tests
 

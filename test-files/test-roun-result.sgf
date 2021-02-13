@@ -1,5 +1,5 @@
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]C[variation nesting incomplete:\
- add '\]' to end of file];C[unexpected end of file -> see end of file]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0]C[variation nesting incomplete: \
+add '\]' to end of file];C[unexpected end of file -> see end of file]
 ;W[ce];N[keep];B[cc]DM[1]BL[34]OB[1]KO[];PL[W];
 
 KM[5.5]
@@ -8,11 +8,11 @@ RE[B+5.75]
 TM[32400]
 
 ;W[aa];PL[W])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18])
-(;FF[4]CA[UTF-8]GM[12]AP[SGFC:1.18])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];N[ illegal ascii code]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0])
+(;FF[4]CA[UTF-8]GM[12]AP[SGFC:2.0])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0];N[ illegal ascii code]
 ;N[keep])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]B[aa];AR[aa:cr];LB[ff:text]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0]B[aa];AR[aa:cr];LB[ff:text]
 ;C[Error 26: couldn't open destination file
    Error 27: couldn't write destination file];C[text1
 
@@ -25,22 +25,22 @@ DT[a sunny afternoon last summer]
 RE[john wins]
 
 C[Error 34: file not saved because of critical errors]))
-(;FF[4]CA[UTF-8]GM[1]SZ[12]AP[SGFC:1.18];B[aa];W[ab];MA[aa:ba]
+(;FF[4]CA[UTF-8]GM[1]SZ[12]AP[SGFC:2.0];B[aa];W[ab];MA[aa:ba]
 [ab];TR[aa];N[keep];LB[aa:a]MA[dd];GB[2];B[cd]DO[];W[dc]IT[]
 ;N[keep];
 
 GN[game info node]
 
 ;N[keep])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]LB[aa:txt])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];C[Error 48: no source file spe\
-cified
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0]LB[aa:txt])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0];C[Error 48: no source file spec\
+ified
   Error 49: error in commandline: e.g. 'sgfc -lb file])
-(;FF[4]CA[UTF-8]GM[1]SZ[52]AP[SGFC:1.18])
-(;FF[4]CA[UTF-8]GM[1]SZ[10:52]AP[SGFC:1.18])
-(;FF[4]CA[UTF-8]GM[1]SZ[19:25]AP[SGFC:1.18];VW[];VW[aa][bb]
-[cc][dd]C[different game types; occurs in line 19];N[keep]
+(;FF[4]CA[UTF-8]GM[1]SZ[52]AP[SGFC:2.0])
+(;FF[4]CA[UTF-8]GM[1]SZ[10:52]AP[SGFC:2.0])
+(;FF[4]CA[UTF-8]GM[1]SZ[19:25]AP[SGFC:2.0];VW[];VW[aa][bb][cc]
+[dd]C[different game types; occurs in line 19];N[keep]
 (;W[aa]
 (;B[bb])
 (;AE[aa];W[ba])
@@ -56,29 +56,29 @@ KM[5.5]
 
 ;C[file contains more than one game tree; occurs on line xxx]
 ))
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]AB[aa][bb])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0]AB[aa][bb])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0]
 
 HA[3]
 
 ;B[bb])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];W[cc];AB[aa]AE[cc]
-;B[dd];W[ee];W[ff];C[too many variations])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];B[])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];B[])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0];W[cc];AB[aa]AE[cc];B[dd]
+;W[ee];W[ff];C[too many variations])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0];B[])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0];B[])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0]
 (;C[var 1])
 (;C[var 2]))
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0]
 (;C[var 1])
 (;C[var 2]))
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]C[unknown command line option, \
-e.g. 'sgfc --versi'];C[unknown encoding as parameter, e.g. 'sgfc --defa\
-ult-encoding=xyz123'];C[internal iconv error])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]C[illegal byte sequence: öüä\
- (call with option -U: 'sgfc -U test.sgf')])
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];C[encoding detection went wron\
-g; example: >>CA[UTF-8\](;FF[4\]CA[ISO-8859-3\])<<];C[warning: differen\
-t charset encodings stored in one file -- option -E2/-E3];C[fatal: diff\
-erent charset encodings stored in one file -- option -E1];N[keep]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0]C[unknown command line option, e\
+.g. 'sgfc --versi'];C[unknown encoding as parameter, e.g. 'sgfc --defau\
+lt-encoding=xyz123'];C[internal iconv error])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0]C[illegal byte sequence: öüä \
+(call with option -U: 'sgfc -U test.sgf')])
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0];C[encoding detection went wrong\
+; example: >>CA[UTF-8\](;FF[4\]CA[ISO-8859-3\])<<];C[warning: different\
+ charset encodings stored in one file -- option -E2/-E3];C[fatal: diffe\
+rent charset encodings stored in one file -- option -E1];N[keep]
 )

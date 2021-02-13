@@ -2,7 +2,7 @@
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 tests/load-properties.c
 ***
-*** Copyright (C) 1996-2020 by Arno Hollosi
+*** Copyright (C) 1996-2021 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
 ***
 **************************************************************************/
@@ -82,11 +82,11 @@ void test_lwic_error_output(struct SGFCError *error)
 	ck_assert_msg(test_lwic_errors_seen <= 12, "too many errors, latest %lx at %d:%d:%s",
 			   	  error->error, error->row, error->col, error->message);
 	struct SGFCError expect = test_lwic_errors[test_lwic_errors_seen];
-	ck_assert_int_eq(error->error, expect.error);
+	ck_assert_uint_eq(error->error, expect.error);
 	ck_assert_msg(strstr(error->message, expect.message) != NULL,
 			      "should contain '%s': %s", expect.message, error->message);
-	ck_assert_int_eq(error->row, expect.row);
-	ck_assert_int_eq(error->col, expect.col);
+	ck_assert_uint_eq(error->row, expect.row);
+	ck_assert_uint_eq(error->col, expect.col);
 }
 
 START_TEST (test_lowercase_with_illegal_chars)

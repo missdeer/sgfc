@@ -1,4 +1,4 @@
-(;FF[4]CA[UTF-8]GM[19]AP[SGFC:1.18];C[Text : value 中: with 中 unneccessary : escape : characters中]
+(;FF[4]CA[UTF-8]GM[19]AP[SGFC:2.0];C[Text : value 中: with 中 unneccessary : escape : characters中]
 ;C[中Text : value with [neces\\sary\] escape : characters中]
 ;N[SimpleText : value 中 with : unneccessary : escape : characters中]
 ;N[SimpleText value : with [neces\\sary\] : escape characters]

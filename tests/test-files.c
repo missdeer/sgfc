@@ -2,7 +2,7 @@
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 tests/position.c
 ***
-*** Copyright (C) 1996-2020 by Arno Hollosi
+*** Copyright (C) 1996-2021 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
 ***
 **************************************************************************/
@@ -49,20 +49,20 @@ static void TestWithFile(const char *path, const char *expected, char *output)
 
 	size_t explen;
 	expected_output = ReadTestFile(expected, &explen);
-	ck_assert_int_gt(explen, 150); /* smallest file ~ 190 byte */
+	ck_assert_uint_gt(explen, 150); /* smallest file ~ 190 byte */
 	*(expected_output+explen) = 0;
 	ret = SaveSGF(sgfc, SetupSaveTestIO, "outfile");
 	ck_assert_int_eq(ret, true);
 	free(expected_output);
 
 	expected_output = ReadTestFile(output, &explen);
-	ck_assert_int_gt(explen, 190); /* smallest output ~ 190 byte */
+	ck_assert_uint_gt(explen, 190); /* smallest output ~ 190 byte */
 	*(expected_output+explen) = 0;
-	long actual_size = ftell(testout);
-	ck_assert_int_gt(actual_size, explen - 70); /* longest summary line ~63 bytes */
+	size_t actual_size = (size_t)ftell(testout);
+	ck_assert_uint_gt(actual_size, explen - 70); /* longest summary line ~63 bytes */
 	char *outbuf = SaveMalloc(actual_size, "stdout buffer");
 	ck_assert_int_ne(-1, fseek(testout, 0, SEEK_SET));
-	ck_assert_int_eq(actual_size, fread(outbuf, 1, (size_t)actual_size, testout));
+	ck_assert_uint_eq(actual_size, fread(outbuf, 1, actual_size, testout));
 	/* by only comparing up to actual_size we do not compare summary line */
 	ck_assert_int_eq(0, memcmp(outbuf, expected_output, actual_size));
 	free(outbuf);

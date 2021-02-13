@@ -2,7 +2,7 @@
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 save.c
 ***
-*** Copyright (C) 1996-2018 by Arno Hollosi
+*** Copyright (C) 1996-2021 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
 ***
 **************************************************************************/
@@ -402,7 +402,7 @@ static void SetRootProps(struct SaveInfo *save, struct TreeInfo *info, struct No
 		NewPropValue(save->sgfc, r, TKN_CA, "UTF-8", NULL, true);
 
 	if(save->sgfc->options->add_sgfc_ap_property)
-		NewPropValue(save->sgfc, r, TKN_AP, "SGFC", "1.18", true);
+		NewPropValue(save->sgfc, r, TKN_AP, "SGFC", "2.0", true);
 
 	if(info->GM == 1)
 	{

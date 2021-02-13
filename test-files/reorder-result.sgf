@@ -1,8 +1,8 @@
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0]
 (;W[aa];B[bb])
 (;W[ba])
 (;AW[eg];B[ef]))
-(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:1.18];B[dd];W[aa]
+(;FF[4]CA[UTF-8]GM[1]SZ[19]AP[SGFC:2.0];B[dd];W[aa]
 (;B[bb])
 (;AE[aa];W[ba])
 (;AW[eg]AE[aa][dd]C[AE removes 2 stones!];B[ef]))

@@ -2,7 +2,7 @@
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 options.c
 ***
-*** Copyright (C) 1996-2020 by Arno Hollosi
+*** Copyright (C) 1996-2021 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
 ***
 **************************************************************************/
@@ -23,13 +23,13 @@
 
 void PrintHelp(const enum option_help format)
 {
-	puts(" SGFC v1.18  - Smart Game Format Syntax Checker & Converter");
+	puts(" SGFC v2.0 - Smart Game Format Syntax Checker & Converter");
 	if(format == OPTION_HELP_VERSION)
 		return;
 
-	puts("               Copyright (C) 1996-2018 by Arno Hollosi\n"
-		 "               Email: <ahollosi@xmp.net>\n"
-		 " ----------------------------------------------------------");
+	puts("             Copyright (C) 1996-2021 by Arno Hollosi\n"
+		 "             Email: <ahollosi@xmp.net>\n"
+		 " --------------------------------------------------------");
 
 	if(format == OPTION_HELP_SHORT)
 		puts(" 'sgfc -h' for help on options");

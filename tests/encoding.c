@@ -2,7 +2,7 @@
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 tests/encoding.c
 ***
-*** Copyright (C) 1996-2020 by Arno Hollosi
+*** Copyright (C) 1996-2021 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
 ***
 **************************************************************************/
@@ -120,7 +120,7 @@ START_TEST (test_basic_conversion)
 
 	/* ... and convert text back */
 	cd = iconv_open("UTF-8", "UTF-16");
-	result = DecodeBuffer(sgfc, cd, dst_buffer, dst_pos - dst_buffer, 0, NULL);
+	result = DecodeBuffer(sgfc, cd, dst_buffer, (U_LONG)(dst_pos - dst_buffer), 0, NULL);
 	ck_assert_ptr_ne(result, NULL);
 	ck_assert_str_eq(result, src_buffer);
 	free(result);
@@ -196,8 +196,8 @@ START_TEST (test_8bit_value_in_middle)
 	ck_assert_str_eq("abc\xE4\xB8\xADxyz", sgfc->root->prop->value->value);
 	ck_assert_str_eq("def\xE4\xB8\xADuvw", sgfc->root->prop->value->value2);
 	ck_assert_str_eq("ab\xE4\xB8\xADxyz", sgfc->root->prop->next->value->value);
-	ck_assert_int_eq(3, sgfc->root->prop->col);
-	ck_assert_int_eq(22, sgfc->root->prop->next->col);
+	ck_assert_int_eq(3, (long)sgfc->root->prop->col);
+	ck_assert_int_eq(22, (long)sgfc->root->prop->next->col);
 	ck_assert_int_eq(0, sgfc->error_count);
 	ck_assert_int_eq(0, sgfc->warning_count);
 END_TEST
@@ -217,8 +217,8 @@ START_TEST (test_8bit_value_at_end)
 	ck_assert_str_eq("\xE4\xB8\xAD", sgfc->root->prop->value->value);
 	ck_assert_str_eq("\xE5\xB8\xAE", sgfc->root->prop->value->value2);
 	ck_assert_str_eq("ab\xE4\xB8\xAD", sgfc->root->prop->next->value->value);
-	ck_assert_int_eq(3, sgfc->root->prop->col);
-	ck_assert_int_eq(10, sgfc->root->prop->next->col);
+	ck_assert_int_eq(3, (long)sgfc->root->prop->col);
+	ck_assert_int_eq(10, (long)sgfc->root->prop->next->col);
 	ck_assert_int_eq(0, sgfc->error_count);
 	ck_assert_int_eq(0, sgfc->warning_count);
 END_TEST

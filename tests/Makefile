@@ -1,5 +1,5 @@
 # Makefile for SGFC
-# Copyright (C) 1996-2018 by Arno Hollosi
+# Copyright (C) 1996-2021 by Arno Hollosi
 # (see 'COPYING' for more copyright information)
 
 # System configuration
@@ -12,7 +12,7 @@ OPTIONS = -pedantic -W -Wimplicit -Wreturn-type -Wswitch -Wformat\
 	  -Wuninitialized -Wparentheses -Wpointer-arith -Wbad-function-cast\
 	  -Wcast-qual -Wcast-align -Waggregate-return -Wstrict-prototypes\
 	  -Wnested-externs -Wshadow -Wchar-subscripts -std=c99\
-	  -Wimplicit-fallthrough=0
+	  -Wno-implicit-fallthrough -Wconversion -Wsign-conversion
 
 DIRECTORIES = -I ../src
 OPTIMIZATION = -O1

@@ -2,7 +2,7 @@
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 main.c
 ***
-*** Copyright (C) 1996-2018 by Arno Hollosi
+*** Copyright (C) 1996-2021 by Arno Hollosi
 ***
 *** Copyright notice:
 ***

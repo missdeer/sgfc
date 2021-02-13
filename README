@@ -1,7 +1,7 @@
-SGF Syntax Checker & Converter: SGFC V1.18
-==========================================
+SGF Syntax Checker & Converter: SGFC V2.0
+=========================================
 
-SGFC Copyright (C) 1996-2018 by Arno Hollosi <ahollosi@xmp.net>
+SGFC Copyright (C) 1996-2021 by Arno Hollosi <ahollosi@xmp.net>
 
 SGFC is open source software and is published under the terms of the
 BSD License. Read 'COPYING' for more information.
@@ -192,6 +192,11 @@ of multi-byte sequence encodings, like in e.g. GB18030 or Shift_JIS),
 then results might differ depending on the encoding mode used and some characters
 might be broken in the output file.
 
+SGFC uses iconv (or more precisely libiconv) in order to support different encodings.
+Therefore supported encodings (and their names) depend on the version of iconv
+on your system. Under Unix systems try "man iconv" or "man 3 iconv" to get additional
+information about your system.
+
 
 4.2 Option summary (alphabetical):
 ----------------------------------
@@ -380,6 +385,13 @@ Override encoding specified in SGF file with 'name'.
 This option can be used to forcefully override any encoding value specified
 within the SGF file. It is helpful, when SGFC is unable to detect the correct
 encoding of the file.
+
+Note that supported encodings and their canonical names depend on the
+iconv library the SGFC binary is linked against. If an encoding is not recognized,
+then use the original iconv tools on your system in order to list available
+character encodings. Unfortunately, SGFC cannot provide a list of supported
+encodings, as POSIX's libiconv does not offer the ability to query for supported
+encodings.
 
 
 Option -g:
@@ -680,6 +692,17 @@ Examples:
 
 Appendix A: History
 ===================
+
+V2.0 (2021-02-14)
+-----------------
+- made sgfc charset aware (see section 4.1, options -E, --default-encoding, --encoding)
+- several bug fixes related to soft linebreaks, wrong property flags, memory leaks
+- added ability to save resulting SGF file to memory (SaveFileHandler)
+- reorganized sourced code (src/ subdirectory, new options.c file, etc.) and added unit tests
+- thanks to Patrick Näf for his feedback, patches, and general discussion.
+  Check out his libsgfc++ (https://github.com/herzbube/libsgfcplusplus/)
+  which inspired many changes to SGFC V2.0
+
 
 V1.18 (2018-06-23)
 ------------------
