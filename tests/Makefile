@@ -8,10 +8,10 @@
 # System environment
 CC = gcc
 
-OPTIONS = -pedantic -W -Wimplicit -Wreturn-type -Wswitch -Wformat\
+OPTIONS = -std=c99 -pedantic -W -Wimplicit -Wreturn-type -Wswitch -Wformat\
 	  -Wuninitialized -Wparentheses -Wpointer-arith -Wbad-function-cast\
 	  -Wcast-qual -Wcast-align -Waggregate-return -Wstrict-prototypes\
-	  -Wnested-externs -Wshadow -Wchar-subscripts -std=c99\
+	  -Wnested-externs -Wshadow -Wchar-subscripts -Wno-unused-parameter\
 	  -Wno-implicit-fallthrough -Wconversion -Wsign-conversion
 
 DIRECTORIES = -I ../src
