@@ -707,6 +707,13 @@ static int FindStart(struct LoadInfo *load, bool first_time)
 *** Function:	LoadSGF
 ***				Loads a SGF file into the memory and inits all
 ***				necessary information in SGFInfo structure
+***
+***             Note that some property values might actually be parsed
+***             the wrong way (e.g. compose type stone values in GM[] != 1)
+***             as this function doesn't keep track of such context across
+***             properties, nodes, or trees. Only after ParseSGF() the
+***             SGF game tree and its properties will be in proper shape.
+***
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				name ... filename/path
 *** Returns:	true on success, false on fatal error

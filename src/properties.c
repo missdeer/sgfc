@@ -70,9 +70,9 @@ const struct SGFToken sgf_token[NUM_SGF_TOKENS] =
 	{ "B",	60, FF1234,	Check_Move, Do_Move,	  TYPE_MOVE|PVT_CHECK_EMPTY,		   BLACK },
 	{ "W",	60, FF1234,	Check_Move,	Do_Move,	  TYPE_MOVE|PVT_CHECK_EMPTY,		   WHITE },
 
-	{ "AB",	62, FF1234,	Check_Pos,  Do_AddStones, TYPE_SETUP | CP_LIST | DOUBLE_MERGE, BLACK },
-	{ "AW",	62, FF1234,	Check_Pos,  Do_AddStones, TYPE_SETUP | CP_LIST | DOUBLE_MERGE, WHITE },
-	{ "AE",	61, FF1234,	Check_Pos,  Do_AddStones, TYPE_SETUP | CP_LIST | DOUBLE_MERGE, EMPTY },
+	{ "AB",	62, FF1234,	Check_Stone,  Do_AddStones, TYPE_SETUP | CP_LIST | DOUBLE_MERGE, BLACK },
+	{ "AW",	62, FF1234,	Check_Stone,  Do_AddStones, TYPE_SETUP | CP_LIST | DOUBLE_MERGE, WHITE },
+	{ "AE",	61, FF1234,	Check_Pos,    Do_AddStones, TYPE_SETUP | CP_LIST | DOUBLE_MERGE, EMPTY },
 
 	{ "N",	40, FF1234,	Check_Text,	NULL, PVT_DEL_EMPTY|PVT_SIMPLETEXT, 0 },
 	{ "C",	40, FF1234,	Check_Text,	NULL, PVT_DEL_EMPTY|PVT_TEXT|DOUBLE_MERGE|SPLIT_SAVE, 0 },

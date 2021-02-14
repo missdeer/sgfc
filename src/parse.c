@@ -743,6 +743,41 @@ bool Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 
 
 /**************************************************************************
+*** Function:	Check_Stone
+***				Checks stone type & expand compressed point lists if possible
+*** Parameters: sgfc ... pointer to SGFInfo structure
+***				p	 ... pointer to property containing the value
+***				v	 ... pointer to property value
+*** Returns:	true for success / false if value has to be deleted
+**************************************************************************/
+
+bool Check_Stone(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
+{
+	if(sgfc->info->GM == 1)
+		return Check_Pos(sgfc, p, v);
+
+	if(v->value2)
+	{
+		/* stone type was erroneously split by load.c into composed value -> merge again */
+		char *stone_value = SaveMalloc(v->value_len + v->value2_len + 2, "property value buffer");
+		memcpy(stone_value, v->value, v->value_len);
+		memcpy(stone_value + v->value_len + 1, v->value2, v->value2_len);
+		stone_value[v->value_len] = ':';					/* restore colon */
+		stone_value[v->value_len + v->value2_len + 1] = 0;	/* 0-terminate */
+		free(v->value);
+		free(v->value2);
+		v->value = stone_value;
+		v->value_len += v->value2_len + 1;
+		v->value2 = NULL;
+		v->value2_len = 0;
+	}
+
+	/* Parse_Move does the right thing */
+	return Check_Value(sgfc, p, v, PARSE_POS, Parse_Move);
+}
+
+
+/**************************************************************************
 *** Function:	Check_Label
 ***				Checks label type value & prints error messages
 *** Parameters: sgfc ... pointer to SGFInfo structure

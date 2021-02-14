@@ -70,6 +70,7 @@ bool Check_Value(struct SGFInfo *, struct Property *, struct PropValue *,
 bool Check_Text(struct SGFInfo *, struct Property *, struct PropValue *);
 bool Check_Label(struct SGFInfo *, struct Property *, struct PropValue *);
 bool Check_Pos(struct SGFInfo *, struct Property *, struct PropValue *);
+bool Check_Stone(struct SGFInfo *, struct Property *, struct PropValue *);
 bool Check_AR_LN(struct SGFInfo *, struct Property *, struct PropValue *);
 bool Check_Figure(struct SGFInfo *, struct Property *, struct PropValue *);
 
