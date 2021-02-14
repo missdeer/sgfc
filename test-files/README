@@ -82,7 +82,7 @@ ordering of variations is reversed.
 test-files/mixed-encoding.sgf
 -----------------------------
 
-This file contains differrent character encodings within (simple)text values.
+This file contains different character encodings within (simple)text values.
 It can safely be parsed with the E2 option. E1 fails with a fatal error,
 E3 replaces the 0x00 bytes of the UTF-16 encoding with spaces (hence destroying
 those text values.)

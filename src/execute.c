@@ -8,7 +8,6 @@
 **************************************************************************/
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "all.h"
 #include "protos.h"

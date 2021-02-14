@@ -21,8 +21,6 @@ OPTIONS = -std=c99 -pedantic -W -Wimplicit -Wreturn-type -Wswitch -Wformat \
 		  -Wno-format-nonliteral -Wno-disabled-macro-expansion \
 		  -Wno-documentation-unknown-command -Wno-switch-enum \
 		  -Wno-conditional-uninitialized
-#OPTIONS = -W -Wall -pedantic -std=c99 -Wno-unused-parameter -Wmicrosoft \
-		  -Wsign-conversion -Wshorten-64-to-32 -Wconversion
 
 OPTIMIZATION = -O1
 CFLAGS = $(OPTIMIZATION) $(OPTIONS)

@@ -142,7 +142,7 @@ You can define the character used to indicate the end of line. This is only
 used when SGFC writes a file, because SGFC automatically detects any kind
 of linebreak during reading. 
 This define is useful if you want SGFC to write SGF files using the
-linebreak-code specific to your machine (e.g. Mac or MsDos).
+linebreak-code specific to your machine (e.g. Mac or MSDos).
 
 VERSION_NO_MAIN:
 ----------------
@@ -161,6 +161,10 @@ Option arguments have to be preceded by a '-'.
 If the 'outfile' is missing, SGFC just checks the 'infile'.
 Conversion to FF[4] takes place only if you specify the 'outfile'.
 'outfile' may be the same as 'infile'.
+
+In order to specify filenames with a leading '-' separate the filename
+arguments from the options with a single '--'.
+Example: sgfc -n -pet -- -in.sgf -out.sgf
 
 
 4.1 A note on character encodings
@@ -201,9 +205,8 @@ information about your system.
 4.2 Option summary (alphabetical):
 ----------------------------------
 
-    -h  ... print a help message with all options
     -bx ... Beginning of SGF data is detected by
-                1 - advanced search algorithm (default)
+                1 - search algorithm (default)
                 2 - first occurrence of '(;'
                 3 - first occurrence of '('
     -c  ... write file even if a critical error occurs
@@ -214,6 +217,7 @@ information about your system.
               2 - text property values only, _after_ parsing (unit=byte)
               3 - no encoding applied (binary style; unit=byte)
     -g  ... print game signature (Go GM[1] games only)
+    -h  ... print a help message with all options
     -i  ... interactive mode (faulty game-info values only)
     -k  ... keep header in front of SGF data
     -lx ... x = 1,2,3: a hard linebreak is
@@ -278,9 +282,12 @@ beginning. But some erroneous files mark the beginning only with '('.
 To detect such files SGFC uses a more sophisticated search. However
 this search might go wrong (in seldom cases).
 
-In that case specify
+Values:
+    -b1 ... use search algorithm that is capable of detecting missing ';'
+            in most cases
     -b2 ... the first '(;' is searched.
-            Note: missing ';' at the beginning cannot be detected
+            Note: missing ';' at the beginning will not be detected, but
+            whole tree will be omitted until first '(;'
     -b3 ... the first '(' is searched.
             Note: This is the best choice if the SGF data is not preceded
             by plain text. If there's text in front of the SGF data then
@@ -324,6 +331,7 @@ Set default encoding to provided name.
 Allows setting the desired default encoding if no CA[] property is specified.
 On the flip side, if a CA[] property is specified, it overrides this option.
 The default encoding (if this option is not specified) is ISO-8859-1.
+
 The option -U is a handy alias for '--default-encoding=UTF-8'.
 
 
@@ -383,7 +391,7 @@ Option --encoding=name:
 Override encoding specified in SGF file with 'name'.
 
 This option can be used to forcefully override any encoding value specified
-within the SGF file. It is helpful, when SGFC is unable to detect the correct
+within the SGF file. It is helpful when SGFC is unable to detect the correct
 encoding of the file.
 
 Note that supported encodings and their canonical names depend on the
@@ -447,9 +455,8 @@ Option -k:
 Keep header in front of SGF data.
 
 SGF files may be preceded by plain text. In most cases this is an
-email header which has not been removed.
-By default SGFC removes this header as it contains no SGF relevant
-information.
+email header which has not been removed. By default SGFC removes
+this header as it should not contain relevant information.
 
 
 Option -l:
@@ -613,7 +620,6 @@ Disable warning messages.
 
 SGFC is a rather pedantic syntax checker. If you want to limit the number
 of messages you get specify this option.
-Use this option with care!
 
 
 Option -y:
@@ -695,10 +701,13 @@ Appendix A: History
 
 V2.0 (2021-02-14)
 -----------------
-- made sgfc charset aware (see section 4.1, options -E, --default-encoding, --encoding)
-- several bug fixes related to soft linebreaks, wrong property flags, memory leaks
+- made sgfc charset aware by using iconv library (see section 4.1,
+  and options -E, -U, --default-encoding, --encoding)
+- several bug fixes related to soft linebreaks, wrong property flags,
+  memory leaks, backslash escaping
 - added ability to save resulting SGF file to memory (SaveFileHandler)
-- reorganized sourced code (src/ subdirectory, new options.c file, etc.) and added unit tests
+- reorganized sourced code (src/ subdirectory, options.c file, ...)
+  and added unit tests
 - thanks to Patrick Näf for his feedback, patches, and general discussion.
   Check out his libsgfc++ (https://github.com/herzbube/libsgfcplusplus/)
   which inspired many changes to SGFC V2.0
@@ -1038,6 +1047,7 @@ Classes:
         Example: >>(;LB[a a: text])<<
 
 26:FE   "could not open destination file '%s'"
+
 27:FE   "could not write destination file '%s'"
 
 28:E    "property <%s> already exists (%s)" (merged/deleted)

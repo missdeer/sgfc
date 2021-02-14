@@ -236,7 +236,7 @@ static int WriteChar(struct SaveInfo *save, char c, U_SHORT spc)
 
 static int WritePropValue(struct SaveInfo *save, const char *v, bool second, U_SHORT flags)
 {
-	U_SHORT fl;
+	bool fl;
 
 	if(!v)	return true;
 

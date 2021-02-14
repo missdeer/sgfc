@@ -35,6 +35,10 @@ test-common.h       prototypes and common include files
 test-helper.c       setup(), teardown(), and other helpers
 
 check-value.c       test cases for Check_Value()
+delete-node.c       test cases for del_empty_nodes option and DelNode()
+encoding.c          test cases for handling different encodings
+load-properties.c   test cases for lowercase chars in property IDs
 parse-text.c        test cases for Parse_Text() and Check_Text()
 position.c          test cases verifying the internal board plays
 trigger-errors.c    test cases for triggering almost all SGFC errors
+value.length.c      test cases verifying PropValue->length attribute
