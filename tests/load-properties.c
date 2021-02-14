@@ -76,6 +76,7 @@ struct SGFCError test_lwic_errors[] =
 	{E_NO_PROP_VALUES,		  "<ggG>",	3, 14, 0},
 };
 
+
 void test_lwic_error_output(struct SGFCError *error)
 {
 	test_lwic_errors_seen++;
@@ -109,7 +110,6 @@ START_TEST (test_lowercase_with_illegal_chars)
 	ck_assert_msg(test_lwic_errors_seen == 12,
 			      "not all errors seen, expected 12, got %d", test_lwic_errors_seen);
 END_TEST
-
 
 
 TCase *sgfc_tc_load_properties(void)
