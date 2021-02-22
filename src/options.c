@@ -340,7 +340,6 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 				PrintError(FE_TOO_MANY_FILES, sgfc, argv[i]);
 				return false;
 			}
-			break;
 		}
 argument_parsed:;
 	}
