@@ -38,6 +38,7 @@ check-value.c       test cases for Check_Value()
 delete-node.c       test cases for del_empty_nodes option and DelNode()
 encoding.c          test cases for handling different encodings
 load-properties.c   test cases for lowercase chars in property IDs
+options.c           test cases for parsing of command line options
 other-games.c       test cases for property values when GM[] != 1
 parse-text.c        test cases for Parse_Text() and Check_Text()
 position.c          test cases verifying the internal board plays

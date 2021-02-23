@@ -14,6 +14,7 @@ TCase *sgfc_tc_check_value(void);
 TCase *sgfc_tc_delete_node(void);
 TCase *sgfc_tc_encoding(void);
 TCase *sgfc_tc_load_properties(void);
+TCase *sgfc_tc_options(void);
 TCase *sgfc_tc_other_games(void);
 TCase *sgfc_tc_parse_text(void);
 TCase *sgfc_tc_position(void);
@@ -29,6 +30,7 @@ Suite *sgfc_suite(void)
 	suite_add_tcase(s, sgfc_tc_delete_node());
 	suite_add_tcase(s, sgfc_tc_encoding());
 	suite_add_tcase(s, sgfc_tc_load_properties());
+	suite_add_tcase(s, sgfc_tc_options());
 	suite_add_tcase(s, sgfc_tc_other_games());
 	suite_add_tcase(s, sgfc_tc_parse_text());
 	suite_add_tcase(s, sgfc_tc_position());

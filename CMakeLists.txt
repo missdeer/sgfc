@@ -37,6 +37,7 @@ add_executable(sgfc-test
         tests/delete-node.c
         tests/encoding.c
         tests/load-properties.c
+        tests/options.c
         tests/other-games.c
         tests/parse-text.c
         tests/position.c

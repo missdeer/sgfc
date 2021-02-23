@@ -331,10 +331,13 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 		else	/* argument isn't preceded by '-' or we are past '--' */
 		{
 			if(!options->infile)
+			{
 				options->infile = argv[i];
-			else
-			if(!options->outfile)
+			}
+			else if(!options->outfile)
+			{
 				options->outfile = argv[i];
+			}
 			else
 			{
 				PrintError(FE_TOO_MANY_FILES, sgfc, argv[i]);
