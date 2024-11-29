@@ -13,6 +13,7 @@
 
 
 START_TEST (test_delete_leaf_node)
+{
 	char buffer[] = "(;N[a];)";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -22,10 +23,12 @@ START_TEST (test_delete_leaf_node)
 	sgfc->options->del_empty_nodes = true;
 	ParseSGF(sgfc);
 	ck_assert_ptr_eq(NULL, sgfc->root->child);
+}
 END_TEST
 
 
 START_TEST (test_delete_middle_node)
+{
 	char buffer[] = "(;N[a];;N[b])";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -36,10 +39,12 @@ START_TEST (test_delete_middle_node)
 	ParseSGF(sgfc);
 	ck_assert_ptr_eq(NULL, sgfc->root->child->child);
 	ck_assert_str_eq("b", sgfc->root->child->prop->value->value);
+}
 END_TEST
 
 
 START_TEST (test_delete_root_node)
+{
 	char buffer[] = "(;;N[b])";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -50,10 +55,12 @@ START_TEST (test_delete_root_node)
 	ParseSGF(sgfc);
 	ck_assert_ptr_eq(NULL, sgfc->root->child);
 	ck_assert_str_eq("b", sgfc->root->prop->value->value);
+}
 END_TEST
 
 
 START_TEST (test_delete_with_sibling)
+{
 	char buffer[] = "(;N[a](;N[b];N[c])(;N[d]))";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -65,10 +72,12 @@ START_TEST (test_delete_with_sibling)
 
 	expected_output = "(;FF[4]CA[UTF-8]GM[1]SZ[19]N[a]\n(;N[c])\n(;N[d]))\n";
 	SaveSGF(sgfc, SetupSaveTestIO, "outfile");
+}
 END_TEST
 
 
 START_TEST (test_delete_replace_with_sibling)
+{
 	char buffer[] = "(;N[a](;N[b])(;N[d]))";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -80,10 +89,12 @@ START_TEST (test_delete_replace_with_sibling)
 
 	expected_output = "(;FF[4]CA[UTF-8]GM[1]SZ[19]N[a];N[d])\n";
 	SaveSGF(sgfc, SetupSaveTestIO, "outfile");
+}
 END_TEST
 
 
 START_TEST (test_delete_fails)
+{
 	char buffer[] = "(;N[a](;N[b](;N[c1])(;N[c2]))(;N[d]))";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -95,6 +106,7 @@ START_TEST (test_delete_fails)
 
 	expected_output = "(;FF[4]CA[UTF-8]GM[1]SZ[19]N[a]\n(;N[b]\n(;N[c1])\n(;N[c2]))\n(;N[d]))\n";
 	SaveSGF(sgfc, SetupSaveTestIO, "outfile");
+}
 END_TEST
 
 

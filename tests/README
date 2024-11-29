@@ -11,8 +11,8 @@ Unit tests
 ==========
 
 A (small number) of unit test cases are located in tests/. They are using
-the Check unit test framework (https://libcheck.github.io/check/). If you
-would like to run the tests, you need to install this library
+the Check unit test framework (https://libcheck.github.io/check/), v0.15.2.
+If you would like to run the tests, you need to install this library
 (and its dependencies: pthread, subunit, rt, and m) first. The tests work
 on my Linux machine, there is no guarantee that they work on other systems.
 

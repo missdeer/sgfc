@@ -248,7 +248,7 @@ static int WritePropValue(struct SaveInfo *save, const char *v, bool second, U_S
 	while(*v)
 	{
 		if(*v == '\\' || *v == ']' || (flags & PVT_COMPOSE && *v == ':'))
-			saveputc(save, '\\');
+			saveputc(save, '\\')
 
 		/* soft linebreak, if line is long and not in middle of multi-byte char */
 		if(fl && (save->linelen > MAXTEXT_LINELEN) && (*v & 0xc0) != 0x80)

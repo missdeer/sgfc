@@ -11,6 +11,7 @@
 
 
 START_TEST (test_move_property)
+{
 	char buffer[] = "(;GM[123];B[f45];W[g67:snake])";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -24,10 +25,12 @@ START_TEST (test_move_property)
 	ck_assert_str_eq("f45", sgfc->root->child->prop->value->value);
 	ck_assert_str_eq("g67:snake", sgfc->root->child->child->prop->value->value);
 	ck_assert_ptr_eq(NULL, sgfc->root->child->child->prop->value->value2);
+}
 END_TEST
 
 
 START_TEST (test_stone_property)
+{
 	char buffer[] = "(;GM[123];AB[f45]AW[g67:rabbit])";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -41,10 +44,12 @@ START_TEST (test_stone_property)
 	ck_assert_str_eq("f45", sgfc->root->child->prop->value->value);
 	ck_assert_str_eq("g67:rabbit", sgfc->root->child->prop->next->value->value);
 	ck_assert_ptr_eq(NULL, sgfc->root->child->prop->next->value->value2);
+}
 END_TEST
 
 
 START_TEST (test_point_property)
+{
 	char buffer[] = "(;GM[123];MA[f45:h51]LB[g67:text];AE[i8:j~8])";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -61,10 +66,12 @@ START_TEST (test_point_property)
 	ck_assert_str_eq("text", sgfc->root->child->prop->next->value->value2);
 	ck_assert_str_eq("i8", sgfc->root->child->child->prop->value->value);
 	ck_assert_str_eq("j~8", sgfc->root->child->child->prop->value->value2);
+}
 END_TEST
 
 
 START_TEST (test_no_compressed_lists)
+{
 	/* just verify that SGFC doesn't try to expand compressed point lists */
 	char buffer[] = "(;GM[123];AB[f11:turtle]AE[g33:h44])";
 	sgfc->buffer = buffer;
@@ -78,6 +85,7 @@ START_TEST (test_no_compressed_lists)
 
 	expected_output = "(;FF[4]CA[UTF-8]GM[123];AB[f11:turtle]AE[g33:h44])\n";
 	SaveSGF(sgfc, SetupSaveTestIO, "outfile");
+}
 END_TEST
 
 

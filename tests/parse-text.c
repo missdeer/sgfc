@@ -26,16 +26,19 @@ void parse_text_teardown(void)
 }
 
 START_TEST (test_basic_string)
+{
     char text[] = "basic test";
 	prop_value->value = text;
 	prop_value->value_len = strlen(text);
     int len = Parse_Text(sgfc, prop_value, 1, 0);
 	ck_assert_int_eq(len, 10);
 	ck_assert_str_eq(text, "basic test");
+}
 END_TEST
 
 
 START_TEST (test_soft_linebreak)
+{
     char text[] = "soft\\\nbreak";
 	prop_value->value = text;
 	prop_value->value_len = strlen(text);
@@ -47,10 +50,12 @@ START_TEST (test_soft_linebreak)
 	prop_value->value2_len = strlen(text2);
 	Parse_Text(sgfc, prop_value, 2, PVT_SIMPLE);
 	ck_assert_str_eq(text2, "softbreak:SIMPLE");
+}
 END_TEST
 
 
 START_TEST (test_trailing_spaces)
+{
     char text[] = "trailing   ";
 	prop_value->value = text;
 	prop_value->value_len = strlen(text);
@@ -74,10 +79,12 @@ START_TEST (test_trailing_spaces)
 	prop_value->value_len = strlen(text4);
 	Parse_Text(sgfc, prop_value, 1, 0);
 	ck_assert_str_eq(text4, "trailing4 \\");
+}
 END_TEST
 
 
 START_TEST (test_trailing_spaces_simpletext)
+{
     char text[] = "trailing \n ";
 	prop_value->value = text;
 	prop_value->value_len = strlen(text);
@@ -95,10 +102,12 @@ START_TEST (test_trailing_spaces_simpletext)
 	prop_value->value_len = strlen(text3);
 	Parse_Text(sgfc, prop_value, 1, PVT_SIMPLE);
 	ck_assert_str_eq(text3, "trailing3");
+}
 END_TEST
 
 
 START_TEST (test_composed_simpletext_linebreaks)
+{
 	struct Property p;
 	struct PropValue v;
 
@@ -125,6 +134,7 @@ START_TEST (test_composed_simpletext_linebreaks)
     Check_Text(sgfc, &p, &v);
 	ck_assert_str_eq(val1c, "aa a");
 	ck_assert_str_eq(val2c, "bb b");
+}
 END_TEST
 
 

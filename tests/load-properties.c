@@ -13,6 +13,7 @@
 
 
 START_TEST (test_lowercase_in_front)
+{
 	char buffer[] = "(;ccB[aa])";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -20,10 +21,12 @@ START_TEST (test_lowercase_in_front)
 	int ret = LoadSGFFromFileBuffer(sgfc);
 	ck_assert_int_eq(ret, true);
 	ck_assert_str_eq("ccB", sgfc->root->prop->idstr);
+}
 END_TEST
 
 
 START_TEST (test_lowercase_around)
+{
 	char buffer[] = "(;ccAddBee[aa])";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -31,10 +34,12 @@ START_TEST (test_lowercase_around)
 	int ret = LoadSGFFromFileBuffer(sgfc);
 	ck_assert_int_eq(ret, true);
 	ck_assert_str_eq("ccAddBee", sgfc->root->prop->idstr);
+}
 END_TEST
 
 
 START_TEST (test_lowercase_second_prop)
+{
 	char buffer[] = "(;AB[aa]xxAEyy[bb])";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -43,10 +48,12 @@ START_TEST (test_lowercase_second_prop)
 	ck_assert_int_eq(ret, true);
 	ck_assert_str_eq("AB", sgfc->root->prop->idstr);
 	ck_assert_str_eq("xxAEyy", sgfc->root->prop->next->idstr);
+}
 END_TEST
 
 
 START_TEST (test_lowercase_missing_semicolon)
+{
 	char buffer[] = "(;AB[aa](xxAEyy[bb]))";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -54,6 +61,7 @@ START_TEST (test_lowercase_missing_semicolon)
 	int ret = LoadSGFFromFileBuffer(sgfc);
 	ck_assert_int_eq(ret, true);
 	ck_assert_str_eq("xxAEyy", sgfc->root->child->prop->idstr);
+}
 END_TEST
 
 
@@ -80,7 +88,7 @@ struct SGFCError test_lwic_errors[] =
 void test_lwic_error_output(struct SGFCError *error)
 {
 	test_lwic_errors_seen++;
-	ck_assert_msg(test_lwic_errors_seen <= 12, "too many errors, latest %lx at %d:%d:%s",
+	ck_assert_msg(test_lwic_errors_seen <= 12, "too many errors, latest %lx at %ld:%ld:%s",
 			   	  error->error, error->row, error->col, error->message);
 	struct SGFCError expect = test_lwic_errors[test_lwic_errors_seen];
 	ck_assert_uint_eq(error->error, expect.error);
@@ -91,6 +99,7 @@ void test_lwic_error_output(struct SGFCError *error)
 }
 
 START_TEST (test_lowercase_with_illegal_chars)
+{
 	char buffer[] = "(;xx yyAB[aa] z3 zzZZ uuAWvv ww[bb] cc[pp] q_ \n"
 				    "(kk xxAEyy[bb])\n"
 					"(ll) (rrR) (;ggG)\n"
@@ -109,6 +118,7 @@ START_TEST (test_lowercase_with_illegal_chars)
 	ck_assert_str_eq("ssBs", sgfc->root->child->sibling->sibling->sibling->prop->idstr);
 	ck_assert_msg(test_lwic_errors_seen == 12,
 			      "not all errors seen, expected 12, got %d", test_lwic_errors_seen);
+}
 END_TEST
 
 

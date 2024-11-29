@@ -7,20 +7,17 @@
 
 # System environment
 CC = gcc
-#CC = /home/arno/development/sgfc/afl-2.52b/afl-gcc
+#CC = /home/arno/development/sgfc/AFLplusplus-4.08c/afl-cc
 
-OPTIONS = -std=c99 -pedantic -W -Wimplicit -Wreturn-type -Wswitch -Wformat \
-	  -Wuninitialized -Wparentheses -Wpointer-arith -Wbad-function-cast \
-	  -Wcast-qual -Wcast-align -Waggregate-return -Wstrict-prototypes \
-	  -Wnested-externs -Wshadow -Wchar-subscripts -Wno-unused-parameter \
-	  -Wno-implicit-fallthrough -Wconversion -Wsign-conversion
+OPTIONS = -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-implicit-fallthrough
 
 # clang
 #CC = clang
 #OPTIONS = -std=c99 -Weverything -Wno-padded -Wno-unused-parameter \
 		  -Wno-format-nonliteral -Wno-disabled-macro-expansion \
 		  -Wno-documentation-unknown-command -Wno-switch-enum \
-		  -Wno-conditional-uninitialized
+		  -Wno-conditional-uninitialized -Wno-implicit-fallthrough \
+		  -Wno-reserved-identifier -Wno-missing-noreturn -Wno-string-concatenation
 
 OPTIMIZATION = -O1
 CFLAGS = $(OPTIMIZATION) $(OPTIONS)

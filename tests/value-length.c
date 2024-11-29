@@ -40,6 +40,7 @@ void VerifyTreeValueLength(struct Node *n, int phase)
 }
 
 START_TEST (test_length_with_test_sgf)
+{
 	int ret = LoadSGF(sgfc, "../test-files/test.sgf");
 	ck_assert_int_eq(ret, true);
 	VerifyTreeValueLength(sgfc->root, 1);
@@ -47,6 +48,7 @@ START_TEST (test_length_with_test_sgf)
 	ParseSGF(sgfc);
 	VerifyTreeValueLength(sgfc->root, 2);
 	free(sgfc->buffer);		/* common_teardown doesn't free buffer */
+}
 END_TEST
 
 

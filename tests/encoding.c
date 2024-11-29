@@ -13,6 +13,7 @@
 
 
 START_TEST (test_detect_encoding_BOM)
+{
 	char *result;
 	char buffer[4] = {'\xFE', '\xFF', ' ', ' '};
 
@@ -47,10 +48,12 @@ START_TEST (test_detect_encoding_BOM)
 	result = DetectEncoding(buffer, buffer+4);
 	ck_assert_str_eq(result, "UTF-8");
 	free(result);
+}
 END_TEST
 
 
 START_TEST (test_detect_encoding)
+{
 	char *result;
 
 	char buffer[] = "some (text CA[basic-case] more text";
@@ -87,10 +90,12 @@ START_TEST (test_detect_encoding)
 	result = DetectEncoding(buffer7, buffer7 + strlen(buffer7));
 	ck_assert_str_eq(result, "after-brace");
 	free(result);
+}
 END_TEST
 
 
 START_TEST (test_no_encoding_specified)
+{
 	char *result;
 
 	char buffer[] = "you're not gonna find it";
@@ -100,10 +105,12 @@ START_TEST (test_no_encoding_specified)
 	char buffer2[] = "you're not gonna CA[it";
 	result = DetectEncoding(buffer2, buffer2 + strlen(buffer2));
 	ck_assert_ptr_eq(result, NULL);
+}
 END_TEST
 
 
 START_TEST (test_basic_conversion)
+{
 	char src_buffer[] = "simple test";
 	char dst_buffer[100];
 	char *src_pos, *dst_pos, *result;
@@ -125,10 +132,12 @@ START_TEST (test_basic_conversion)
 	ck_assert_str_eq(result, src_buffer);
 	free(result);
 	iconv_close(cd);
+}
 END_TEST
 
 
 START_TEST (test_bad_char_conversion)
+{
 	char *result;
 	char buffer[50]; /* large enough so that no reallocation is necessary */
 	memset(buffer, 0xFF, 50);
@@ -149,10 +158,12 @@ START_TEST (test_bad_char_conversion)
 	ck_assert_str_eq(result, "sim\uFFFDle t\uFFFDst w\uFFFDh b\uFFFDd chars\uFFFD");
 	free(result);
 	iconv_close(cd);
+}
 END_TEST
 
 
 START_TEST (test_buffer_overflow_conversion)
+{
 	char *result;
 
 	char buffer[2] = {'\xE4', 0}; /* "ä" in ISO-8859-1 */
@@ -179,10 +190,12 @@ START_TEST (test_buffer_overflow_conversion)
 	ck_assert_str_eq(result, expected);
 	iconv_close(cd);
 	free(result);
+}
 END_TEST
 
 
 START_TEST (test_8bit_value_in_middle)
+{
 	print_error_handler = PrintErrorHandler;	/* count errors */
 	print_error_output_hook = NULL;
 	sgfc->options->forced_encoding = "UTF-8";
@@ -200,10 +213,12 @@ START_TEST (test_8bit_value_in_middle)
 	ck_assert_int_eq(22, (long)sgfc->root->prop->next->col);
 	ck_assert_int_eq(0, sgfc->error_count);
 	ck_assert_int_eq(0, sgfc->warning_count);
+}
 END_TEST
 
 
 START_TEST (test_8bit_value_at_end)
+{
 	print_error_handler = PrintErrorHandler;	/* count errors */
 	print_error_output_hook = NULL;
 	sgfc->options->forced_encoding = "UTF-8";
@@ -221,6 +236,7 @@ START_TEST (test_8bit_value_at_end)
 	ck_assert_int_eq(10, (long)sgfc->root->prop->next->col);
 	ck_assert_int_eq(0, sgfc->error_count);
 	ck_assert_int_eq(0, sgfc->warning_count);
+}
 END_TEST
 
 

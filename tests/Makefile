@@ -8,11 +8,7 @@
 # System environment
 CC = gcc
 
-OPTIONS = -std=c99 -pedantic -W -Wimplicit -Wreturn-type -Wswitch -Wformat\
-	  -Wuninitialized -Wparentheses -Wpointer-arith -Wbad-function-cast\
-	  -Wcast-qual -Wcast-align -Waggregate-return -Wstrict-prototypes\
-	  -Wnested-externs -Wshadow -Wchar-subscripts -Wno-unused-parameter\
-	  -Wno-implicit-fallthrough -Wconversion -Wsign-conversion
+OPTIONS = -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter
 
 DIRECTORIES = -I ../src
 OPTIMIZATION = -O1
