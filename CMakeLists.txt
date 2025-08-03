@@ -22,27 +22,10 @@ set(src_files
         src/strict.c
         src/util.c)
 
-add_executable(sgfc
-        ${src_files}
-        src/main.c)
+# Create static library from SGFC source files (excluding main.c)
+add_library(sgfc STATIC ${src_files})
 
-target_link_libraries(sgfc m)
-
-add_executable(sgfc-test
-        ${src_files}
-        tests/test-runner.c
-        tests/test-common.h
-        tests/test-helper.c
-        tests/check-value.c
-        tests/delete-node.c
-        tests/encoding.c
-        tests/load-properties.c
-        tests/options.c
-        tests/other-games.c
-        tests/parse-text.c
-        tests/position.c
-        tests/test-files.c
-        tests/trigger-errors.c
-        tests/value-length.c)
-
-target_link_libraries(sgfc-test check rt pthread subunit m)
+# Find and link iconv
+find_package(Iconv REQUIRED)
+target_link_libraries(sgfc Iconv::Iconv)
+target_include_directories(sgfc PUBLIC src)
