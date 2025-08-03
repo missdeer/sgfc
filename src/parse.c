@@ -119,7 +119,7 @@ static void ParseText_NormalizeWhitespace(struct SGFInfo *sgfc, char *s, size_t 
 		else							/* other chars than \r,\n */
 		{
 			old = 0;
-			if(isspace((unsigned char)*s))				/* transform all WS to space */
+			if(*s > 0 && *s <= 32 && isspace((unsigned char)*s))				/* transform all WS to space */
 				*d++ = ' ';
 			else if(!*s)				/* replace \0 bytes with space, so that we can use NULL terminated strings */
 			{
