@@ -30,6 +30,8 @@ set(sgfc_core_sources
         src/strict.c
         src/util.c)
 
+find_package(Iconv REQUIRED)
+
 add_library(sgfc_core STATIC ${sgfc_core_sources})
 
 target_include_directories(sgfc_core
@@ -38,7 +40,8 @@ target_include_directories(sgfc_core
 
 target_link_libraries(sgfc_core
         PUBLIC
-        m)
+        m
+        Iconv::Iconv)
 
 add_executable(sgfc
         src/main.c)
