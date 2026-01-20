@@ -1,7 +1,7 @@
-SGF Syntax Checker & Converter: SGFC V2.0
+SGF Syntax Checker & Converter: SGFC V2.1
 =========================================
 
-SGFC Copyright (C) 1996-2021 by Arno Hollosi <ahollosi@xmp.net>
+SGFC Copyright (C) 1996-2026 by Arno Hollosi <ahollosi@xmp.net>
 
 SGFC is open source software and is published under the terms of the
 BSD License. Read 'COPYING' for more information.
@@ -698,6 +698,11 @@ Examples:
 
 Appendix A: History
 ===================
+
+V2.1 (2026-01-20)
+-----------------
+- fix off-by-one bug when saving result into a buffer (reported by  Patrick Näf)
+
 
 V2.0 (2021-02-14)
 -----------------
