@@ -41,6 +41,7 @@ add_executable(sgfc-test
         tests/other-games.c
         tests/parse-text.c
         tests/position.c
+        tests/saving.c
         tests/test-files.c
         tests/trigger-errors.c
         tests/value-length.c)

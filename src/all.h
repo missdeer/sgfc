@@ -2,7 +2,7 @@
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 all.h
 ***
-*** Copyright (C) 1996-2021 by Arno Hollosi
+*** Copyright (C) 1996-2026 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
 ***
 *** Notes:	global definition of all #defines and structures
@@ -398,6 +398,10 @@ struct SGFCOptions
 	bool error_enabled[MAX_ERROR_NUM];
 	bool delete_property[NUM_SGF_TOKENS];
 };
+
+
+/* Start with ~5kb buffer which suffices in many cases */
+#define DEFAULT_BUFFER_SIZE ((size_t) 5000)
 
 /* used by save.c when using MemoryIO SaveFileHandler functions */
 struct MemoryIOHandle {

@@ -1,7 +1,7 @@
 SGF Syntax Checker & Converter: SGFC V2.0
 =========================================
 
-SGFC Copyright (C) 1996-2021 by Arno Hollosi <ahollosi@xmp.net>
+SGFC Copyright (C) 1996-2026 by Arno Hollosi <ahollosi@xmp.net>
 
 SGFC is open source software and is published under the terms of the
 BSD License. Read 'COPYING' for more information.
@@ -42,5 +42,6 @@ options.c           test cases for parsing of command line options
 other-games.c       test cases for property values when GM[] != 1
 parse-text.c        test cases for Parse_Text() and Check_Text()
 position.c          test cases verifying the internal board plays
+saving.c            test cases for edge cases in saving files
 trigger-errors.c    test cases for triggering almost all SGFC errors
 value.length.c      test cases verifying PropValue->length attribute

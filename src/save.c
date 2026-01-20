@@ -2,7 +2,7 @@
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 save.c
 ***
-*** Copyright (C) 1996-2021 by Arno Hollosi
+*** Copyright (C) 1996-2026 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
 ***
 **************************************************************************/
@@ -86,7 +86,6 @@ struct SaveFileHandler *SetupSaveFileIO(void)
 /**************************************************************************
 *** Function:	SaveBufferIO_open
 ***				Initializes SaveBuffer structure for saving to memory
-***             Allocates 5000 bytes as initial value
 *** Parameters: sfh ... pointer to SaveFileHandler
 ***				path, mode ... dummy
 *** Returns:	true on success, false on error (out of memory)
@@ -94,11 +93,10 @@ struct SaveFileHandler *SetupSaveFileIO(void)
 
 int SaveBufferIO_open(struct SaveFileHandler *sfh, const char *path, const char *mode)
 {
-	/* Start with ~5kb buffer which suffices in many cases */
-	sfh->fh.memh.buffer = (char *)malloc((size_t)5000);
+	sfh->fh.memh.buffer = (char *)malloc(DEFAULT_BUFFER_SIZE);
 	if(!sfh->fh.memh.buffer)
 		return false;
-	sfh->fh.memh.buffer_size = 5000;
+	sfh->fh.memh.buffer_size = DEFAULT_BUFFER_SIZE;
 	sfh->fh.memh.pos = sfh->fh.memh.buffer;
 	return true;
 }
@@ -144,7 +142,7 @@ static int SaveBufferIO_putc(struct SaveFileHandler *sfh, int c)
 		memcpy(new_buffer, sfh->fh.memh.buffer, sfh->fh.memh.buffer_size);
 		free(sfh->fh.memh.buffer);
 		sfh->fh.memh.buffer = new_buffer;
-		sfh->fh.memh.pos = new_buffer + sfh->fh.memh.buffer_size;
+		sfh->fh.memh.pos = new_buffer + sfh->fh.memh.buffer_size - 1;
 		sfh->fh.memh.buffer_size *= 2;
 	}
 

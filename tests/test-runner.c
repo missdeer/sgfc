@@ -2,7 +2,7 @@
 *** Project: SGF Syntax Checker & Converter
 ***	File:	 tests/testrunner.c
 ***
-*** Copyright (C) 1996-2021 by Arno Hollosi
+*** Copyright (C) 1996-2026 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
 ***
 **************************************************************************/
@@ -21,6 +21,7 @@ TCase *sgfc_tc_position(void);
 TCase *sgfc_tc_test_files(void);
 TCase *sgfc_tc_trigger_errors(void);
 TCase *sgfc_tc_value_length(void);
+TCase *sgfc_tc_save(void);
 
 
 Suite *sgfc_suite(void)
@@ -37,6 +38,7 @@ Suite *sgfc_suite(void)
 	suite_add_tcase(s, sgfc_tc_test_files());
 	suite_add_tcase(s, sgfc_tc_trigger_errors());
 	suite_add_tcase(s, sgfc_tc_value_length());
+	suite_add_tcase(s, sgfc_tc_save());
 	return s;
 }
 
