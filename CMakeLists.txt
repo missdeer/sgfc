@@ -33,11 +33,11 @@ add_executable(sgfc-test
         tests/test-runner.c
         tests/test-common.h
         tests/test-helper.c
+        tests/check-encoding.c
+        tests/check-options.c
         tests/check-value.c
         tests/delete-node.c
-        tests/encoding.c
         tests/load-properties.c
-        tests/options.c
         tests/other-games.c
         tests/parse-text.c
         tests/position.c

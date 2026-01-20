@@ -8,7 +8,7 @@
 # System environment
 CC = gcc
 
-OPTIONS = -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter
+OPTIONS = -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-implicit-fallthrough
 
 DIRECTORIES = -I ../src
 OPTIMIZATION = -O1
@@ -16,8 +16,8 @@ CFLAGS = $(DIRECTORIES) $(OPTIMIZATION) $(OPTIONS)
 
 LIB = -lcheck -lpthread -lrt -lsubunit -lm
 OBJ = test-runner.o test-helper.o position.o parse-text.o check-value.o\
-	trigger-errors.o test-files.o load-properties.o encoding.o delete-node.o\
-	value-length.o other-games.o options.o saving.o
+	trigger-errors.o test-files.o load-properties.o check-encoding.o delete-node.o\
+	value-length.o other-games.o check-options.o saving.o
 
 SRC_OBJ = ../src/execute.o ../src/gameinfo.o ../src/load.o\
 	../src/parse.o ../src/parse2.o ../src/options.o ../src/save.o\
