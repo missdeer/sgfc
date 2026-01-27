@@ -126,7 +126,7 @@ START_TEST (test_basic_conversion)
 	iconv_close(cd);
 
 	/* ... and convert text back */
-	cd = iconv_open("UTF-8", "UTF-16");
+	cd = iconv_open("UTF-8", "UTF-16LE");
 	result = DecodeBuffer(sgfc, cd, dst_buffer, (U_LONG)(dst_pos - dst_buffer), 0, NULL);
 	ck_assert_ptr_ne(result, NULL);
 	ck_assert_str_eq(result, src_buffer);
