@@ -462,7 +462,7 @@ bool Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 	if(st->ginfo && (st->ginfo != n))
 	{
 		PrintError(E4_GINFO_ALREADY_SET, sgfc, p->row, p->col, p->idstr,
-			 	   st->ginfo->row, st->ginfo->col);
+				   st->ginfo->row, st->ginfo->col);
 		return false;
 	}
 
@@ -509,7 +509,7 @@ bool Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 		if(v->next)
 		{
 			PrintError(E_BAD_VW_VALUES, sgfc, p->row, p->col,
-			  		   "values after '[]' value found", "deleted");
+					   "values after '[]' value found", "deleted");
 			v = v->next;
 			while(v)
 				v = DelPropValue(p, v);
@@ -523,7 +523,7 @@ bool Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 		if(!v->value_len)	/* '[]' within other values */
 		{
 			PrintError(E_BAD_VW_VALUES, sgfc, v->row, v->col,
-			  		   "empty value found in list", "deleted");
+					   "empty value found in list", "deleted");
 			v = DelPropValue(p, v);
 		}
 		else
@@ -548,7 +548,7 @@ bool Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 			if(!ExpandPointList(sgfc, p, v, false))
 			{
 				PrintError(E_BAD_VW_VALUES, sgfc, v->row, v->col,
-			   			   "illegal FF[3] definition", "deleted");
+						   "illegal FF[3] definition", "deleted");
 				return false;
 			}
 
@@ -556,7 +556,7 @@ bool Do_View(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct Bo
 		}
 		else		/* looks like FF4 definition (wrong FF set?) */
 			PrintError(E_BAD_VW_VALUES, sgfc, p->row, p->col,
-			  		   "FF[4] definition in older FF found", "parsing done anyway");
+					   "FF[4] definition in older FF found", "parsing done anyway");
 	}
 
 	return true;

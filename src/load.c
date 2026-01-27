@@ -104,7 +104,7 @@ static const char *NextCharInBuffer(const char **c, const char *end, U_LONG step
 static const char *NextChar(struct LoadInfo *load)
 {
 	return NextCharInBuffer(&load->current, load->b_end, 1,
-						 	&load->cur_row, &load->cur_col, load->is_utf8);
+							&load->cur_row, &load->cur_col, load->is_utf8);
 }
 
 
@@ -211,7 +211,7 @@ static bool GetNextSGFChar(struct LoadInfo *load, bool print_error, U_LONG error
 			case ')':
 			case '[':	if(print_error && lc)
 							PrintError(E_ILLEGAL_OUTSIDE_CHARS, load->sgfc, load->cur_row, load->cur_col-lc,
-				  				       true, load->current-lc, lc);
+									   true, load->current-lc, lc);
 						load->lowercase = 0;
 						return true;
 
@@ -598,7 +598,7 @@ static bool BuildSGFTree(struct LoadInfo *load, struct Node *r, bool missing_sem
 						{
 							if(!missing_semicolon)
 								PrintError(E_MISSING_NODE_START, load->sgfc,
-				   						   load->cur_row, load->cur_col - load->lowercase);
+										   load->cur_row, load->cur_col - load->lowercase);
 							empty = 0;
 							r = NewNodeWithProperties(load, r);
 							if(!r)
@@ -607,7 +607,7 @@ static bool BuildSGFTree(struct LoadInfo *load, struct Node *r, bool missing_sem
 						else
 						{
 							PrintError(E_ILLEGAL_OUTSIDE_CHARS, load->sgfc,
-				  					   load->cur_row, load->cur_col - load->lowercase,
+									   load->cur_row, load->cur_col - load->lowercase,
 									   true, load->current - load->lowercase, load->lowercase);
 							NextChar(load);
 						}

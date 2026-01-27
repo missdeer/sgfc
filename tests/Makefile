@@ -8,7 +8,7 @@
 # System environment
 CC = gcc
 
-OPTIONS = -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-implicit-fallthrough
+OPTIONS = -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter
 
 DIRECTORIES = -I ../src
 OPTIMIZATION = -O1

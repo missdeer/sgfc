@@ -114,7 +114,7 @@ extern void (*print_error_output_hook)(struct SGFCError *);
 extern void (*oom_panic_hook)(const char *);
 
 int PrintError(U_LONG, struct SGFInfo *, ...);
-void ExitWithOOMError(const char *);
+void ExitWithOOMError(const char *) __attribute__((noreturn));
 bool PrintErrorHandler(U_LONG, struct SGFInfo *, va_list);
 void PrintErrorOutputHook(struct SGFCError *);
 void CommonPrintErrorOutputHook(struct SGFCError *, FILE *);

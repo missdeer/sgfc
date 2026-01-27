@@ -9,15 +9,14 @@
 CC = gcc
 #CC = /home/arno/development/sgfc/AFLplusplus-4.08c/afl-cc
 
-OPTIONS = -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wno-implicit-fallthrough
+OPTIONS = -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter
 
 # clang
 #CC = clang
 #OPTIONS = -std=c99 -Weverything -Wno-padded -Wno-unused-parameter \
+		  -Wno-documentation-unknown-command -Wno-declaration-after-statement \
 		  -Wno-format-nonliteral -Wno-disabled-macro-expansion \
-		  -Wno-documentation-unknown-command -Wno-switch-enum \
-		  -Wno-conditional-uninitialized -Wno-implicit-fallthrough \
-		  -Wno-reserved-identifier -Wno-missing-noreturn -Wno-string-concatenation
+		  -Wno-switch-enum
 
 OPTIMIZATION = -O1
 CFLAGS = $(OPTIMIZATION) $(OPTIONS)

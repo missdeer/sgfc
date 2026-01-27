@@ -147,7 +147,7 @@ static int ParsePropertyArg(struct SGFInfo *sgfc, const char **str)
 {
 	const char *c = *str;
 	size_t n;
-	int m;
+	int m = 0;
 
 	c++; /* first char after initial option letter */
 	/* count uppercase */
