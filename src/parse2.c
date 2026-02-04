@@ -659,7 +659,7 @@ static bool GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 		case -1:
 			PrintError(E_BAD_VALUE_CORRECTED, sgfc, p->value->row, p->value->col,
 					   p->value->value, p->idstr, v);
-			__attribute__((fallthrough));
+			ATTRIBUTE_FALLTHROUGH;
 		case 1:	*d = atoi(v);
 				if(*d < 1)
 				{

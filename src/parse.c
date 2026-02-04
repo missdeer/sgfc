@@ -440,7 +440,7 @@ int Parse_Float(char *value, size_t *len, ...)
 						break;
 			case ',':	ret = -1;
 						*s = '.';
-						__attribute__((fallthrough));
+						ATTRIBUTE_FALLTHROUGH;
 			case '.':	if(where & 8)	ret = -1;
 						else	{
 										*d++ = *s;
@@ -800,7 +800,7 @@ bool Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 					goto done;
 		case -1:	error = 1;
-					__attribute__((fallthrough));
+					ATTRIBUTE_FALLTHROUGH;
 		case 1:		switch(Parse_Text(sgfc, v, 2, p->flags))
 					{
 						case 0:	PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
@@ -847,14 +847,14 @@ bool Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 					goto done;
 		case -1:	error = 1;
-					__attribute__((fallthrough));
+					ATTRIBUTE_FALLTHROUGH;
 		case 1:		switch(Parse_Move(v->value2, &v->value2_len, PARSE_POS, sgfc))
 					{
 						case 0:	PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 								goto done;
 						case -1:
 								error = 1;
-								__attribute__((fallthrough));
+								ATTRIBUTE_FALLTHROUGH;
 						case 1:	if(!strcmp(v->value, v->value2))
 								{
 									PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
@@ -907,10 +907,11 @@ bool Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 		switch(Parse_Number(v->value, &v->value_len))
 		{
 			case 0:	strcpy(v->value, "0");
-					__attribute__((fallthrough));
+					ATTRIBUTE_FALLTHROUGH;
 			case -1:
 					PrintError(E_BAD_COMPOSE_CORRECTED, sgfc, v->row, v->col, v->value,
 							   "FG", v->value, v->value2);
+					break;
 			case 1:	break;
 		}
 	}

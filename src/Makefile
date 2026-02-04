@@ -7,7 +7,7 @@
 
 # System environment
 CC = gcc
-#CC = /home/arno/development/sgfc/AFLplusplus-4.08c/afl-cc
+#CC = /home/arno/development/sgfc/AFLplusplus-4.35c/afl-cc
 
 OPTIONS = -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter
 

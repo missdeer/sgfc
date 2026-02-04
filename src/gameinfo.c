@@ -178,10 +178,10 @@ static int Parse_Result(char *value, size_t *len, ...)
 		case 'j':
 		case 'J':	if(strnccmp(value, "jigo", 4))
 						return 0;
-					__attribute__((fallthrough));
+					ATTRIBUTE_FALLTHROUGH;
 		case 'd':	err = -1;
 					value[0] = 'D';
-					__attribute__((fallthrough));
+					ATTRIBUTE_FALLTHROUGH;
 		case 'D':	if(!strcmp(value, "Draw"))
 						break;
 					err = -1;
@@ -190,7 +190,7 @@ static int Parse_Result(char *value, size_t *len, ...)
 					break;
 		case 'v':	err = -1;
 					value[0] = 'V';
-					__attribute__((fallthrough));
+					ATTRIBUTE_FALLTHROUGH;
 		case 'V':	if(!strcmp(value, "Void"))
 						break;
 					err = -1;
@@ -201,11 +201,11 @@ static int Parse_Result(char *value, size_t *len, ...)
 		case 'Z':	if(strnccmp(value, "zwart", 5))
 						return 0;
 					value[0] = 'B';
-					__attribute__((fallthrough));
+					ATTRIBUTE_FALLTHROUGH;
 		case 'b':
 		case 'w':	err = -1;
 					value[0] = (char)toupper((unsigned char)value[0]);
-					__attribute__((fallthrough));
+					ATTRIBUTE_FALLTHROUGH;
 		case 'B':
 		case 'W':	charpoints = GetFraction(value);
 
@@ -302,7 +302,7 @@ static int Parse_Result(char *value, size_t *len, ...)
 							case 't':
 							case 'f':	err = -1;
 										value[2] = (char)toupper((unsigned char)value[2]);
-										__attribute__((fallthrough));
+										ATTRIBUTE_FALLTHROUGH;
 							case 'R':
 							case 'T':
 							case 'F':	if(*len > 3)
@@ -541,7 +541,7 @@ static int Parse_Date(char *value, size_t *len, ...)
 						break;
 
 			case ',':	c++;			/* loop inc */
-						__attribute__((fallthrough));
+						ATTRIBUTE_FALLTHROUGH;
 
 			case 0:		switch(turn)	/* date has got which type? */
 						{
