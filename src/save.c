@@ -400,7 +400,7 @@ static void SetRootProps(struct SaveInfo *save, struct TreeInfo *info, struct No
 		NewPropValue(save->sgfc, r, TKN_CA, "UTF-8", NULL, true);
 
 	if(save->sgfc->options->add_sgfc_ap_property)
-		NewPropValue(save->sgfc, r, TKN_AP, "SGFC", "2.1", true);
+		NewPropValue(save->sgfc, r, TKN_AP, "SGFC", "2.2", true);
 
 	if(info->GM == 1)
 	{

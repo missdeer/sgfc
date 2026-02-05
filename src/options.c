@@ -23,7 +23,7 @@
 
 void PrintHelp(const enum option_help format)
 {
-	puts(" SGFC v2.1 - Smart Game Format Syntax Checker & Converter");
+	puts(" SGFC v2.2 - Smart Game Format Syntax Checker & Converter");
 	if(format == OPTION_HELP_VERSION)
 		return;
 
