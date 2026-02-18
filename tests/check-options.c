@@ -140,6 +140,50 @@ START_TEST (test_mix2)
 }
 END_TEST
 
+START_TEST (test_unknown_short_option)
+{
+	const char *args[] = {"sgfc", "-Q"};
+	bool result = ParseArgs(sgfc, 2, args);
+	ck_assert(result == false);
+}
+END_TEST
+
+
+START_TEST (test_unknown_long_option)
+{
+	const char *args[] = {"sgfc", "--nope"};
+	bool result = ParseArgs(sgfc, 2, args);
+	ck_assert(result == false);
+}
+END_TEST
+
+
+START_TEST (test_bad_numeric_parameter)
+{
+	const char *args[] = {"sgfc", "-E4"};
+	bool result = ParseArgs(sgfc, 2, args);
+	ck_assert(result == false);
+}
+END_TEST
+
+
+START_TEST (test_unknown_encoding_parameter)
+{
+	const char *args[] = {"sgfc", "--encoding=NOT-A-REAL-ENCODING-123"};
+	bool result = ParseArgs(sgfc, 2, args);
+	ck_assert(result == false);
+}
+END_TEST
+
+
+START_TEST (test_too_many_file_parameters)
+{
+	const char *args[] = {"sgfc", "input", "output", "extra"};
+	bool result = ParseArgs(sgfc, 4, args);
+	ck_assert(result == false);
+}
+END_TEST
+
 
 TCase *sgfc_tc_options(void)
 {
@@ -158,5 +202,10 @@ TCase *sgfc_tc_options(void)
 	tcase_add_test(tc, test_long_options_and_encoding);
 	tcase_add_test(tc, test_mix1);
 	tcase_add_test(tc, test_mix2);
+	tcase_add_test(tc, test_unknown_short_option);
+	tcase_add_test(tc, test_unknown_long_option);
+	tcase_add_test(tc, test_bad_numeric_parameter);
+	tcase_add_test(tc, test_unknown_encoding_parameter);
+	tcase_add_test(tc, test_too_many_file_parameters);
 	return tc;
 }

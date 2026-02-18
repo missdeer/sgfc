@@ -218,6 +218,7 @@ typedef enum {
 #define MAX_BOARDSIZE	52
 
 #define MAX_REORDER_VARIATIONS 100
+#define ENCODING_DETECT_SCAN_LIMIT 1000
 
 /* separate structure, so that it can be re-used when iterating the node tree */
 struct PathBoard

@@ -11,6 +11,17 @@
 
 #include "test-common.h"
 
+static bool encoding_fallback_seen;
+
+static bool encoding_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglist)
+{
+	(void)sgfi;
+	(void)arglist;
+	if(type == WS_ENCODING_FALLBACK)
+		encoding_fallback_seen = true;
+	return true;
+}
+
 
 START_TEST (test_detect_encoding_BOM)
 {
@@ -48,6 +59,22 @@ START_TEST (test_detect_encoding_BOM)
 	result = DetectEncoding(buffer, buffer+4);
 	ck_assert_str_eq(result, "UTF-8");
 	free(result);
+}
+END_TEST
+
+START_TEST (test_detect_encoding_limits)
+{
+	char nested[] = "(((CA[UTF-8]))";
+	char *result = DetectEncoding(nested, nested + strlen(nested));
+	ck_assert_ptr_eq(result, NULL);
+
+	char delayed[ENCODING_DETECT_SCAN_LIMIT + 200];
+	memset(delayed, 'a', sizeof(delayed));
+	delayed[0] = '(';
+	memcpy(delayed + ENCODING_DETECT_SCAN_LIMIT + 5, "CA[UTF-8]", 9);
+	delayed[sizeof(delayed)-1] = 0;
+	result = DetectEncoding(delayed, delayed + sizeof(delayed) - 1);
+	ck_assert_ptr_eq(result, NULL);
 }
 END_TEST
 
@@ -239,6 +266,39 @@ START_TEST (test_8bit_value_at_end)
 }
 END_TEST
 
+START_TEST (test_open_iconv_fallback)
+{
+	encoding_fallback_seen = false;
+	print_error_handler = encoding_error_handler;
+	sgfc->options->forced_encoding = NULL;
+	sgfc->options->default_encoding = "UTF-8";
+
+	const char *encoding_name = NULL;
+	iconv_t cd = OpenIconV(sgfc, "NOT-A-REAL-ENCODING-123", &encoding_name);
+	ck_assert_ptr_ne(cd, NULL);
+	ck_assert_str_eq(encoding_name, "UTF-8");
+	ck_assert(encoding_fallback_seen);
+	iconv_close(cd);
+}
+END_TEST
+
+
+START_TEST (test_open_iconv_forced_encoding)
+{
+	encoding_fallback_seen = false;
+	print_error_handler = encoding_error_handler;
+	sgfc->options->forced_encoding = "UTF-8";
+	sgfc->options->default_encoding = "ISO-8859-1";
+
+	const char *encoding_name = NULL;
+	iconv_t cd = OpenIconV(sgfc, "NOT-A-REAL-ENCODING-123", &encoding_name);
+	ck_assert_ptr_ne(cd, NULL);
+	ck_assert_str_eq(encoding_name, "UTF-8");
+	ck_assert(!encoding_fallback_seen);
+	iconv_close(cd);
+}
+END_TEST
+
 
 TCase *sgfc_tc_encoding(void)
 {
@@ -249,11 +309,14 @@ TCase *sgfc_tc_encoding(void)
 
 	tcase_add_test(tc, test_detect_encoding_BOM);
 	tcase_add_test(tc, test_detect_encoding);
+	tcase_add_test(tc, test_detect_encoding_limits);
 	tcase_add_test(tc, test_no_encoding_specified);
 	tcase_add_test(tc, test_basic_conversion);
 	tcase_add_test(tc, test_bad_char_conversion);
 	tcase_add_test(tc, test_buffer_overflow_conversion);
 	tcase_add_test(tc, test_8bit_value_in_middle);
 	tcase_add_test(tc, test_8bit_value_at_end);
+	tcase_add_test(tc, test_open_iconv_fallback);
+	tcase_add_test(tc, test_open_iconv_forced_encoding);
 	return tc;
 }

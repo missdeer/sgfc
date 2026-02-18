@@ -79,8 +79,8 @@ char *DetectEncoding(const char *c, const char *b_end)
 	if(c+3 >= b_end)
 		/* no encoding found (not even enough place for BOM) --> assume default */
 		return NULL;
-	if(c+1000 < b_end)
-		b_end = c+1000;	/* limit search to first 1000 bytes */
+	if(c + ENCODING_DETECT_SCAN_LIMIT < b_end)
+		b_end = c + ENCODING_DETECT_SCAN_LIMIT;	/* limit search to first SCAN_LIMIT bytes */
 
 	/* check for Unicode BOM */
 	if(*c == (char)0xFE && *(c+1) == (char)0xFF)
