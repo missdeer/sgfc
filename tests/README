@@ -41,6 +41,7 @@ delete-node.c       test cases for del_empty_nodes option and DelNode()
 load-properties.c   test cases for lowercase chars in property IDs
 other-games.c       test cases for property values when GM[] != 1
 parse-text.c        test cases for Parse_Text() and Check_Text()
+parse-move.c        test cases for Parse_Move()
 position.c          test cases verifying the internal board plays
 saving.c            test cases for edge cases in saving files
 trigger-errors.c    test cases for triggering almost all SGFC errors

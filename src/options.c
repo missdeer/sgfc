@@ -23,19 +23,19 @@
 
 void PrintHelp(const enum option_help format)
 {
-	puts(" SGFC v2.2 - Smart Game Format Syntax Checker & Converter");
+	puts("SGFC v2.2 - Smart Game Format Syntax Checker & Converter");
 	if(format == OPTION_HELP_VERSION)
 		return;
 
-	puts("             Copyright (C) 1996-2026 by Arno Hollosi\n"
-		 "             Email: ahollosi@xmp.net\n"
-		 " --------------------------------------------------------");
+	puts("            Copyright (C) 1996-2026 by Arno Hollosi\n"
+		 "            Email: ahollosi@xmp.net\n"
+		 "--------------------------------------------------------");
 
 	if(format == OPTION_HELP_SHORT)
-		puts(" 'sgfc -h' for help on options");
+		puts("'sgfc -h' for help on options");
 	else if (format == OPTION_HELP_LONG)
-		puts(" sgfc [options] infile [outfile]\n\n"
-			 " Options:\n"
+		puts("sgfc [options] infile [outfile]\n\n"
+			 "Options:\n"
 			 "    -bx ... x = 1,2,3: beginning of SGF data is detected by\n"
 			 "              1 - smart search algorithm (default)\n"
 			 "              2 - first occurrence of '(;'\n"

@@ -89,11 +89,11 @@ void test_lwic_error_output(struct SGFCError *error)
 {
 	test_lwic_errors_seen++;
 	ck_assert_msg(test_lwic_errors_seen <= 12, "too many errors, latest %lx at %ld:%ld:%s",
-			   	  error->error, error->row, error->col, error->message);
+				  error->error, error->row, error->col, error->message);
 	struct SGFCError expect = test_lwic_errors[test_lwic_errors_seen];
 	ck_assert_uint_eq(error->error, expect.error);
 	ck_assert_msg(strstr(error->message, expect.message) != NULL,
-			      "should contain '%s': %s", expect.message, error->message);
+				  "should contain '%s': %s", expect.message, error->message);
 	ck_assert_uint_eq(error->row, expect.row);
 	ck_assert_uint_eq(error->col, expect.col);
 }
@@ -101,9 +101,9 @@ void test_lwic_error_output(struct SGFCError *error)
 START_TEST (test_lowercase_with_illegal_chars)
 {
 	char buffer[] = "(;xx yyAB[aa] z3 zzZZ uuAWvv ww[bb] cc[pp] q_ \n"
-				    "(kk xxAEyy[bb])\n"
+					"(kk xxAEyy[bb])\n"
 					"(ll) (rrR) (;ggG)\n"
-	 				"(;ssBs[ab]))";
+					"(;ssBs[ab]))";
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
 
@@ -117,7 +117,7 @@ START_TEST (test_lowercase_with_illegal_chars)
 	ck_assert_str_eq("xxAEyy", sgfc->root->child->prop->idstr);
 	ck_assert_str_eq("ssBs", sgfc->root->child->sibling->sibling->sibling->prop->idstr);
 	ck_assert_msg(test_lwic_errors_seen == 12,
-			      "not all errors seen, expected 12, got %d", test_lwic_errors_seen);
+				  "not all errors seen, expected 12, got %d", test_lwic_errors_seen);
 }
 END_TEST
 

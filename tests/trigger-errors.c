@@ -389,7 +389,7 @@ START_TEST (test_WS_FF_DIFFERS)
 	trigger_error(WS_FF_DIFFERS,
 				  "(;GN[1]) (;FF[3]GN[2])",
 				  "(;FF[4]CA[UTF-8]GM[1]SZ[19]\n\nGN[1]\n\n)\n"
-	  			  "(;FF[4]CA[UTF-8]GM[1]SZ[19]\n\nGN[2]\n\n)\n");
+				  "(;FF[4]CA[UTF-8]GM[1]SZ[19]\n\nGN[2]\n\n)\n");
 }
 END_TEST
 
@@ -467,7 +467,7 @@ START_TEST (test_W_VARLEVEL_UNCERTAIN)
 	trigger_error(W_VARLEVEL_UNCERTAIN,
 				  "(;;B[dd];W[aa](;B[bb])(;AE[aa];W[ba])(;AE[dd][aa];B[ef]))",
 				  "(;FF[4]CA[UTF-8]GM[1]SZ[19];B[dd];W[aa]\n"
-	  			  "(;B[bb])\n(;AE[aa];W[ba])\n(;AE[aa][dd];B[ef]))\n");
+				  "(;B[bb])\n(;AE[aa];W[ba])\n(;AE[aa][dd];B[ef]))\n");
 }
 END_TEST
 
@@ -496,7 +496,7 @@ START_TEST (test_W_INT_KOMI_FOUND)
 	trigger_error(W_INT_KOMI_FOUND,
 				  "(;KI[11])(;KM[3.5]KI[8])",
 				  "(;FF[4]CA[UTF-8]GM[1]SZ[19]\n\nKM[5.5]\n\n)\n"
-	  			  "(;FF[4]CA[UTF-8]GM[1]SZ[19]\n\nKM[3.5]\n\n)\n");
+				  "(;FF[4]CA[UTF-8]GM[1]SZ[19]\n\nKM[3.5]\n\n)\n");
 }
 END_TEST
 
@@ -519,7 +519,7 @@ START_TEST (test_W_HANDICAP_NOT_SETUP)
 	trigger_error(W_HANDICAP_NOT_SETUP,
 				  "(;GM[1]AB[aa][bb])(;GM[1]HA[3];B[bb])",
 				  "(;FF[4]CA[UTF-8]GM[1]SZ[19]AB[aa][bb])\n"
-	  			  "(;FF[4]CA[UTF-8]GM[1]SZ[19]\n\nHA[3]\n\n;B[bb])\n");
+				  "(;FF[4]CA[UTF-8]GM[1]SZ[19]\n\nHA[3]\n\n;B[bb])\n");
 }
 END_TEST
 
