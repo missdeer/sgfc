@@ -607,61 +607,43 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 	size_t size;
 	int ret;
 
-	if(!sgfc->options->interactive)
-	{
-		PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "(not corrected!)");
-		return true;
-	}
-
-	size = v->value_len;
-	if(size < 25)		/* CorrectDate may use up to 15 chars */
-		size = 25;
-	newgi = SaveDupString(v->value, size, "game info value buffer");
-
 	PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "");
+
+	size = v->value_len > 25 ? v->value_len : 25;
+	newgi = SaveDupString(v->value, size, "game info value buffer");
 
 	while(true)
 	{
-		ret = (*Parse_Value)(newgi, 0, sgfc);
+		size = strlen(newgi);
+		ret = (*Parse_Value)(newgi, &size);
+
+		if(ret == 1)	/* correct value */
+			break;
 
 		if(ret)	printf("--> Use [%s] (enter), delete (d) or type in new value? ", newgi);
-		else	printf("--> Keep faulty value (enter), delete (d) or type in new value? ");
+		else	printf("--> Keep faulty value [%s] (enter), delete (d) or type in new value? ", newgi);
 
 		fgets(inp, 2000, stdin);
 		if(strlen(inp))
 			inp[strlen(inp)-1] = 0;	/* delete last char, it is a newline */
 
-		if(!strnccmp(inp, "d", 0))	/* delete */
-		{
-			free(newgi);
-			return false;
-		}
-
-		if(strlen(inp))			/* edit */
-		{
-			ret = (*Parse_Value)(inp, 0);
-			if(ret == 1)
-			{
-				free(v->value);
-				v->value_len = strlen(inp);
-				v->value = SaveMalloc(v->value_len+4, "game info value buffer");
-				strcpy(v->value, inp);
-				break;
-			}
-
-			puts("--! Error in input string !--");
-			if(ret == -1)
-			{
-				size = (strlen(inp) > 25) ? strlen(inp) : 25;
-				free(newgi);
-				newgi = SaveDupString(inp, size, "game info value buffer");
-			}
-		}
-		else					/* [return] */
+		if(!strlen(inp))			/* [return] */
 			break;
+
+		free(newgi);
+
+		if(!strnccmp(inp, "d", 0))	/* delete */
+			return false;
+
+		size = strlen(inp);
+		if (size < 25)
+			size = 25;
+		newgi = SaveDupString(inp, size, "game info value buffer");
 	}
 
-	free(newgi);
+	free(v->value);
+	v->value_len = size;
+	v->value = newgi;
 	return true;
 }
 
@@ -678,7 +660,7 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 {
 	char *val;
-	size_t size;
+	size_t size, val_len;
 	int res;
 	int (*parse)(char *, size_t *, ...);
 
@@ -699,37 +681,30 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 
 	val = SaveMalloc(size, "result value buffer");
 	strcpy(val, v->value);
-	size_t val_len = v->value_len;
+	val_len = v->value_len;
 	res = (*parse)(val, &val_len);
 
-	if(sgfc->options->interactive)
+	if(sgfc->options->interactive && res < 1)
 	{
-		if(res < 1 && !PromptGameInfo(sgfc, p, v, parse))
-		{
-			free(val);
-			return false;
-		}
-	}
-	else
-	{
-		switch(res)
-		{
-			case 0:
-				PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "(NOT CORRECTED!)");
-				break;
-			case -1:
-				PrintError(E4_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, p->idstr, val);
-				free(v->value);
-				v->value = val;
-				v->value_len = val_len;
-				return true;
-		}
+		free(val);
+		return PromptGameInfo(sgfc, p, v, parse);
 	}
 
-	if(res == 2)
+	switch(res)
 	{
-		strcpy(v->value, val);
-		v->value_len = val_len;
+		case 0:
+			PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "(NOT CORRECTED!)");
+			break;
+		case -1:
+			PrintError(E4_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, p->idstr, val);
+			free(v->value);
+			v->value = val;
+			v->value_len = val_len;
+			return true;
+		case 2:
+			strcpy(v->value, val);
+			v->value_len = val_len;
+			break;
 	}
 
 	free(val);
