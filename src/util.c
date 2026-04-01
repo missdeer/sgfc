@@ -283,8 +283,13 @@ void strnpcpy(char *dst, const char *src, size_t len)
 U_LONG KillChars(char *value, size_t *len, U_SHORT kill, const char *cset)
 {
 	U_LONG faulty = 0, err = 0;
-	size_t i = *len;
+	size_t i;
 	char *c, *d;
+
+	if(!value || !len || !*len)
+		return 0;
+
+	i = *len;
 
 	for(c = d = value; i; c++, i--)
 	{

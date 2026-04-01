@@ -465,17 +465,17 @@ struct SGFToken
 
 /* defines for compiler attributes */
 #if __STDC_VERSION__ >= 202311L
-  // C23 introduced standardized attribute syntax
-  #define ATTRIBUTE_NORETURN [[noreturn]]
-  #define ATTRIBUTE_FALLTHROUGH [[fallthrough]]
+	// C23 introduced standardized attribute syntax
+	#define ATTRIBUTE_NORETURN [[noreturn]]
+	#define ATTRIBUTE_FALLTHROUGH [[fallthrough]]
 #else
-  #ifdef _MSC_VER
-    // _Noreturn keyword does not work when compiling sgfc
-    // as part of a C++ project
-    #define ATTRIBUTE_NORETURN __declspec(noreturn)
-    #define ATTRIBUTE_FALLTHROUGH __fallthrough
-  #else
-    #define ATTRIBUTE_NORETURN __attribute__((noreturn))
-    #define ATTRIBUTE_FALLTHROUGH __attribute__((fallthrough))
-  #endif
+	#ifdef _MSC_VER
+		// _Noreturn keyword does not work when compiling sgfc
+		// as part of a C++ project
+		#define ATTRIBUTE_NORETURN __declspec(noreturn)
+		#define ATTRIBUTE_FALLTHROUGH __fallthrough
+	#else
+		#define ATTRIBUTE_NORETURN __attribute__((noreturn))
+		#define ATTRIBUTE_FALLTHROUGH __attribute__((fallthrough))
+	#endif
 #endif
