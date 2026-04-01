@@ -704,6 +704,60 @@ static int FindStart(struct LoadInfo *load, bool first_time)
 
 
 /**************************************************************************
+*** Function:	LoadSGFFromStdin
+***				Loads a SGF from stdin into the memory and inits all
+***				necessary information in SGFInfo structure
+***
+*** Parameters: sgfc ... pointer to SGFInfo structure
+*** Returns:	true on success, false on fatal error
+**************************************************************************/
+
+bool LoadSGFFromStdin(struct SGFInfo *sgfc)
+{
+	size_t capacity = DEFAULT_BUFFER_SIZE;
+	size_t size = 0;
+
+	char *buffer = malloc(capacity);
+	if (!buffer)
+		return false;
+
+	while (true)
+	{
+		if (size == capacity)
+		{
+			capacity *= 2;
+			char *tmp = realloc(buffer, capacity);
+			if (!tmp)
+			{
+				free(buffer);
+				return false;
+			}
+			buffer = tmp;
+		}
+
+		size_t n = fread(buffer + size, 1, capacity - size, stdin);
+		size += n;
+
+		if (n == 0)
+		{
+			if (feof(stdin))
+				break;
+			if (ferror(stdin))
+			{
+				free(buffer);
+				return false;
+			}
+		}
+	}
+
+	sgfc->buffer = buffer;
+	sgfc->b_end = buffer + size;
+
+	return LoadSGFFromFileBuffer(sgfc);
+}
+
+
+/**************************************************************************
 *** Function:	LoadSGF
 ***				Loads a SGF file into the memory and inits all
 ***				necessary information in SGFInfo structure
@@ -723,6 +777,9 @@ bool LoadSGF(struct SGFInfo *sgfc, const char *name)
 {
 	long size;
 	FILE *file;
+
+	if (!strcmp(name, "-"))
+		return LoadSGFFromStdin(sgfc);
 
 	file = fopen(name, "rb");
 	if(!file)

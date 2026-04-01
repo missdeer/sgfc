@@ -46,31 +46,66 @@ struct SaveInfo
 
 
 /**************************************************************************
-*** Function:	SetupSaveFileIO
-***				Allocate and initialize SaveFileHandler for regular file access
-*** Parameters: -
-*** Returns:	pointer to SafeFileHandler
+*** Function:	SaveFileIO_open
+***				Function for opening a regular file or stdout
+*** Parameters: sfh ... SaveFileHandler
+***				path ... filepath
+***				mode ... file opening mode for fopen()
+*** Returns:	true for success, false for error
 **************************************************************************/
 
 static int SaveFileIO_open(struct SaveFileHandler *sfh, const char *path, const char *mode)
 {
+	if(!strcmp(path, "-"))
+	{
+		sfh->fh.file = stdout;
+		return true;
+	}
 	sfh->fh.file = fopen(path, mode);
 	return !!sfh->fh.file;
 }
+
+
+/**************************************************************************
+*** Function:	SaveFileIO_close
+***				Closing regular file (or do nothing in case of stdout)
+*** Parameters: sfh ... pointer to SaveFileHandler
+***				error ... SGFC error code or E_NO_ERROR
+*** Returns:	true on success, false on error
+**************************************************************************/
 
 static int SaveFileIO_close(struct SaveFileHandler *sfh, U_LONG error)
 {
 	FILE *file = sfh->fh.file;
 	if(!file)
-		return 0;
+		return true;
 	sfh->fh.file = NULL;
-	return fclose(file);
+	if(file == stdout)
+		return true;
+	return !fclose(file);
 }
+
+
+/**************************************************************************
+*** Function:	SaveFileIO_putc
+***				Writes char to file
+*** Parameters: sfh ... pointer to SaveFileHandler
+***				c   ... char to write
+*** Returns:	char written or EOF in case of error
+**************************************************************************/
 
 static int SaveFileIO_putc(struct SaveFileHandler *sfh, int c)
 {
 	return fputc(c, sfh->fh.file);
 }
+
+
+/**************************************************************************
+*** Function:	SetupSaveFileIO
+***				Allocate and initialize SaveFileHandler for regular file access
+*** Parameters: -
+*** Returns:	pointer to SafeFileHandler
+**************************************************************************/
 
 struct SaveFileHandler *SetupSaveFileIO(void)
 {

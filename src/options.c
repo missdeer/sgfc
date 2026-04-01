@@ -69,11 +69,13 @@ void PrintHelp(const enum option_help format)
 			 "    -v  ... correct variation level and root moves\n"
 			 "    -w  ... disable warning messages\n"
 			 "    -yP ... delete property P (P = property id)\n"
-			 "    -z  ... reverse ordering of variations\n\n"
+			 "    -z  ... reverse ordering of variations\n"
+			 "    --  ... end of options (useful for filenames starting with -)\n\n"
 			 "    --help    ... print long help text (same as -h)\n"
 			 "    --version ... print version only\n"
 			 "    --default-encoding=name ... set default encoding to 'name' (CA[] has priority)\n"
-			 "    --encoding=name         ... override encoding specified in SGF file with 'name'\n"
+			 "    --encoding=name         ... override encoding specified in SGF file with 'name'\n\n"
+			 "    Use '-' as infile to read SGF from stdin, use '-' as outfile to write SGF to stdout\n"
 		);
 }
 
@@ -86,26 +88,26 @@ void PrintHelp(const enum option_help format)
 **************************************************************************/
 
 void PrintStatusLine(const struct SGFInfo *sgfc) {
-	printf("%s: ", sgfc->options->infile);
+	fprintf(E_OUTPUT, "%s: ", sgfc->options->infile);
 
 	if(sgfc->error_count || sgfc->warning_count)	/* errors & warnings */
 	{
 		if(sgfc->error_count)
-			printf("%d error(s)  ", sgfc->error_count);
+			fprintf(E_OUTPUT, "%d error(s)  ", sgfc->error_count);
 
 		if(sgfc->warning_count)
-			printf("%d warning(s)  ", sgfc->warning_count);
+			fprintf(E_OUTPUT, "%d warning(s)  ", sgfc->warning_count);
 
 		if(sgfc->critical_count)
-			printf("(critical:%d)  ", sgfc->critical_count);
+			fprintf(E_OUTPUT, "(critical:%d)  ", sgfc->critical_count);
 	}
 	else								/* file ok */
-		printf("OK  ");
+		fprintf(E_OUTPUT, "OK  ");
 
 	if(sgfc->ignored_count)
-		printf("(%d message(s) ignored)", sgfc->ignored_count);
+		fprintf(E_OUTPUT, "(%d message(s) ignored)", sgfc->ignored_count);
 
-	printf("\n");
+	fprintf(E_OUTPUT, "\n");
 }
 
 
@@ -242,7 +244,7 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 
 	for(i = 1; i < argc; i++)
 	{
-		if(!options_finished && argv[i][0] == '-')
+		if(!options_finished && argv[i][0] == '-' && argv[i][1])
 		{
 			for(c = &argv[i][1]; *c; c++)
 			{
@@ -328,7 +330,7 @@ bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[])
 				}
 			}
 		}
-		else	/* argument isn't preceded by '-' or we are past '--' */
+		else	/* argument is either a single '-', isn't preceded by '-', or we are past '--' */
 		{
 			if(!options->infile)
 			{

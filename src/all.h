@@ -32,7 +32,7 @@ typedef unsigned long	U_LONG;
 
 /* defines for error handling */
 
-#define E_OUTPUT	stdout				/* output channel for error messages */
+#define E_OUTPUT	stderr				/* output channel for error messages */
 
 struct SGFCError {
 	U_LONG error;			/* type and number of error */
