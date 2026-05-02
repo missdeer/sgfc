@@ -148,6 +148,7 @@ struct Property *NewPropValue(struct SGFInfo *, struct Node *, token, const char
 struct PropValue *DelPropValue(struct Property *, struct PropValue *);
 struct Node *NewNode(struct SGFInfo *, struct Node *, U_LONG, U_LONG, bool);
 void DelNode(struct SGFInfo *, struct Node *, U_LONG);
+struct TreeInfo *FreeTreeInfo(struct TreeInfo *);
 
 bool CalcGameSig(struct TreeInfo *, char *);
 

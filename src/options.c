@@ -431,20 +431,14 @@ void FreeSGFInfo(struct SGFInfo *sgfc)
 {
 	struct Node *n, *m;
 	struct Property *p;
-	struct TreeInfo *t, *hlp;
+	struct TreeInfo *t;
 
 	if(!sgfc)							/* check just to be sure */
 		return;
 
 	t = sgfc->tree;						/* free TreeInfo's */
 	while(t)
-	{
-		if(t->encoding)
-			iconv_close(t->encoding);
-		hlp = t->next;
-		free(t);
-		t = hlp;
-	}
+		t = FreeTreeInfo(t);
 
 	n = sgfc->first;						/* free Nodes */
 	while(n)

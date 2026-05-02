@@ -569,7 +569,7 @@ void DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error)
 				Delete(&sgfc->tree, ti);
 				if(sgfc->info == ti)
 					sgfc->info = NULL;
-				free(ti);
+				FreeTreeInfo(ti);
 			}
 		}
 		else
@@ -588,7 +588,7 @@ void DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error)
 				Delete(&sgfc->tree, ti);
 				if(sgfc->info == ti)
 					sgfc->info = NULL;
-				free(ti);
+				FreeTreeInfo(ti);
 			}
 		}
 	}
@@ -749,6 +749,25 @@ struct PropValue *DelPropValue(struct Property *p, struct PropValue *v)
 
 	Delete(&p->value, v);
 	free(v);
+	return next;
+}
+
+
+/**************************************************************************
+*** Function:	FreeTreeInfo
+***				Frees all buffers related to TreeInfo
+*** Parameters: ti ... TreeInfo structure
+*** Returns:	ti->next
+**************************************************************************/
+
+struct TreeInfo *FreeTreeInfo(struct TreeInfo *ti)
+{
+	struct TreeInfo *next = ti->next;
+
+	if(ti->encoding)
+		iconv_close(ti->encoding);
+	free(ti);
+
 	return next;
 }
 
