@@ -403,23 +403,24 @@ static void ReorderVariations(struct SGFInfo *sgfc, struct Node *r)
 
 
 /**************************************************************************
-*** Function:	DelEmptyNodes (recursive)
+*** Function:	DelEmptyNodes
 ***				Deletes empty nodes
 *** Parameters: sgfc ... pointer to SGFInfo structure
-***				n	 ... start node
 *** Returns:	-
 **************************************************************************/
 
-static void DelEmptyNodes(struct SGFInfo *sgfc, struct Node *n)
+static void DelEmptyNodes(struct SGFInfo *sgfc)
 {
-	if(n->child)
-		DelEmptyNodes(sgfc, n->child);
+	struct Node *n = sgfc->tail;
 
-	if(n->sibling)
-		DelEmptyNodes(sgfc, n->sibling);
-
-	if(!n->prop)
-		DelNode(sgfc, n, W_EMPTY_NODE_DELETED);
+	/* we loop from tail to front, as it minimizes pointer updates due to deletions */
+	while(n)
+	{
+		struct Node *prev = n->prev;
+		if(!n->prop)
+			DelNode(sgfc, n, W_EMPTY_NODE_DELETED);
+		n = prev;
+	}
 }
 
 
@@ -1012,7 +1013,7 @@ bool ParseSGF(struct SGFInfo *sgfc)
 		CorrectVariations(sgfc, sgfc->root, sgfc->tree);
 
 	if(sgfc->options->del_empty_nodes)
-		DelEmptyNodes(sgfc, sgfc->root);
+		DelEmptyNodes(sgfc);
 
 	if(sgfc->options->reorder_variations)
 		ReorderVariations(sgfc, sgfc->root);

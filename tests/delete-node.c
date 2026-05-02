@@ -110,6 +110,24 @@ START_TEST (test_delete_fails)
 END_TEST
 
 
+START_TEST (test_delete_empty_nodes)
+{
+	char buffer[] = "(;)(;N[a](;;N[b](;N[c1])(;;;)(;(;(;)))(;N[c2]))(;;N[d];;))(;;)";
+	sgfc->buffer = buffer;
+	sgfc->b_end = buffer + strlen(buffer);
+	int ret = LoadSGFFromFileBuffer(sgfc);
+	ck_assert_int_eq(ret, true);
+
+	sgfc->options->del_empty_nodes = true;
+	ret = ParseSGF(sgfc);
+	ck_assert_int_eq(ret, true);
+
+	expected_output = "(;FF[4]CA[UTF-8]GM[1]SZ[19]N[a]\n(;N[b]\n(;N[c1])\n(;N[c2]))\n(;N[d]))\n";
+	SaveSGF(sgfc, SetupSaveTestIO, "outfile");
+}
+END_TEST
+
+
 TCase *sgfc_tc_delete_node(void)
 {
 	TCase *tc;
@@ -123,5 +141,6 @@ TCase *sgfc_tc_delete_node(void)
 	tcase_add_test(tc, test_delete_with_sibling);
 	tcase_add_test(tc, test_delete_replace_with_sibling);
 	tcase_add_test(tc, test_delete_fails);
+	tcase_add_test(tc, test_delete_empty_nodes);
 	return tc;
 }
