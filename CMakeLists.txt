@@ -37,8 +37,11 @@ add_executable(sgfc-test
         tests/check-options.c
         tests/check-value.c
         tests/delete-node.c
+        tests/gameinfo-interactive.c
         tests/load-properties.c
+        tests/nesting.c
         tests/other-games.c
+        tests/parse-move.c
         tests/parse-text.c
         tests/position.c
         tests/saving.c

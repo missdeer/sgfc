@@ -930,7 +930,7 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 			/* MergeDoubleText() needs to be after Check_Properties(), because
 			 * depending on OPTION_ENCODING, the decoding step only occurs in
 			 * Check_Properties() and merging unknown character encodings is
-			 * deemed to dangerous -> after decoding we have UTF-8, which is safe */
+			 * deemed too dangerous -> after decoding we have UTF-8, which is safe */
 			MergeDoubleText(sgfc, n);
 			if(SplitMoveSetup(sgfc, n))
 				n = n->child;				/* new child node already parsed */

@@ -2,38 +2,38 @@
 # Copyright (C) 1996-2026 by Arno Hollosi
 # (see 'COPYING' for more copyright information)
 
-# System configuration
-# SHELL = /bin/bash
+CC := gcc
 
-# System environment
-CC = gcc
+OPTFLAGS  ?= -O1
+STD       := -std=c99
+WARNFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter
 
-OPTIONS = -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter
+CPPFLAGS += -I../src
+CFLAGS   += $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS)
+LDFLAGS  +=
+LDLIBS   += -lcheck -lpthread -lrt -lsubunit -lm
 
-DIRECTORIES = -I ../src
-OPTIMIZATION = -O1
-CFLAGS = $(DIRECTORIES) $(OPTIMIZATION) $(OPTIONS)
-
-LIB = -lcheck -lpthread -lrt -lsubunit -lm
-OBJ = test-runner.o test-helper.o position.o parse-text.o check-value.o\
-	trigger-errors.o test-files.o load-properties.o check-encoding.o parse-move.o delete-node.o\
+OBJ := test-runner.o test-helper.o position.o parse-text.o check-value.o \
+	trigger-errors.o test-files.o load-properties.o check-encoding.o parse-move.o delete-node.o \
 	value-length.o other-games.o check-options.o saving.o gameinfo-interactive.o nesting.o
 
-SRC_OBJ = ../src/execute.o ../src/gameinfo.o ../src/load.o\
-	../src/parse.o ../src/parse2.o ../src/options.o ../src/save.o\
-	../src/properties.o ../src/strict.o ../src/util.o ../src/error.o\
-	../src/encoding.o
-
-sgfc-test: $(OBJ) $(SRC_OBJ)
-	$(CC) $(CFLAGS) $(OBJ) $(SRC_OBJ) -o $@ $(LIB)
+SRC_OBJ := ../src/execute.o ../src/gameinfo.o ../src/load.o ../src/parse.o ../src/parse2.o \
+	../src/options.o ../src/save.o ../src/properties.o ../src/strict.o ../src/util.o \
+	../src/error.o ../src/encoding.o
 
 tests: sgfc-test
 	./sgfc-test
 
-all: clean tests
+sgfc-test: $(OBJ) $(SRC_OBJ)
+	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+
+%.o: %.c test-common.h ../src/all.h ../src/protos.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(OBJ) sgfc-test
+	rm -f *.gcda *.gcno *.gcov
 
-%.o: %.c test-common.h ../src/all.h ../src/protos.h
-	$(CC) $(CFLAGS) -c $<
+all: clean tests
+
+.PHONY: all tests clean

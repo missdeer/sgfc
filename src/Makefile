@@ -1,37 +1,40 @@
 # Makefile for SGFC
 # Copyright (C) 1996-2026 by Arno Hollosi
-# (see 'main.c' for more copyright information)
+# (see 'COPYING' for more copyright information)
 
-# System configuration
-# SHELL = /bin/bash
+CC := gcc
+#CC := /home/arno/development/sgfc/AFLplusplus-4.35c/afl-cc
 
-# System environment
-CC = gcc
-#CC = /home/arno/development/sgfc/AFLplusplus-4.35c/afl-cc
+OPTFLAGS  ?= -O1
+STD       := -std=c99
+WARNFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter
 
-OPTIONS = -std=c99 -Wall -Wextra -Wpedantic -Wno-unused-parameter
+CPPFLAGS +=
+CFLAGS   += $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS)
+LDFLAGS  +=
+LDLIBS   += -lm
 
 # clang
-#CC = clang
-#OPTIONS = -std=c99 -Weverything -Wno-padded -Wno-unused-parameter \
+#CC := clang
+#WARNFLAGS := -Weverything -Wno-padded -Wno-unused-parameter \
 		  -Wno-documentation-unknown-command -Wno-declaration-after-statement \
 		  -Wno-format-nonliteral -Wno-disabled-macro-expansion \
 		  -Wno-switch-enum
 
-OPTIMIZATION = -O1
-CFLAGS = $(OPTIMIZATION) $(OPTIONS)
-
-LIB = -lm
-OBJ = execute.o gameinfo.o load.o main.o parse.o parse2.o options.o\
+OBJ := execute.o gameinfo.o load.o main.o parse.o parse2.o options.o\
 	properties.o save.o strict.o util.o error.o encoding.o
 
-sgfc: $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $@ $(LIB)
 
-all: clean sgfc
+sgfc: $(OBJ)
+	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LDLIBS)
 
 clean:
 	rm -f $(OBJ) sgfc
+	rm -f *.gcda *.gcno *.gcov
 
 %.o: %.c all.h protos.h 
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+
+all: clean sgfc
+
+.PHONY: all clean

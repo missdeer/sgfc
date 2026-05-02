@@ -11,6 +11,7 @@ tests:
 clean:
 	$(MAKE) -C src/ clean
 	$(MAKE) -C tests/ clean
+	rm -rf coverage-html coverage.info
 
 clean-test-files:
 	rm -f test-files/*.txt test-files/*-result.sgf
@@ -25,6 +26,12 @@ test-files: src/sgfc
 	src/sgfc -ct test-files/escaping.sgf test-files/escaping-result.sgf >test-files/escaping-output.txt || true
 	src/sgfc -cE2 test-files/mixed-encoding.sgf test-files/mixed-encoding-result.sgf >test-files/mixed-encoding-output.txt || true
 
+coverage:
+	$(MAKE) -C src sgfc OPTFLAGS='-O0 -g' COVERAGEFLAGS='--coverage'
+	$(MAKE) -C tests tests OPTFLAGS='-O0 -g' COVERAGEFLAGS='--coverage'
+	lcov --capture --directory src --output-file coverage.info
+	genhtml coverage.info --output-directory coverage-html
+
 all: clean sgfc tests
 
-.PHONY: sgfc tests test-files clean clean-test-files
+.PHONY: sgfc tests test-files clean clean-test-files coverage
