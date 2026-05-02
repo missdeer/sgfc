@@ -60,19 +60,20 @@ static void CheckHandicap(struct SGFInfo *sgfc, struct Node *root)
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				node ... root's first child node
 ***				check_setup ... whether setup stones outside root node should be checked
+***				nesting of branches (recursion limit)
 *** Returns:	-
 **************************************************************************/
 
-static void CheckMoveOrder(struct SGFInfo *sgfc, struct Node *node, bool check_setup)
+static void CheckMoveOrder(struct SGFInfo *sgfc, struct Node *node, bool check_setup, int nesting)
 {
 	int old_col = 0;
 
-	if(!node)		/* does tree only consist of root node? */
-		return;
+	if(nesting > TREE_NESTING_LIMIT)
+		return; 
+
 	while(node)
 	{
-		if(FindProperty(node, TKN_AB) || FindProperty(node, TKN_AW)
-		   || FindProperty(node, TKN_AE))
+		if(FindProperty(node, TKN_AB) || FindProperty(node, TKN_AW) || FindProperty(node, TKN_AE))
 		{
 			if(check_setup)
 				PrintError(W_SETUP_AFTER_ROOT, sgfc, node->row, node->col);
@@ -93,7 +94,7 @@ static void CheckMoveOrder(struct SGFInfo *sgfc, struct Node *node, bool check_s
 			old_col = TKN_W;
 		}
 		if (node->sibling)
-			CheckMoveOrder(sgfc, node->sibling, false);
+			CheckMoveOrder(sgfc, node->sibling, false, nesting+1);
 		node = node->child;
 	}
 }
@@ -119,10 +120,8 @@ void StrictChecking(struct SGFInfo *sgfc)
 		if(tree->GM == 1)
 		{
 			CheckHandicap(sgfc, tree->root);
-			CheckMoveOrder(sgfc, tree->root->child, true);
+			CheckMoveOrder(sgfc, tree->root->child, true, 0);
 		}
 		tree = tree->next;
 	}
-
-	/* TODO: delete pass moves at end (?) */
 }

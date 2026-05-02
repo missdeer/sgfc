@@ -886,12 +886,13 @@ static bool CheckDifferingRootProperties(struct SGFInfo *sgfc)
 ***				Steps recursive through the SGF tree and
 ***				calls Check_Properties for each node
 *** Parameters: sgfc ... pointer to SGFInfo structure
-***				r    ... pointer to root node of current tree
+***				r    ... pointer to root node of current (sub)tree
 ***				old  ... board status before parsing root node
+***				nesting ... nesting level of branches (recursion limit)
 *** Returns:	-
 **************************************************************************/
 
-static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatus *old)
+static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardStatus *old, int nesting)
 {
 	struct Node *n;
 	unsigned int area;
@@ -919,9 +920,10 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 				memset(st->markup, 0, area * sizeof(U_SHORT));
 			st->markup_changed = false;
 
-			if(n->sibling && n != r)		/* for n=r loop is done outside */
+			/* for n=r loop is done outside */
+			if(n->sibling && n != r && nesting <= TREE_NESTING_LIMIT)
 			{
-				CheckSGFSubTree(sgfc, n, st);
+				CheckSGFSubTree(sgfc, n, st, nesting+1);
 				break;						/* did complete subtree -> break */
 			}
 
@@ -979,7 +981,7 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
 		}
 		st->markup_changed = true;
 
-		CheckSGFSubTree(sgfc, ti->root, st);
+		CheckSGFSubTree(sgfc, ti->root, st, 0);
 
 		ti = ti->next;
 

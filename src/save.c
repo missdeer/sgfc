@@ -453,12 +453,16 @@ static void SetRootProps(struct SaveInfo *save, struct TreeInfo *info, struct No
 ***				info 	 ... TreeInfo
 ***				n		 ... root node of tree
 ***				newlines ... number of nl to print
+***				nesting  ... nesting of branches (recursion limit)
 *** Returns:	true: success / false error
 **************************************************************************/
 
 static int WriteTree(struct SaveInfo *save, struct TreeInfo *info,
-					 struct Node *n, int newlines)
+					 struct Node *n, int newlines, int nesting)
 {
+	if(nesting > TREE_NESTING_LIMIT)
+		return false;
+
 	if(newlines && save->linelen > 0)
 		saveputc(save, '\n')
 
@@ -476,7 +480,7 @@ static int WriteTree(struct SaveInfo *save, struct TreeInfo *info,
 		{
 			while(n)					/* write child + variations */
 			{
-				if(!WriteTree(save, info, n, 1))
+				if(!WriteTree(save, info, n, 1, nesting+1))
 					return false;
 				n = n->sibling;
 			}
@@ -549,7 +553,7 @@ bool SaveSGF(struct SGFInfo *sgfc, struct SaveFileHandler *(*setup_sfh)(void), c
 
 	while(n)
 	{
-		if(!WriteTree(&save, info, n, nl))
+		if(!WriteTree(&save, info, n, nl, 0))
 			goto write_error;
 
 		nl = 2;
