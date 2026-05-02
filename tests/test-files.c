@@ -147,7 +147,7 @@ TCase *sgfc_tc_test_files(void)
 {
 	TCase *tc;
 
-	tc = tcase_create("test-files");
+	tc = tcase_create("test_files");
 	tcase_add_checked_fixture(tc, FileTestSetup, FileTestTeardown);
 
 	tcase_add_test(tc, test_test_sgf);

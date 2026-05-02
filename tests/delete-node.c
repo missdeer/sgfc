@@ -114,7 +114,7 @@ TCase *sgfc_tc_delete_node(void)
 {
 	TCase *tc;
 
-	tc = tcase_create("position");
+	tc = tcase_create("delete_node");
 	tcase_add_checked_fixture(tc, common_setup, common_teardown);
 
 	tcase_add_test(tc, test_delete_leaf_node);

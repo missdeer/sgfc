@@ -126,7 +126,7 @@ TCase *sgfc_tc_load_properties(void)
 {
 	TCase *tc;
 
-	tc = tcase_create("position");
+	tc = tcase_create("load_properties");
 	tcase_add_checked_fixture(tc, common_setup, common_teardown);
 
 	tcase_add_test(tc, test_lowercase_in_front);

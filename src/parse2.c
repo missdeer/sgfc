@@ -870,7 +870,7 @@ static bool CheckDifferingRootProperties(struct SGFInfo *sgfc)
 		{
 			if(strnccmp(ti->encoding_name, first_encoding, 0))
 			{
-				PrintError(E_MULTIPLE_ENCODINGS, sgfc, row, col);
+				PrintError(FE_MULTIPLE_ENCODINGS, sgfc, row, col);
 				return false;
 			}
 		}

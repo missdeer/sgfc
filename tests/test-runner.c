@@ -24,6 +24,7 @@ TCase *sgfc_tc_trigger_errors(void);
 TCase *sgfc_tc_value_length(void);
 TCase *sgfc_tc_save(void);
 TCase *sgfc_tc_gameinfo_interactive(void);
+TCase *sgfc_tc_tree_nesting(void);
 
 
 Suite *sgfc_suite(void)
@@ -43,6 +44,7 @@ Suite *sgfc_suite(void)
 	suite_add_tcase(s, sgfc_tc_value_length());
 	suite_add_tcase(s, sgfc_tc_save());
 	suite_add_tcase(s, sgfc_tc_gameinfo_interactive());
+	suite_add_tcase(s, sgfc_tc_tree_nesting());
 	return s;
 }
 

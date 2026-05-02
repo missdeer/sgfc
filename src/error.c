@@ -114,6 +114,8 @@ static const char *error_mesg[] =
 		"charset encoding detection went wrong! Please use --encoding to override.\n",
 		"different charset encodings stored in one file (will cause troubles with applications)\n",
 		"different encodings in one file detected. Use option -E2/3 to parse this file\n",
+/* 75 */
+		"nesting of branches is too deep and exceeds limit of %d nested branches\n",
 };
 
 

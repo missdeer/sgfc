@@ -56,7 +56,7 @@ TCase *sgfc_tc_value_length(void)
 {
 	TCase *tc;
 
-	tc = tcase_create("test-files");
+	tc = tcase_create("value-length");
 	tcase_add_checked_fixture(tc, common_setup, common_teardown);
 
 	tcase_add_test(tc, test_length_with_test_sgf);

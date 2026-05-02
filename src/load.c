@@ -547,13 +547,21 @@ static struct Node *NewNodeWithProperties(struct LoadInfo *load, struct Node *pa
 ***				Recursive function to build up the sgf tree structure
 *** Parameters: load ... pointer to LoadInfo structure
 ***				r	 ... tree root
+***				nesting ... counter for recursion due to nested branches
 ***				missing_semicolon ... whether missing semicolon is known/reported already
-*** Returns:	true or false on success/error
+*** Returns:	0 for ok, 1 for error, -1 for fatal error
 **************************************************************************/
 
-static bool BuildSGFTree(struct LoadInfo *load, struct Node *r, bool missing_semicolon)
+static int BuildSGFTree(struct LoadInfo *load, struct Node *r, int nesting, bool missing_semicolon)
 {
-	int end_tree = 0, empty = 1;
+	int end_tree = 0, empty = 1, result;
+
+	/* protect from stack overflow */
+	if(nesting > TREE_NESTING_LIMIT)
+	{
+		PrintError(FE_DEEP_NESTING, load->sgfc, load->cur_row, load->cur_col, TREE_NESTING_LIMIT);
+		return -1;
+	}
 
 	while(GetNextSGFChar(load, true, E_VARIATION_NESTING))
 	{
@@ -562,8 +570,9 @@ static bool BuildSGFTree(struct LoadInfo *load, struct Node *r, bool missing_sem
 			case ';':	if(end_tree)
 						{
 							PrintError(E_NODE_OUTSIDE_VAR, load->sgfc, load->cur_row, load->cur_col);
-							if(!BuildSGFTree(load, r, false))
-								return false;
+							result = BuildSGFTree(load, r, nesting+1, false);
+							if(result)
+								return result;
 							end_tree = 1;
 						}
 						else
@@ -572,7 +581,7 @@ static bool BuildSGFTree(struct LoadInfo *load, struct Node *r, bool missing_sem
 							NextChar(load);
 							r = NewNodeWithProperties(load, r);
 							if(!r)
-								return false;
+								return 1;
 						}
 						break;
 			case '(':	if(empty)
@@ -584,15 +593,16 @@ static bool BuildSGFTree(struct LoadInfo *load, struct Node *r, bool missing_sem
 						else
 						{
 							NextChar(load);
-							if(!BuildSGFTree(load, r, false))
-								return false;
+							result = BuildSGFTree(load, r, nesting+1, false);
+							if(result)
+								return result;
 							end_tree = 1;
 						}
 						break;
 			case ')':	if(empty)
 							PrintError(E_EMPTY_VARIATION, load->sgfc, load->cur_row, load->cur_col);
 						NextChar(load);
-						return true;
+						return 0;
 
 			default:	if(empty)		/* assume there's a missing ';' */
 						{
@@ -602,7 +612,7 @@ static bool BuildSGFTree(struct LoadInfo *load, struct Node *r, bool missing_sem
 							empty = 0;
 							r = NewNodeWithProperties(load, r);
 							if(!r)
-								return false;
+								return 1;
 						}
 						else
 						{
@@ -615,7 +625,7 @@ static bool BuildSGFTree(struct LoadInfo *load, struct Node *r, bool missing_sem
 		}
 	}
 
-	return false;
+	return 1;
 }
 
 
@@ -863,7 +873,13 @@ bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 	{
 		if(!miss)
 			NextChar(&load);				/* skip '(' */
-		if(!BuildSGFTree(&load, NULL, miss==2))
+		int result = BuildSGFTree(&load, NULL, 0, miss==2);
+		if(result == -1)
+		{
+			free(decode_buffer);
+			return false;
+		}
+		else if(result)
 			break;
 		miss = FindStart(&load, false);		/* skip junk in front of '(;' */
 	}

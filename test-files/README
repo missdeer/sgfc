@@ -42,6 +42,7 @@ Warning 71: illegal byte sequence. Parse with -U option, e.g. 'sgfc -U test.sgf'
 Fatal error 73: charset encoding detection went wrong
 Warning 74: different charset encodings in file. Use 'sgfc -E2 test-file/mixed-encoding.sgf'
 Fatal error 75: different charset encodings in file. Use 'sgfc test-file/mixed-encoding.sgf'
+Fatal error 76: nesting of branches exceeds limit of 10000 nested branches
 
 Every line yields one or more errors/warnings.
 test.sgf is compiled in a way that error/warning x occurs in line x, e.g.

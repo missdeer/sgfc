@@ -148,9 +148,10 @@ struct SGFCError {
 #define WS_ENCODING_FALLBACK	(72UL | E_WARNING_STRICT | E_CRITICAL)
 #define FE_WRONG_ENCODING		(73UL | E_FATAL_ERROR | E_SEARCHPOS)
 #define WS_CA_DIFFERS			(74UL | E_WARNING_STRICT | E_SEARCHPOS | E_CRITICAL)
-#define E_MULTIPLE_ENCODINGS	(75UL | E_FATAL_ERROR | E_SEARCHPOS)
+#define FE_MULTIPLE_ENCODINGS	(75UL | E_FATAL_ERROR | E_SEARCHPOS)
+#define FE_DEEP_NESTING			(76UL | E_FATAL_ERROR | E_SEARCHPOS)
 
-#define MAX_ERROR_NUM	75UL
+#define MAX_ERROR_NUM	76UL
 
 
 /* order must match order in sgf_token[] !! */
@@ -403,6 +404,9 @@ struct SGFCOptions
 
 /* Start with ~5kb buffer which suffices in many cases */
 #define DEFAULT_BUFFER_SIZE ((size_t) 5000)
+
+/* Maxmimum nesting of tree branches (for stack protection) */
+#define TREE_NESTING_LIMIT 10000
 
 /* used by save.c when using MemoryIO SaveFileHandler functions */
 struct MemoryIOHandle {

@@ -1206,3 +1206,6 @@ Classes:
 
 75:FE   "different encodings in one file detected. Use option -E2/3 to parse this file"
         Example same as in #74; using default option of -E1
+
+76:FE   "nesting of branches is too deep and exceeds limit of 10000 nested branches"
+        Example: create a file with more than 10000 repititions of "(;", i.e. "(;(;(;..."
