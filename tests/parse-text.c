@@ -180,6 +180,19 @@ START_TEST (test_linebreak_modes)
 END_TEST
 
 
+START_TEST (test_soft_linebreak_only_value)
+{
+	char text[] = "\\\n";
+
+	print_error_handler = parse_text_error_handler;
+	prop_value->value = text;
+	prop_value->value_len = strlen(text);
+	Parse_Text(sgfc, prop_value, 1, PVT_SIMPLE);
+	ck_assert_str_eq(text, "");
+}
+END_TEST
+
+
 START_TEST (test_ctrl_byte_replaced)
 {
 	char text[] = {'a', 0, 'b', 0};
@@ -210,6 +223,7 @@ TCase *sgfc_tc_parse_text(void)
 	tcase_add_test(tc, test_trailing_spaces_simpletext);
 	tcase_add_test(tc, test_composed_simpletext_linebreaks);
 	tcase_add_test(tc, test_linebreak_modes);
+	tcase_add_test(tc, test_soft_linebreak_only_value);
 	tcase_add_test(tc, test_ctrl_byte_replaced);
 	return tc;
 }
