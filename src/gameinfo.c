@@ -610,7 +610,7 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 	PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "");
 
 	size = v->value_len > 25 ? v->value_len : 25;
-	newgi = SaveDupString(v->value, size, "game info value buffer");
+	newgi = SafeDupString(v->value, size, "game info value buffer");
 
 	while(true)
 	{
@@ -638,7 +638,7 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 		size = strlen(inp);
 		if (size < 25)
 			size = 25;
-		newgi = SaveDupString(inp, size, "game info value buffer");
+		newgi = SafeDupString(inp, size, "game info value buffer");
 	}
 
 	free(v->value);
@@ -679,7 +679,7 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 	size = (v->value_len > 25-8) ? (v->value_len + 8) : (25+1);
 	/* correct functions may use up to 25 bytes; +8 because time in hours multiplies by 3600 and adds ".0" */
 
-	val = SaveMalloc(size, "result value buffer");
+	val = SafeMalloc(size, "result value buffer");
 	strcpy(val, v->value);
 	val_len = v->value_len;
 	res = (*parse)(val, &val_len);

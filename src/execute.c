@@ -388,7 +388,7 @@ bool Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 		hlp = FindProperty(n, TKN_BM);
 		hlp->id = TKN_DO;
 		free(hlp->idstr);
-		hlp->idstr = SaveDupString(sgf_token[TKN_DO].id, 0, "DO id string");
+		hlp->idstr = SafeDupString(sgf_token[TKN_DO].id, 0, "DO id string");
 		hlp->value->value[0] = 0;
 		hlp->value->value_len = 0;
 		return false;
@@ -400,7 +400,7 @@ bool Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 		hlp = FindProperty(n, TKN_TE);
 		hlp->id = TKN_IT;
 		free(hlp->idstr);
-		hlp->idstr = SaveDupString(sgf_token[TKN_IT].id, 0, "DO id string");
+		hlp->idstr = SafeDupString(sgf_token[TKN_IT].id, 0, "DO id string");
 		hlp->value->value[0] = 0;
 		hlp->value->value_len = 0;
 		return false;
@@ -477,7 +477,7 @@ bool Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 		PrintError(W_INT_KOMI_FOUND, sgfc, p->row, p->col, "converted to <KM>");
 
 		ki = strtol(p->value->value, NULL, 10);		/* we can ignore errors here */
-		new_km = SaveMalloc(p->value->value_len+3, "new KM number value");
+		new_km = SafeMalloc(p->value->value_len+3, "new KM number value");
 		if(ki % 2)	sprintf(new_km, "%ld.5", ki/2);
 		else		sprintf(new_km, "%ld", ki/2);
 		NewPropValue(sgfc, n, TKN_KM, new_km, NULL, false);

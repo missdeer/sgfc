@@ -598,7 +598,7 @@ static void MergeDoubleText(struct SGFInfo *sgfc, struct Node *n)
 			v = p->value;
 			w = q->value;
 
-			c = SaveMalloc(v->value_len + w->value_len + 3, "new property value");
+			c = SafeMalloc(v->value_len + w->value_len + 3, "new property value");
 			memcpy(c, v->value, v->value_len);
 			c[v->value_len]   = '\n';
 			c[v->value_len+1] = '\n';
@@ -809,7 +809,7 @@ bool InitAllTreeInfo(struct SGFInfo *sgfc)
 
 	for(; root; root = root->sibling)
 	{
-		ti = SaveMalloc(sizeof(struct TreeInfo), "tree info structure");
+		ti = SafeMalloc(sizeof(struct TreeInfo), "tree info structure");
 		if(!InitTreeInfo(sgfc, ti, root))
 			return false;
 		AddTail(&sgfc->tree, ti);		/* add to SGFInfo */
@@ -897,7 +897,7 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 	struct Node *n;
 	unsigned int area;
 
-	struct BoardStatus *st = SaveMalloc(sizeof(struct BoardStatus), "board status buffer");
+	struct BoardStatus *st = SafeMalloc(sizeof(struct BoardStatus), "board status buffer");
 
 	while(r)
 	{
@@ -905,7 +905,7 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 		area = (unsigned int)(old->bwidth * old->bheight);
 		if(st->board)
 		{
-			st->board = SaveMalloc(sizeof(char) * area, "goban buffer");
+			st->board = SafeMalloc(sizeof(char) * area, "goban buffer");
 			memcpy(st->board, old->board, area * sizeof(char));
 		}
 		/* path_board is reused (paths marked with different path_num) */
@@ -964,7 +964,7 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
 {
 	unsigned int area;
 
-	struct BoardStatus *st = SaveMalloc(sizeof(struct BoardStatus), "board status buffer");
+	struct BoardStatus *st = SafeMalloc(sizeof(struct BoardStatus), "board status buffer");
 
 	while(ti)
 	{
@@ -975,9 +975,9 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
 		area = (unsigned int)(st->bwidth * st->bheight);
 		if(area)
 		{
-			st->board = SaveCalloc(area * sizeof(char), "goban buffer");
-			st->markup = SaveMalloc(area * sizeof(U_SHORT), "markup buffer");
-			st->paths = SaveCalloc(sizeof(struct PathBoard), "path_board buffer");
+			st->board = SafeCalloc(area * sizeof(char), "goban buffer");
+			st->markup = SafeMalloc(area * sizeof(U_SHORT), "markup buffer");
+			st->paths = SafeCalloc(sizeof(struct PathBoard), "path_board buffer");
 		}
 		st->markup_changed = true;
 

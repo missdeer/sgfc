@@ -109,7 +109,7 @@ static int SaveFileIO_putc(struct SaveFileHandler *sfh, int c)
 
 struct SaveFileHandler *SetupSaveFileIO(void)
 {
-	struct SaveFileHandler *sfh = SaveMalloc(sizeof(struct SaveFileHandler), "file handler");
+	struct SaveFileHandler *sfh = SafeMalloc(sizeof(struct SaveFileHandler), "file handler");
 	sfh->open = SaveFileIO_open;
 	sfh->close = SaveFileIO_close;
 	sfh->putc = SaveFileIO_putc;
@@ -197,7 +197,7 @@ struct SaveFileHandler *SetupSaveBufferIO(
 	int (*open)(struct SaveFileHandler *, const char *, const char *),
 	int (*close)(struct SaveFileHandler *, U_LONG))
 {
-	struct SaveFileHandler *sfh = SaveMalloc(sizeof(struct SaveFileHandler), "memory file handler");
+	struct SaveFileHandler *sfh = SafeMalloc(sizeof(struct SaveFileHandler), "memory file handler");
 	sfh->open = SaveBufferIO_open;
 	sfh->putc = SaveBufferIO_putc;
 	if(open)	sfh->open = open;
@@ -523,7 +523,7 @@ bool SaveSGF(struct SGFInfo *sgfc, struct SaveFileHandler *(*setup_sfh)(void), c
 	if(!(save.sfh = setup_sfh()))
 		return false;
 
-	char *name = SaveMalloc(name_buffer_size, "filename buffer");
+	char *name = SafeMalloc(name_buffer_size, "filename buffer");
 	if(sgfc->options->split_file)
 		snprintf(name, name_buffer_size, "%s_%03d.sgf", base_name, i);
 	else

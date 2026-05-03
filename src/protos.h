@@ -129,9 +129,9 @@ void f_AddTail(struct ListHead *, struct ListNode *);
 void f_Enqueue(struct ListHead *, struct ListNode *);
 void f_Delete(struct ListHead *, struct ListNode *);
 
-char *SaveDupString(const char *, size_t, const char *);
-void *SaveMalloc(size_t , const char *);
-void *SaveCalloc(size_t , const char *);
+char *SafeDupString(const char *, size_t, const char *);
+void *SafeMalloc(size_t , const char *);
+void *SafeCalloc(size_t , const char *);
 
 bool strnccmp(const char *, const char *, size_t);
 bool stridcmp(const char *, const char *);

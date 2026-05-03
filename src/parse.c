@@ -649,7 +649,7 @@ static bool Check_Single_Value(struct SGFInfo *sgfc, struct Property *p, struct 
 							   char *value, size_t *value_len, U_SHORT flags,
 							   int (*Parse_Value)(char *, size_t *, ...))
 {
-	char *before = SaveDupString(value, 0, "prop value before checking");
+	char *before = SafeDupString(value, 0, "prop value before checking");
 
 	switch((*Parse_Value)(value, value_len, flags, sgfc))
 	{
@@ -763,7 +763,7 @@ bool Check_Stone(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	if(v->value2)
 	{
 		/* stone type was erroneously split by load.c into composed value -> merge again */
-		char *stone_value = SaveMalloc(v->value_len + v->value2_len + 2, "property value buffer");
+		char *stone_value = SafeMalloc(v->value_len + v->value2_len + 2, "property value buffer");
 		memcpy(stone_value, v->value, v->value_len);
 		memcpy(stone_value + v->value_len + 1, v->value2, v->value2_len);
 		stone_value[v->value_len] = ':';					/* restore colon */
@@ -795,7 +795,7 @@ bool Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	int error = 0;
 	bool result = false;
 
-	char *before = SaveMalloc(v->value_len+v->value2_len+2, "AR_LN value");
+	char *before = SafeMalloc(v->value_len+v->value2_len+2, "AR_LN value");
 	sprintf(before, "%s:%s", v->value, v->value2);
 
 	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc))
@@ -842,7 +842,7 @@ bool Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	int error = 0;
 	bool result = false;
 
-	char *before = SaveMalloc(v->value_len+v->value2_len+2, "AR_LN value");
+	char *before = SafeMalloc(v->value_len+v->value2_len+2, "AR_LN value");
 	sprintf(before, "%s:%s", v->value, v->value2);
 
 	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc))
@@ -898,7 +898,7 @@ bool Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 			else
 			{
 				v->value2 = v->value;
-				v->value = SaveMalloc(4, "new FG number value");
+				v->value = SafeMalloc(4, "new FG number value");
 				strcpy(v->value, "0");
 				PrintError(E_BAD_COMPOSE_CORRECTED, sgfc, v->row, v->col, v->value, "FG", v->value, v->value2);
 			}

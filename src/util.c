@@ -122,14 +122,14 @@ void f_Delete(struct ListHead *h, struct ListNode *n)
 
 
 /**************************************************************************
-*** Function:	SaveMalloc
+*** Function:	SafeMalloc
 ***				malloc() + error handling (i.e. printing error + failing)
 *** Parameters: size ... size of memory to allocate
 ***				err	 ... error message
 *** Returns:	pointer to memory (or termination in case of error)
 **************************************************************************/
 
-void *SaveMalloc(size_t size, const char *err)
+void *SafeMalloc(size_t size, const char *err)
 {
 	void *mem = malloc(size);
 	if(!mem)
@@ -143,14 +143,14 @@ void *SaveMalloc(size_t size, const char *err)
 
 
 /**************************************************************************
-*** Function:	SaveCalloc
+*** Function:	SafeCalloc
 ***				calloc() + error handling (i.e. printing error + failing)
 *** Parameters: size ... size of memory to allocate
 ***				err	 ... error message
 *** Returns:	pointer to memory (or termination in case of error)
 **************************************************************************/
 
-void *SaveCalloc(size_t size, const char *err)
+void *SafeCalloc(size_t size, const char *err)
 {
 	void *mem = calloc(size, 1);
 	if(!mem)
@@ -164,7 +164,7 @@ void *SaveCalloc(size_t size, const char *err)
 
 
 /**************************************************************************
-*** Function:	SaveDupString
+*** Function:	SafeDupString
 ***				Safely duplicate a string (possibly not \0 terminated)
 *** Parameters: src ... source buffer
 ***				len	 ... size of buffer
@@ -172,11 +172,11 @@ void *SaveCalloc(size_t size, const char *err)
 *** Returns:	pointer to \0-terminated duplicate (or termination in case of error)
 **************************************************************************/
 
-char *SaveDupString(const char *src, size_t len, const char *err)
+char *SafeDupString(const char *src, size_t len, const char *err)
 {
 	if(!len)
 		len = strlen(src);
-	char *dst = SaveMalloc(len+1, err);
+	char *dst = SafeMalloc(len+1, err);
 	memcpy(dst, src, len);
 	*(dst+len) = 0;	/* 0-terminate */
 	return dst;
@@ -393,10 +393,10 @@ struct Property *FindProperty(struct Node *n, token id)
 
 struct Property *AddProperty(struct Node *n, token id, U_LONG row, U_LONG col, const char *id_str)
 {
-	struct Property *newp = SaveMalloc(sizeof(struct Property), "property structure");
+	struct Property *newp = SafeMalloc(sizeof(struct Property), "property structure");
 	/* init property structure */
 	newp->id = id;
-	newp->idstr = SaveDupString(id_str, 0, "ID string");
+	newp->idstr = SafeDupString(id_str, 0, "ID string");
 	newp->priority = sgf_token[id].priority;
 	newp->flags = sgf_token[id].flags;		/* local copy */
 	newp->row = row;
@@ -454,7 +454,7 @@ struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, U_LONG row, U_LO
 {
 	struct Node *newn, *hlp;
 
-	newn = SaveMalloc(sizeof(struct Node), "node structure");
+	newn = SafeMalloc(sizeof(struct Node), "node structure");
 
 	newn->parent	= parent;		/* init node structure */
 	newn->child		= NULL;
@@ -654,14 +654,14 @@ struct PropValue *AddPropValue(struct SGFInfo *sgfc,
 							   const char *value, size_t size,
 							   const char *value2, size_t size2)
 {
-	struct PropValue *newv = SaveMalloc(sizeof(struct PropValue), "property value structure");
+	struct PropValue *newv = SafeMalloc(sizeof(struct PropValue), "property value structure");
 	newv->row = row;
 	newv->col = col;
 
 	if(value)
 	{
 		/* +2 because Parse_Float may add 1 char and for trailing '\0' byte */
-		newv->value = SaveMalloc(size+2, "property value buffer");
+		newv->value = SafeMalloc(size+2, "property value buffer");
 		memcpy(newv->value, value, size);
 		*(newv->value + size) = 0;
 		newv->value_len = size;
@@ -674,7 +674,7 @@ struct PropValue *AddPropValue(struct SGFInfo *sgfc,
 
 	if(value2)
 	{
-		newv->value2 = SaveMalloc(size2+2, "property value2 buffer");
+		newv->value2 = SafeMalloc(size2+2, "property value2 buffer");
 		memcpy(newv->value2, value2, size2);
 		*(newv->value2 + size2) = 0;
 		newv->value2_len = size2;

@@ -24,7 +24,7 @@ static bool parse_text_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list 
 void parse_text_setup(void)
 {
 	common_setup();
-	prop_value = SaveCalloc(sizeof(struct PropValue), "propval");
+	prop_value = SafeCalloc(sizeof(struct PropValue), "propval");
 	prop_value->row = 3;
 	prop_value->col = 1;
 }

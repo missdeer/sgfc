@@ -310,7 +310,7 @@ static bool NewValue(struct LoadInfo *load, struct Property *p, U_SHORT flags)
 				AddPropValue(load->sgfc, p, row, col, s, (size_t)(load->current - s - 1), NULL, 0);
 			else						/* not weak -> error */
 			{
-				char *val = SaveDupString(s, (size_t)(load->current - s - 1), "compose error value");
+				char *val = SafeDupString(s, (size_t)(load->current - s - 1), "compose error value");
 				PrintError(E_COMPOSE_EXPECTED, load->sgfc, row, col, val, p->idstr);
 				free(val);
 			}

@@ -84,17 +84,17 @@ char *DetectEncoding(const char *c, const char *b_end)
 
 	/* check for Unicode BOM */
 	if(*c == (char)0xFE && *(c+1) == (char)0xFF)
-		return SaveDupString("UTF-16BE", 0, "encoding");
+		return SafeDupString("UTF-16BE", 0, "encoding");
 	if(*c == (char)0xFF && *(c+1) == (char)0xFE)
 	{
 		if(!*(c+2) && !*(c+3))
-			return SaveDupString("UTF-32LE", 0, "encoding");
-		return SaveDupString("UTF-16LE", 0, "encoding");
+			return SafeDupString("UTF-32LE", 0, "encoding");
+		return SafeDupString("UTF-16LE", 0, "encoding");
 	}
 	if(!*c && !*(c+1) && *(c+2) == (char)0xFE && *(c+3) == (char)0xFF)
-		return SaveDupString("UTF-32BE", 0, "encoding");
+		return SafeDupString("UTF-32BE", 0, "encoding");
 	if(*c == (char)0xEF && *(c+1) == (char)0xBB && *(c+2) == (char)0xBF)
-		return SaveDupString("UTF-8", 0, "encoding");
+		return SafeDupString("UTF-8", 0, "encoding");
 
 	/* assume that while not necessarily ASCII-safe, that the encoding
 	 * has ASCII characters at ASCII codepoints, i.e. we can search for "(CA[]".
@@ -144,7 +144,7 @@ char *DetectEncoding(const char *c, const char *b_end)
 	while(c_end < b_end && *c_end != ']')
 		c_end++;
 	size_t len = (size_t)(c_end - c);
-	char *ca_value = SaveDupString(c, len, "encoding");
+	char *ca_value = SafeDupString(c, len, "encoding");
 	if(!Parse_Charset(ca_value, &len) || !len)
 	{
 		free(ca_value);
@@ -180,7 +180,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 	in_buffer = buffer;
 	out_size = in_left = size;
 	/* +1 for \0 termination of buffer */
-	out_buffer = SaveMalloc(out_size + 1, "buffer for encoding conversion");
+	out_buffer = SafeMalloc(out_size + 1, "buffer for encoding conversion");
 	out_pos = out_buffer;
 	out_left = out_size;
 
@@ -218,7 +218,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 				size_t increase = (size_t)(lrintf(needed*1.05f)) + 12; /* +5% + 3x 4 byte wide chars */
 				size_t new_size = out_size + increase;
 				/* +1 for \0 termination of buffer */
-				char *new_buffer = SaveMalloc(new_size+1, "temporary buffer for encoding conversion");
+				char *new_buffer = SafeMalloc(new_size+1, "temporary buffer for encoding conversion");
 				memcpy(new_buffer, out_buffer, out_size);
 				out_pos = new_buffer + (out_pos - out_buffer);
 				out_left += increase;
@@ -270,7 +270,7 @@ char *DecodeSGFBuffer(struct SGFInfo *sgfc, const char **encbuffer_end, char **e
 	if(encoding != selected_encoding)
 	{
 		free(encoding);
-		*encoding_name = SaveDupString(selected_encoding, 0, "encoding name");
+		*encoding_name = SafeDupString(selected_encoding, 0, "encoding name");
 	}
 	else
 		*encoding_name = encoding;

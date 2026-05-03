@@ -147,7 +147,7 @@ struct ErrorC_internal {
 
 struct ErrorC_internal *SetupErrorC_internal(void)
 {
-	struct ErrorC_internal *errc = SaveCalloc(sizeof(struct ErrorC_internal), "static error.c struct");
+	struct ErrorC_internal *errc = SafeCalloc(sizeof(struct ErrorC_internal), "static error.c struct");
 	errc->acc_type = E_NO_ERROR;
 	return errc;
 }
