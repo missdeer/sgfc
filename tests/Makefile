@@ -9,8 +9,8 @@ STD       := -std=c99
 WARNFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter
 
 CPPFLAGS += -I../src
-CFLAGS   += $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS)
-LDFLAGS  +=
+CFLAGS   += $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS) $(SANFLAGS)
+LDFLAGS  += $(SANFLAGS)
 LDLIBS   += -lcheck -lpthread -lrt -lsubunit -lm
 
 OBJ := test-runner.o test-helper.o position.o parse-text.o check-value.o \
@@ -21,8 +21,10 @@ SRC_OBJ := ../src/execute.o ../src/gameinfo.o ../src/load.o ../src/parse.o ../sr
 	../src/options.o ../src/save.o ../src/properties.o ../src/strict.o ../src/util.o \
 	../src/error.o ../src/encoding.o
 
+RUN_PREFIX ?=
+
 tests: sgfc-test
-	./sgfc-test
+	$(RUN_PREFIX) ./sgfc-test
 
 sgfc-test: $(OBJ) $(SRC_OBJ)
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)

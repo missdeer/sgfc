@@ -10,8 +10,8 @@ STD       := -std=c99
 WARNFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter
 
 CPPFLAGS +=
-CFLAGS   += $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS)
-LDFLAGS  +=
+CFLAGS   += $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS) $(SANFLAGS)
+LDFLAGS  += $(SANFLAGS)
 LDLIBS   += -lm
 
 # clang
@@ -21,7 +21,7 @@ LDLIBS   += -lm
 		  -Wno-format-nonliteral -Wno-disabled-macro-expansion \
 		  -Wno-switch-enum
 
-OBJ := execute.o gameinfo.o load.o main.o parse.o parse2.o options.o\
+OBJ := execute.o gameinfo.o load.o main.o parse.o parse2.o options.o \
 	properties.o save.o strict.o util.o error.o encoding.o
 
 

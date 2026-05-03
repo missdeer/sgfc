@@ -32,6 +32,16 @@ coverage:
 	lcov --capture --directory src --output-file coverage.info
 	genhtml coverage.info --output-directory coverage-html
 
+SANITIZER_CFLAGS := -O0 -g -fno-omit-frame-pointer \
+	-fsanitize=address,undefined,pointer-compare,pointer-subtract,bounds,object-size,return,unreachable
+
+SANITIZER_OPTIONS := ASAN_OPTIONS=detect_invalid_pointer_pairs=2 \
+                     UBSAN_OPTIONS=print_stacktrace=1
+
+sanitize:
+	$(MAKE) -C src sgfc OPTFLAGS='-O0 -g' SANFLAGS='$(SANITIZER_CFLAGS)'
+	$(MAKE) -C tests tests OPTFLAGS='-O0 -g' SANFLAGS='$(SANITIZER_CFLAGS)' RUN_PREFIX='$(SANITIZER_OPTIONS)'
+
 all: clean sgfc tests
 
 .PHONY: sgfc tests test-files clean clean-test-files coverage
