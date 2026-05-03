@@ -167,8 +167,8 @@ void *SafeCalloc(size_t size, const char *err)
 *** Function:	SafeDupString
 ***				Safely duplicate a string (possibly not \0 terminated)
 *** Parameters: src ... source buffer
-***				len	 ... size of buffer
-***				err	 ... error message
+***				len	... size of buffer
+***				err	... error message
 *** Returns:	pointer to \0-terminated duplicate (or termination in case of error)
 **************************************************************************/
 
@@ -177,6 +177,28 @@ char *SafeDupString(const char *src, size_t len, const char *err)
 	if(!len)
 		len = strlen(src);
 	char *dst = SafeMalloc(len+1, err);
+	memcpy(dst, src, len);
+	*(dst+len) = 0;	/* 0-terminate */
+	return dst;
+}
+
+
+/**************************************************************************
+*** Function:	SafeDupString2
+***				Safely duplicate a string (possibly not \0 terminated)
+*** Parameters: src ... source buffer
+***				len	... size of buffer
+***             min_capacity ... minimal capacity to allocate (excluding trailing \0)
+***				err	... error message
+*** Returns:	pointer to \0-terminated duplicate (or termination in case of error)
+**************************************************************************/
+
+char *SafeDupString2(const char *src, size_t len, size_t min_capacity, const char *err)
+{
+	if(!len)
+		len = strlen(src);
+	size_t capacity = len > min_capacity ? len : min_capacity;
+	char *dst = SafeMalloc(capacity+1, err);
 	memcpy(dst, src, len);
 	*(dst+len) = 0;	/* 0-terminate */
 	return dst;

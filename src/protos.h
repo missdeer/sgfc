@@ -130,6 +130,7 @@ void f_Enqueue(struct ListHead *, struct ListNode *);
 void f_Delete(struct ListHead *, struct ListNode *);
 
 char *SafeDupString(const char *, size_t, const char *);
+char *SafeDupString2(const char *, size_t, size_t, const char *);
 void *SafeMalloc(size_t , const char *);
 void *SafeCalloc(size_t , const char *);
 
