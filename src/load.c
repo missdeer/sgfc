@@ -646,7 +646,7 @@ static int FindStart(struct LoadInfo *load, bool first_time)
 	while(!SGF_EOF)
 	{
 		/* search for '[' (lc) (lc) ']' */
-		if((load->current + 4 <= load->b_end) &&
+		if((size_t)(load->b_end - load->current) >= 4 &&
 		  (*load->current == '['))
 			if(islower((unsigned char)*(load->current+1)) && islower((unsigned char)*(load->current+2)) &&
 			  (*(load->current+3) == ']'))

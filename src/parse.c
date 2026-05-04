@@ -218,15 +218,9 @@ static void ParseText_ApplyLinebreakStyle(struct SGFInfo *sgfc, char *value, siz
 
 static void ParseText_StripTrailingSpace(char *value, size_t *len)
 {
-	if(!*len)
-		return;
-
-	char *c = value + *len - 1;
-
-	while(c >= value && isspace((unsigned char)*c))
-		*c-- = 0;
-
-	*len = (size_t)(c - value + 1);
+	while (*len > 0 && isspace((unsigned char)value[*len - 1])) {
+		value[--*len] = '\0';
+	}
 }
 
 
