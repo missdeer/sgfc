@@ -806,6 +806,7 @@ bool Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 								{
 									error = 1;
 									*(v->value2+4) = 0;
+									v->value2_len = 4;
 								}
 								break;
 					}

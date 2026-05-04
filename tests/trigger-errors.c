@@ -12,6 +12,9 @@
 static U_LONG expected_error;
 static U_LONG allowed_error;	/* additional error that might occur */
 static bool expected_error_occurred;
+static char accumulated_illegal[256];
+static size_t accumulated_illegal_len;
+static int accumulated_flush_count;
 
 
 static bool mock_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglist)
@@ -49,6 +52,54 @@ static void trigger_error(U_LONG type, char *buffer, char *expected)
 	ck_assert_int_eq(ret, true);
 	ck_assert(expected_error_occurred);
 }
+
+
+static void accumulate_error_output(struct SGFCError *error)
+{
+	const char *start, *end;
+	size_t len;
+
+	ck_assert_uint_eq(error->error & M_ERROR_NUM, E_ILLEGAL_OUTSIDE_CHARS & M_ERROR_NUM);
+
+	start = strchr(error->message, '"');
+	ck_assert_ptr_nonnull(start);
+	start++;
+	end = strchr(start, '"');
+	ck_assert_ptr_nonnull(end);
+
+	len = (size_t)(end - start);
+	ck_assert_uint_lt(accumulated_illegal_len + len, sizeof(accumulated_illegal));
+	memcpy(accumulated_illegal + accumulated_illegal_len, start, len);
+	accumulated_illegal_len += len;
+	accumulated_illegal[accumulated_illegal_len] = 0;
+	accumulated_flush_count++;
+}
+
+
+START_TEST (test_E_ILLEGAL_OUTSIDE_CHARS_large_accumulation)
+{
+	char illegal[200];
+
+	for(size_t i = 0; i < 199; i++)
+		illegal[i] = (char)('a' + (i % 26));
+	illegal[199] = 0;
+
+	/* verifying real PrintErrorHandler, not the mock one */
+	print_error_handler = PrintErrorHandler;
+	print_error_output_hook = accumulate_error_output;
+	accumulated_illegal[0] = 0;
+	accumulated_illegal_len = 0;
+	accumulated_flush_count = 0;
+
+	PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, 1UL, 1UL, true, illegal, (U_LONG)strlen(illegal));
+	PrintError(E_NO_ERROR, sgfc);	/* flush the final partial chunk */
+
+	print_error_output_hook = PrintErrorOutputHook;
+
+	ck_assert_int_gt(accumulated_flush_count, 1);
+	ck_assert_str_eq(accumulated_illegal, illegal);
+}
+END_TEST
 
 
 START_TEST (test_W_SGF_IN_HEADER)
@@ -582,6 +633,7 @@ TCase *sgfc_tc_trigger_errors(void)
 	tcase_add_test(tc, test_W_SGF_IN_HEADER);
 	tcase_add_test(tc, test_FE_NO_SGFDATA);
 	tcase_add_test(tc, test_E_ILLEGAL_OUTSIDE_CHARS);
+	tcase_add_test(tc, test_E_ILLEGAL_OUTSIDE_CHARS_large_accumulation);
 	tcase_add_test(tc, test_E_VARIATION_NESTING);
 	tcase_add_test(tc, test_E_UNEXPECTED_EOF);
 

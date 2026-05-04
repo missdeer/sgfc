@@ -279,26 +279,20 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 			if(type & E_MULTIPLE)	illegal_count = va_arg(arglist, U_LONG);
 			else					illegal_count = 1;
 
-			/* illegal_count might overflow or even be much larger than ACCUMULATE_SIZE */
-			while(sgfc->_error_c->acc_count + illegal_count >= ACCUMULATE_SIZE)
+			/* illegal_count might be larger than ACCUMULATE_SIZE -> process in chunks */
+			while(illegal_count)
 			{
-				if(sgfc->_error_c->acc_count < ACCUMULATE_SIZE)
-				{
-					size_t chunk = ACCUMULATE_SIZE - sgfc->_error_c->acc_count;
-					strnpcpy(&sgfc->_error_c->accumulate[sgfc->_error_c->acc_count], illegal, chunk);
-					sgfc->_error_c->acc_count += chunk;
-					illegal_count -= chunk;
-					illegal += chunk;
-				}
-				/* flush accumulate buffer (sets acc_count=0) */
-				PrintError(sgfc->_error_c->acc_type, sgfc,
-						   sgfc->_error_c->acc_row, sgfc->_error_c->acc_col, false);
-			}
-			/* any remainders should now be small enough to fit */
-			if(illegal_count)
-			{
-				strnpcpy(&sgfc->_error_c->accumulate[sgfc->_error_c->acc_count], illegal, illegal_count);
-				sgfc->_error_c->acc_count += illegal_count;
+				size_t space = ACCUMULATE_SIZE - sgfc->_error_c->acc_count;
+				size_t chunk = illegal_count < space ? illegal_count : space;
+				strnpcpy(&sgfc->_error_c->accumulate[sgfc->_error_c->acc_count], illegal, chunk);
+				sgfc->_error_c->acc_count += chunk;
+				illegal_count -= chunk;
+				illegal += chunk;
+
+				if(sgfc->_error_c->acc_count == ACCUMULATE_SIZE)
+					/* flush accumulate buffer (sets acc_count=0) */
+					PrintError(sgfc->_error_c->acc_type, sgfc,
+							   sgfc->_error_c->acc_row, sgfc->_error_c->acc_col, false);
 			}
 
 			va_end(arglist);
