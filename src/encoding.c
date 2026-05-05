@@ -242,7 +242,6 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 			}
 
 			free(out_buffer);
-			iconv_close(cd);
 			PrintError(FE_ENCODING_ERROR, sgfc, (size_t)(in_buffer - buffer) + err_offset);
 			return NULL;
 		}

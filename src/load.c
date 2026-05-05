@@ -17,6 +17,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <limits.h>
+#include <stdint.h>
 
 #include "all.h"
 #include "protos.h"
@@ -67,7 +68,7 @@ static const char *NextCharInBuffer(const char **c, const char *end, U_LONG step
 		bool skip_step = false;
 		if(is_utf8 && (**c & 0xc0) == 0x80)	/* skip UTF-8 continuation bytes */
 		{
-			while((**c & 0xc0) == 0x80 && *c < end)
+			while(*c < end && (**c & 0xc0) == 0x80)
 				(*c)++;
 			if(*c == end)
 				break;
@@ -735,12 +736,17 @@ bool LoadSGFFromStdin(struct SGFInfo *sgfc)
 	{
 		if (size == capacity)
 		{
-			capacity *= 2;
-			char *tmp = realloc(buffer, capacity);
+			char *tmp = NULL;
+			if(capacity < SIZE_MAX / 2)
+			{
+				capacity *= 2;
+				tmp = realloc(buffer, capacity);
+			}
 			if (!tmp)
 			{
-				free(buffer);
-				return false;
+				/* function does not return; exit() only to please linters */
+				(*oom_panic_hook)("stdin file buffer");
+				exit(20);
 			}
 			buffer = tmp;
 		}
@@ -860,7 +866,7 @@ bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 		load.is_utf8 = true;
 	}
 
-	int miss = FindStart(&load, true);	/* skip junk in front of '(;' */
+	int miss = FindStart(&load, true);	/* skip text in front of '(;' */
 	if(miss == -1)
 	{
 		free(decode_buffer);
