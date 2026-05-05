@@ -441,7 +441,8 @@ struct SGFInfo
 
 	char *buffer;			/* file buffer */
 	const char *b_end;		/* file buffer end address */
-	const char *start;		/* start of SGF data within buffer */
+	char *head;				/* text in front of SGF data (or NULL) */
+	size_t head_len;
 	char *global_encoding_name;		/* only used in case of OPTION_ENCODING_EVERYTHING */
 
 	struct SGFCOptions *options;

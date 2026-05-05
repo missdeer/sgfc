@@ -50,7 +50,7 @@ void PrintHelp(const enum option_help format)
 			 "    -g  ... print game signature (Go GM[1] games only)\n"
 			 "    -h  ... print this help message\n"
 			 "    -i  ... interactive mode (faulty game-info values only)\n"
-			 "    -k  ... keep header in front of SGF data\n"
+			 "    -k  ... keep header text in front of SGF data\n"
 			 "    -lx ... x = 1,2,3,4: a hard linebreak is\n"
 			 "              1 - any linebreak encountered (default)\n"
 			 "              2 - any linebreak not preceded by a space (MGT)\n"
@@ -453,6 +453,8 @@ void FreeSGFInfo(struct SGFInfo *sgfc)
 
 	if(sgfc->global_encoding_name)
 		free(sgfc->global_encoding_name);
+	if(sgfc->head)
+		free(sgfc->head);
 	if(sgfc->buffer)
 		free(sgfc->buffer);
 	if(sgfc->options)

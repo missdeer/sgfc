@@ -873,7 +873,14 @@ bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 		return false;
 	}
 
-	sgfc->start = load.current;
+	if(sgfc->options->keep_head)
+	{
+		/* We store a copy of the (decoded) text, as we potentially need it
+		 * when saving the file with the keep_head option.
+		 * Note: we store the potentially decoded text, not the original bytes */
+		sgfc->head_len = (size_t)(load.current - load.buffer);
+		sgfc->head = SafeDupString(load.buffer, sgfc->head_len, "header text in front");
+	}
 
 	while(load.current < load.b_end)
 	{

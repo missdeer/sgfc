@@ -13,9 +13,11 @@
 int Large_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
 {
 	ck_assert_uint_eq(error, E_NO_ERROR);
+	*sfh->fh.memh.pos = 0;
 
 	int i = 0;
-	while (sfh->fh.memh.buffer[i] != 0 && expected_output[i] != 0 && sfh->fh.memh.buffer[i] == expected_output[i]) {
+	while (sfh->fh.memh.buffer[i] != 0 && expected_output[i] != 0 &&
+			sfh->fh.memh.buffer[i] == expected_output[i]) {
 		i++;
 	}
 	int err_pos = i >= 20 ? i - 20 : 0;
@@ -36,7 +38,8 @@ START_TEST (test_extend_save_buffer)
 {
 	char buffer[DEFAULT_BUFFER_SIZE + 100];
 
-	memset(buffer, 'x', DEFAULT_BUFFER_SIZE + 100);   // sentinel value
+	for(U_LONG i=0; i < DEFAULT_BUFFER_SIZE + 100; i++)
+		buffer[i] = (char)('a' + (i % 26));
 	strcpy(buffer, "(;FF[4]CA[UTF-8]GM[1]SZ[19]XX["); // fragile: header as output by SGFC
 	buffer[strlen(buffer)] = 'x';
 	strcpy(&buffer[DEFAULT_BUFFER_SIZE + 95], "]\n)\n");
@@ -54,6 +57,44 @@ START_TEST (test_extend_save_buffer)
 END_TEST
 
 
+START_TEST (test_save_kept_header)
+{
+	char buffer[] = "some data in front(;N[start])";
+
+	sgfc->buffer = buffer;
+	sgfc->b_end = buffer + strlen(buffer);
+	sgfc->options->keep_head = true;
+
+	int ret = LoadSGFFromFileBuffer(sgfc);
+	ck_assert_int_eq(ret, true);
+	ret = ParseSGF(sgfc);
+	ck_assert_int_eq(ret, true);
+
+	expected_output = "some data in front\n(;FF[4]CA[UTF-8]GM[1]SZ[19]N[start])\n";
+	SaveSGF(sgfc, SetupLargeSaveTestIO, "outfile");
+}
+END_TEST
+
+
+START_TEST (test_save_kept_decoded_header)
+{
+	char buffer[] = "H\344der\n(;CA[ISO-8859-1]N[start])";
+
+	sgfc->buffer = buffer;
+	sgfc->b_end = buffer + strlen(buffer);
+	sgfc->options->keep_head = true;
+
+	int ret = LoadSGFFromFileBuffer(sgfc);
+	ck_assert_int_eq(ret, true);
+	ret = ParseSGF(sgfc);
+	ck_assert_int_eq(ret, true);
+
+	expected_output = "H\303\244der\n\n(;FF[4]CA[UTF-8]GM[1]SZ[19]N[start])\n";
+	SaveSGF(sgfc, SetupLargeSaveTestIO, "outfile");
+}
+END_TEST
+
+
 TCase *sgfc_tc_save(void)
 {
 	TCase *tc;
@@ -62,5 +103,7 @@ TCase *sgfc_tc_save(void)
 	tcase_add_checked_fixture(tc, common_setup, common_teardown);
 
 	tcase_add_test(tc, test_extend_save_buffer);
+	tcase_add_test(tc, test_save_kept_header);
+	tcase_add_test(tc, test_save_kept_decoded_header);
 	return tc;
 }

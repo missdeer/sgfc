@@ -26,6 +26,9 @@ Check uses forking in order to limit crashes/segfaults etc. to single
 test cases. To ease debugging you can disable forking in test-runner.c
 by adding "srunner_set_fork_status(sr, CK_NOFORK)".
 
+Note: some tests have relative paths to test files in the folder test-files/
+These tests fail, if sgfc-test is not started from within the tests/ folder.
+
 
 Files
 -----

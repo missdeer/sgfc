@@ -516,7 +516,6 @@ bool SaveSGF(struct SGFInfo *sgfc, struct SaveFileHandler *(*setup_sfh)(void), c
 	struct SaveInfo save = {sgfc, NULL, 0,0,0, false};
 	struct Node *n;
 	struct TreeInfo *info;
-	const char *c;
 	int nl = 0, i = 1;
 	size_t name_buffer_size = strlen(base_name) + 14; /* +14 == "_99999999.sgf" + \0 */
 
@@ -535,10 +534,10 @@ bool SaveSGF(struct SGFInfo *sgfc, struct SaveFileHandler *(*setup_sfh)(void), c
 		goto free_and_return_false;
 	}
 
-	if(sgfc->options->keep_head)
+	if(sgfc->options->keep_head && sgfc->head)
 	{
-		for(c = sgfc->buffer; c < sgfc->start; c++)
-			if((*save.sfh->putc)(save.sfh, *c) == EOF)
+		for(size_t head_pos = 0; head_pos < sgfc->head_len; head_pos++)
+			if((*save.sfh->putc)(save.sfh, sgfc->head[head_pos]) == EOF)
 				goto write_error;
 		if((*save.sfh->putc)(save.sfh, '\n') == EOF)
 			goto write_error;
