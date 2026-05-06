@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "all.h"
 #include "protos.h"
@@ -156,6 +157,22 @@ void *SafeCalloc(size_t size, const char *err)
 
 
 /**************************************************************************
+*** Function:	SafeAddSize
+***				Checked size_t arithmetic for allocation size calculations.
+*** Parameters: a, b ... operands
+***				err	 ... error message
+*** Returns:	result (or termination in case of overflow)
+**************************************************************************/
+
+size_t SafeAddSize(size_t a, size_t b, const char *err)
+{
+	if(a > SIZE_MAX - b)
+		panic_out_of_memory(err); /* function will not return */
+	return a + b;
+}
+
+
+/**************************************************************************
 *** Function:	SafeDupString
 ***				Safely duplicate a \0-terminated string
 *** Parameters: src ... source buffer
@@ -182,7 +199,7 @@ char *SafeDupString(const char *src, const char *err)
 
 char *SafeDupText(const char *src, size_t len, const char *err)
 {
-	char *dst = SafeMalloc(len+1, err);
+	char *dst = SafeMalloc(safe_add(len, 1), err);
 	memcpy(dst, src, len);
 	*(dst+len) = 0;	/* 0-terminate */
 	return dst;
@@ -202,7 +219,7 @@ char *SafeDupText(const char *src, size_t len, const char *err)
 char *SafeDupText2(const char *src, size_t len, size_t min_capacity, const char *err)
 {
 	size_t capacity = len > min_capacity ? len : min_capacity;
-	char *dst = SafeMalloc(capacity+1, err);
+	char *dst = SafeMalloc(safe_add(capacity, 1), err);
 	memcpy(dst, src, len);
 	*(dst+len) = 0;	/* 0-terminate */
 	return dst;
@@ -687,7 +704,7 @@ struct PropValue *AddPropValue(struct SGFInfo *sgfc,
 	if(value)
 	{
 		/* +2 because Parse_Float may add 1 char and for trailing '\0' byte */
-		newv->value = SafeMalloc(size+2, "property value buffer");
+		newv->value = SafeMalloc(safe_add(size, 2), "property value buffer");
 		memcpy(newv->value, value, size);
 		*(newv->value + size) = 0;
 		newv->value_len = size;
@@ -700,7 +717,7 @@ struct PropValue *AddPropValue(struct SGFInfo *sgfc,
 
 	if(value2)
 	{
-		newv->value2 = SafeMalloc(size2+2, "property value2 buffer");
+		newv->value2 = SafeMalloc(safe_add(size2, 2), "property value2 buffer");
 		memcpy(newv->value2, value2, size2);
 		*(newv->value2 + size2) = 0;
 		newv->value2_len = size2;

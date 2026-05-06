@@ -305,15 +305,21 @@ static void CorrectVariation(struct SGFInfo *sgfc, struct Node *n)
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				r	 ... start node
 ***				ti	 ... pointer to TreeInfo (for check of GM)
-*** Returns:	-
+*** Returns:	false on fatal error, true otherwise
 **************************************************************************/
 
-static void CorrectVariations(struct SGFInfo *sgfc, struct Node *r, struct TreeInfo *ti)
+static bool CorrectVariations(struct SGFInfo *sgfc, struct Node *r, struct TreeInfo *ti, int nesting)
 {
 	struct Node *n;
 
 	if(!r)
-		return;
+		return true;
+
+	if(nesting > TREE_NESTING_LIMIT)
+	{
+		PrintError(FE_DEEP_NESTING, sgfc, r->row, r->col, TREE_NESTING_LIMIT);
+		return false;
+	}
 
 	if(!r->parent)		/* root node? */
 	{
@@ -330,7 +336,7 @@ static void CorrectVariations(struct SGFInfo *sgfc, struct Node *r, struct TreeI
 	}
 
 	if(ti->GM != 1)		/* variation level correction only for Go games */
-		return;
+		return true;
 
 	while(r)
 	{
@@ -339,8 +345,11 @@ static void CorrectVariations(struct SGFInfo *sgfc, struct Node *r, struct TreeI
 			n = r;
 			while(n)
 			{
-				if(!r->parent) CorrectVariations(sgfc, n->child, ti->next);
-				else CorrectVariations(sgfc, n->child, ti);
+				bool res;
+				if(!r->parent)	res = CorrectVariations(sgfc, n->child, ti->next, nesting+1);
+				else			res = CorrectVariations(sgfc, n->child, ti, nesting+1);
+				if(!res)
+					return false;
 
 				n = n->sibling;
 			}
@@ -351,6 +360,7 @@ static void CorrectVariations(struct SGFInfo *sgfc, struct Node *r, struct TreeI
 
 		r = r->child;
 	}
+	return true;
 }
 
 
@@ -359,19 +369,22 @@ static void CorrectVariations(struct SGFInfo *sgfc, struct Node *r, struct TreeI
 ***				Reorders variations (including main branch) from A,B,C to C,B,A
 *** Parameters: sgfc ... pointer to SGFInfo structure
 ***				r	 ... start node
-*** Returns:	-
+*** Returns:	false on fatal error, true otherwise
 **************************************************************************/
 
-static void ReorderVariations(struct SGFInfo *sgfc, struct Node *r)
+static bool ReorderVariations(struct SGFInfo *sgfc, struct Node *r, int nesting)
 {
 	struct Node *n, *s[MAX_REORDER_VARIATIONS];
 	int i;
 
 	if(!r)
-		return;
+		return true;
 
-	if (!r->parent && r->sibling)
-		ReorderVariations(sgfc, r->sibling);
+	if(nesting > TREE_NESTING_LIMIT)
+	{
+		PrintError(FE_DEEP_NESTING, sgfc, r->row, r->col, TREE_NESTING_LIMIT);
+		return false;
+	}
 
 	while(r)
 	{
@@ -387,7 +400,8 @@ static void ReorderVariations(struct SGFInfo *sgfc, struct Node *r)
 					break;
 				}
 				s[i++] = n;
-				ReorderVariations(sgfc, n);
+				if(!ReorderVariations(sgfc, n, nesting+1))
+					return false;
 				n = n->sibling;
 			}
 			if(i < MAX_REORDER_VARIATIONS)
@@ -402,6 +416,7 @@ static void ReorderVariations(struct SGFInfo *sgfc, struct Node *r)
 		}
 		r = r->child;
 	}
+	return true;
 }
 
 
@@ -601,15 +616,16 @@ static void MergeDoubleText(struct SGFInfo *sgfc, struct Node *n)
 			v = p->value;
 			w = q->value;
 
-			c = SafeMalloc(v->value_len + w->value_len + 3, "new property value");
+			size_t merged_len = safe_add3(v->value_len, w->value_len, 2);
+			c = SafeMalloc(safe_add(merged_len, 1), "new property value");
 			memcpy(c, v->value, v->value_len);
 			c[v->value_len]   = '\n';
 			c[v->value_len+1] = '\n';
 			memcpy(c+v->value_len+2, w->value, w->value_len+1);
-			*(c + v->value_len + w->value_len + 2) = 0;
+			c[merged_len] = 0;
 			free(v->value);		/* free old buffer */
 			v->value = c;
-			v->value_len = v->value_len + w->value_len + 2;
+			v->value_len = merged_len;
 			q = DelProperty(n, q);	/* delete double property */
 		}
 		p = p->next;
@@ -905,6 +921,9 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 	struct Node *n;
 	unsigned int area;
 
+	if(nesting > TREE_NESTING_LIMIT)
+		return;
+
 	struct BoardStatus *st = SafeMalloc(sizeof(struct BoardStatus), "board status buffer");
 
 	while(r)
@@ -1006,7 +1025,7 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
 *** Function:	ParseSGF
 ***				Calls the check routines one after another
 *** Parameters: sgfc ... pointer to SGFInfo structure
-*** Returns:	true on success, false on fatal error (no SGF data)
+*** Returns:	true on success, false on fatal error
 **************************************************************************/
 
 bool ParseSGF(struct SGFInfo *sgfc)
@@ -1020,13 +1039,16 @@ bool ParseSGF(struct SGFInfo *sgfc)
 		return false;
 
 	if(sgfc->options->fix_variation)
-		CorrectVariations(sgfc, sgfc->root, sgfc->tree);
+		if(!CorrectVariations(sgfc, sgfc->root, sgfc->tree, 0))
+			return false;
 
 	if(sgfc->options->del_empty_nodes)
 		DelEmptyNodes(sgfc);
 
 	if(sgfc->options->reorder_variations)
-		ReorderVariations(sgfc, sgfc->root);
+		for(struct Node *root = sgfc->root; root; root = root->sibling)
+			if(!ReorderVariations(sgfc, root, 0))
+				return false;
 
 	if(sgfc->options->strict_checking)
 		StrictChecking(sgfc);

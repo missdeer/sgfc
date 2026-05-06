@@ -331,18 +331,28 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 	size_t malloc_size = 1; /* \0 byte */
 
 	if(print_c)
-		malloc_size += sgfc->_error_c->acc_count + 4; /* 3 Bytes ""\n + 1 reserve */
+		/* 3 Bytes: ""\n + 1 reserve */
+		malloc_size = safe_add3(malloc_size, sgfc->_error_c->acc_count, 4);
 
 	if(type & E_VALUE)			/* print a property value ("[value]\n") */
 	{
 		val_pos = va_arg(arglist, char *);
-		malloc_size += strlen(val_pos) + 3; /* + '[]\n' bytes */
+		malloc_size = safe_add3(malloc_size, strlen(val_pos), 3); /* + '[]\n' bytes */
 	}
 
 	va_copy(argtmp, arglist);
-	size_t size = (size_t)vsnprintf(NULL, 0, error_mesg[(type & M_ERROR_NUM)-1], argtmp);
+	int formatted_size = vsnprintf(NULL, 0, error_mesg[(type & M_ERROR_NUM)-1], argtmp);
 	va_end(argtmp);
-	malloc_size += size;
+	if(formatted_size < 0)
+	{
+		error.message = "Panic! Could not format error message\n";
+		error.error = type;
+		if(print_error_output_hook)
+			(*print_error_output_hook)(&error);
+		return true;
+	}
+	size_t size = (size_t)formatted_size;
+	malloc_size = safe_add(malloc_size, size);
 
 	error_msg_buffer = (char *)malloc(malloc_size);
 	if(!error_msg_buffer)

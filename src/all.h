@@ -405,7 +405,7 @@ struct SGFCOptions
 #define DEFAULT_BUFFER_SIZE ((size_t) 5000)
 
 /* Maxmimum nesting of tree branches (for stack protection) */
-#define TREE_NESTING_LIMIT 10000
+#define TREE_NESTING_LIMIT 1000
 
 /* used by save.c when using MemoryIO SaveFileHandler functions */
 struct MemoryIOHandle {

@@ -757,15 +757,16 @@ bool Check_Stone(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	if(v->value2)
 	{
 		/* stone type was erroneously split by load.c into composed value -> merge again */
-		char *stone_value = SafeMalloc(v->value_len + v->value2_len + 2, "property value buffer");
+		size_t new_len = safe_add3(v->value_len, v->value2_len, 1);
+		char *stone_value = SafeMalloc(safe_add(new_len, 1), "property value buffer");
 		memcpy(stone_value, v->value, v->value_len);
 		memcpy(stone_value + v->value_len + 1, v->value2, v->value2_len);
 		stone_value[v->value_len] = ':';					/* restore colon */
-		stone_value[v->value_len + v->value2_len + 1] = 0;	/* 0-terminate */
+		stone_value[new_len] = 0;							/* 0-terminate */
 		free(v->value);
 		free(v->value2);
 		v->value = stone_value;
-		v->value_len += v->value2_len + 1;
+		v->value_len = new_len;
 		v->value2 = NULL;
 		v->value2_len = 0;
 	}
@@ -789,7 +790,8 @@ bool Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	int error = 0;
 	bool result = false;
 
-	char *before = SafeMalloc(v->value_len+v->value2_len+2, "AR_LN value");
+	size_t before_size = safe_add3(v->value_len, v->value2_len, 2);
+	char *before = SafeMalloc(before_size, "AR_LN value");
 	sprintf(before, "%s:%s", v->value, v->value2);
 
 	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc))
@@ -837,7 +839,8 @@ bool Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	int error = 0;
 	bool result = false;
 
-	char *before = SafeMalloc(v->value_len+v->value2_len+2, "AR_LN value");
+	size_t before_size = safe_add3(v->value_len, v->value2_len, 2);
+	char *before = SafeMalloc(before_size, "AR_LN value");
 	sprintf(before, "%s:%s", v->value, v->value2);
 
 	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc))

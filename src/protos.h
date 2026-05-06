@@ -136,6 +136,7 @@ char *SafeDupText(const char *, size_t, const char *);
 char *SafeDupText2(const char *, size_t, size_t, const char *);
 void *SafeMalloc(size_t , const char *);
 void *SafeCalloc(size_t , const char *);
+size_t SafeAddSize(size_t, size_t, const char *);
 
 bool strnccmp(const char *, const char *, size_t);
 bool stridcmp(const char *, const char *);

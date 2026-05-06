@@ -520,7 +520,7 @@ bool SaveSGF(struct SGFInfo *sgfc, struct SaveFileHandler *(*setup_sfh)(void), c
 	struct Node *n;
 	struct TreeInfo *info;
 	int nl = 0, i = 1;
-	size_t name_buffer_size = strlen(base_name) + 14; /* +14 == "_99999999.sgf" + \0 */
+	size_t name_buffer_size = safe_add(strlen(base_name), 14); /* +14 == "_99999999.sgf" + \0 */
 
 	if(!(save.sfh = setup_sfh()))
 		return false;

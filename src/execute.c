@@ -11,6 +11,7 @@
 
 #include "all.h"
 #include "protos.h"
+#include "helpers.h"
 
 /* position offset into array */
 #define MXY(x,y) ((y)*st->bwidth + (x))
@@ -480,7 +481,7 @@ bool Do_GInfo(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct B
 		PrintError(W_INT_KOMI_FOUND, sgfc, p->row, p->col, "converted to <KM>");
 
 		ki = strtol(p->value->value, NULL, 10);		/* we can ignore errors here */
-		new_km = SafeMalloc(p->value->value_len+3, "new KM number value");
+		new_km = SafeMalloc(safe_add(p->value->value_len, 3), "new KM number value");
 		if(ki % 2)	sprintf(new_km, "%ld.5", ki/2);
 		else		sprintf(new_km, "%ld", ki/2);
 		NewPropValue(sgfc, n, TKN_KM, new_km, NULL, false);
