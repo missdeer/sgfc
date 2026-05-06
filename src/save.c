@@ -537,13 +537,15 @@ bool SaveSGF(struct SGFInfo *sgfc, struct SaveFileHandler *(*setup_sfh)(void), c
 		goto free_and_return_false;
 	}
 
-	if(sgfc->options->keep_head && sgfc->head)
+	if(sgfc->options->keep_head && sgfc->head && sgfc->head_len)
 	{
 		for(size_t head_pos = 0; head_pos < sgfc->head_len; head_pos++)
 			if((*save.sfh->putc)(save.sfh, sgfc->head[head_pos]) == EOF)
 				goto write_error;
-		if((*save.sfh->putc)(save.sfh, '\n') == EOF)
-			goto write_error;
+		/* only add newline if it is not already there */
+		if(sgfc->head[sgfc->head_len-1] != '\n' && sgfc->head[sgfc->head_len-1] != '\r')
+			if(!WriteChar(&save, '\n', false))
+				goto write_error;
 	}
 
 	save.linelen = 0;

@@ -89,7 +89,7 @@ START_TEST (test_save_kept_empty_header)
 	ret = ParseSGF(sgfc);
 	ck_assert_int_eq(ret, true);
 
-	expected_output = "\n(;FF[4]CA[UTF-8]GM[1]SZ[19]N[start])\n";
+	expected_output = "(;FF[4]CA[UTF-8]GM[1]SZ[19]N[start])\n";
 	SaveSGF(sgfc, SetupLargeSaveTestIO, "outfile");
 }
 END_TEST
@@ -108,7 +108,7 @@ START_TEST (test_save_kept_decoded_header)
 	ret = ParseSGF(sgfc);
 	ck_assert_int_eq(ret, true);
 
-	expected_output = "H\303\244der\n\n(;FF[4]CA[UTF-8]GM[1]SZ[19]N[start])\n";
+	expected_output = "H\303\244der\n(;FF[4]CA[UTF-8]GM[1]SZ[19]N[start])\n";
 	SaveSGF(sgfc, SetupLargeSaveTestIO, "outfile");
 }
 END_TEST

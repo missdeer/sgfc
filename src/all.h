@@ -18,11 +18,13 @@
 									** (drag & drop shell)
 									*/
 
+#ifndef EOLCHAR
 #define EOLCHAR '\n'	/* EndOfLine-Character
 						** '\n' for UNIX, AMIGA (SGF standard)
 						** '\r' for MAC
 						** if undefined, uses MS DOS "\r\n"
 						*/
+#endif
 
 
 typedef unsigned char	U_CHAR;
