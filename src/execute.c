@@ -12,6 +12,9 @@
 #include "all.h"
 #include "protos.h"
 
+/* position offset into array */
+#define MXY(x,y) ((y)*st->bwidth + (x))
+
 
 /**************************************************************************
 *** Function:	MakeCapture
@@ -388,7 +391,7 @@ bool Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 		hlp = FindProperty(n, TKN_BM);
 		hlp->id = TKN_DO;
 		free(hlp->idstr);
-		hlp->idstr = SafeDupString(sgf_token[TKN_DO].id, 0, "DO id string");
+		hlp->idstr = SafeDupString(sgf_token[TKN_DO].id, "DO id string");
 		hlp->value->value[0] = 0;
 		hlp->value->value_len = 0;
 		return false;
@@ -400,7 +403,7 @@ bool Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struc
 		hlp = FindProperty(n, TKN_TE);
 		hlp->id = TKN_IT;
 		free(hlp->idstr);
-		hlp->idstr = SafeDupString(sgf_token[TKN_IT].id, 0, "DO id string");
+		hlp->idstr = SafeDupString(sgf_token[TKN_IT].id, "DO id string");
 		hlp->value->value[0] = 0;
 		hlp->value->value_len = 0;
 		return false;

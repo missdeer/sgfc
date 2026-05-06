@@ -8,12 +8,12 @@
 **************************************************************************/
 
 #include <stdlib.h>
-#include <ctype.h>
 #include <errno.h>
 #include <string.h>
 
 #include "all.h"
 #include "protos.h"
+#include "helpers.h"
 
 
 /**************************************************************************
@@ -119,7 +119,7 @@ static void ParseText_NormalizeWhitespace(struct SGFInfo *sgfc, char *s, size_t 
 		else							/* other chars than \r,\n */
 		{
 			old = 0;
-			if(isspace((unsigned char)*s))				/* transform all WS to space */
+			if(ch_isspace(*s))				/* transform all WS to space */
 				*d++ = ' ';
 			else if(!*s)				/* replace \0 bytes with space, so that we can use NULL terminated strings */
 			{
@@ -218,7 +218,7 @@ static void ParseText_ApplyLinebreakStyle(struct SGFInfo *sgfc, char *value, siz
 
 static void ParseText_StripTrailingSpace(char *value, size_t *len)
 {
-	while (*len > 0 && isspace((unsigned char)value[*len - 1])) {
+	while (*len > 0 && ch_isspace(value[*len - 1])) {
 		value[--*len] = '\0';
 	}
 }
@@ -643,7 +643,7 @@ static bool Check_Single_Value(struct SGFInfo *sgfc, struct Property *p, struct 
 							   char *value, size_t *value_len, U_SHORT flags,
 							   int (*Parse_Value)(char *, size_t *, ...))
 {
-	char *before = SafeDupString(value, 0, "prop value before checking");
+	char *before = SafeDupString(value, "prop value before checking");
 
 	switch((*Parse_Value)(value, value_len, flags, sgfc))
 	{
@@ -974,9 +974,9 @@ static void CheckID_Lowercase(struct SGFInfo *sgfc, struct Property *p)
 {
 	char *id = p->idstr;
 
-	while(isalpha(*id))
+	while(ch_isalpha(*id))
 	{
-		if(islower((unsigned char)*id))
+		if(ch_islower(*id))
 		{
 			PrintError(E_LC_IN_PROPID, sgfc, p->row, p->col, p->idstr);
 			break;		/* print error only once */

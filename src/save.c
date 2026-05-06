@@ -8,11 +8,12 @@
 **************************************************************************/
 
 #include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "all.h"
 #include "protos.h"
+#include "helpers.h"
 
 
 #define MAX_LINELEN		58
@@ -170,15 +171,17 @@ static int SaveBufferIO_putc(struct SaveFileHandler *sfh, int c)
 	/* -1 so that we can always null-terminate buffer in close() function */
 	if (sfh->fh.memh.pos == sfh->fh.memh.buffer + sfh->fh.memh.buffer_size - 1)
 	{
-		/* size*2 ... typical strategy used by ArrayList structures */
-		char *new_buffer = (char *)malloc(sfh->fh.memh.buffer_size*2);
+		if(sfh->fh.memh.buffer_size > SIZE_MAX / 2)
+			return EOF;
+		size_t new_size = sfh->fh.memh.buffer_size * 2;
+		char *new_buffer = (char *)malloc(new_size);
 		if (!new_buffer)
 			return EOF;
 		memcpy(new_buffer, sfh->fh.memh.buffer, sfh->fh.memh.buffer_size);
 		free(sfh->fh.memh.buffer);
 		sfh->fh.memh.buffer = new_buffer;
 		sfh->fh.memh.pos = new_buffer + sfh->fh.memh.buffer_size - 1;
-		sfh->fh.memh.buffer_size *= 2;
+		sfh->fh.memh.buffer_size = new_size;
 	}
 
 	*sfh->fh.memh.pos++ = (char)c;
@@ -226,7 +229,7 @@ static int WriteChar(struct SaveInfo *save, char c, U_SHORT spc)
 {
 	save->chars_in_node++;
 
-	if(spc && isspace((unsigned char)c) && (save->linelen >= MAXTEXT_LINELEN))
+	if(spc && ch_isspace(c) && (save->linelen >= MAXTEXT_LINELEN))
 		c = '\n';
 
 	if(c != '\n')
@@ -332,7 +335,7 @@ static int WriteProperty(struct SaveInfo *save, struct TreeInfo *info, struct Pr
 	while(*p)
 	{
 		/* idstr is original from file -> may contain lowercase too */
-		if(isupper((unsigned char)*p))
+		if(ch_isupper(*p))
 			saveputc(save, *p)
 		p++;
 	}

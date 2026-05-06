@@ -5,34 +5,36 @@
 CC := gcc
 #CC := /home/arno/development/sgfc/AFLplusplus-4.35c/afl-cc
 
-OPTFLAGS  ?= -O1
-STD       := -std=c99
-WARNFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter
+ifeq ($(CC), gcc)
+	WARNFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter
+endif
 
-CPPFLAGS +=
-CFLAGS   += $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS) $(SANFLAGS)
-LDFLAGS  += $(SANFLAGS)
-LDLIBS   += -lm
+ifeq ($(CC), clang)
+	WARNFLAGS := -Weverything -Wno-padded -Wno-unused-parameter \
+			  -Wno-documentation-unknown-command -Wno-declaration-after-statement \
+			  -Wno-format-nonliteral -Wno-disabled-macro-expansion \
+			  -Wno-switch-enum -Wno-unsafe-buffer-usage
+endif
 
-# clang
-#CC := clang
-#WARNFLAGS := -Weverything -Wno-padded -Wno-unused-parameter \
-		  -Wno-documentation-unknown-command -Wno-declaration-after-statement \
-		  -Wno-format-nonliteral -Wno-disabled-macro-expansion \
-		  -Wno-switch-enum
+OPTFLAGS := -O1
+STD      := -std=c99
+CPPFLAGS :=
+CFLAGS   := $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS) $(SANFLAGS) $(USER_CFLAGS)
+LDFLAGS  := $(SANFLAGS)
+LDLIBS   := -lm
 
 OBJ := execute.o gameinfo.o load.o main.o parse.o parse2.o options.o \
 	properties.o save.o strict.o util.o error.o encoding.o
 
 
 sgfc: $(OBJ)
-	$(CC) $(LDFLAGS) $(OBJ) -o $@ $(LDLIBS)
+	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 clean:
 	rm -f $(OBJ) sgfc
 	rm -f *.gcda *.gcno *.gcov
 
-%.o: %.c all.h protos.h 
+%.o: %.c all.h protos.h helpers.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
 
 all: clean sgfc

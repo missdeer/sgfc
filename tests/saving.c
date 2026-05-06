@@ -76,6 +76,25 @@ START_TEST (test_save_kept_header)
 END_TEST
 
 
+START_TEST (test_save_kept_empty_header)
+{
+	char buffer[] = "(;N[start])";
+
+	sgfc->buffer = buffer;
+	sgfc->b_end = buffer + strlen(buffer);
+	sgfc->options->keep_head = true;
+
+	int ret = LoadSGFFromFileBuffer(sgfc);
+	ck_assert_int_eq(ret, true);
+	ret = ParseSGF(sgfc);
+	ck_assert_int_eq(ret, true);
+
+	expected_output = "\n(;FF[4]CA[UTF-8]GM[1]SZ[19]N[start])\n";
+	SaveSGF(sgfc, SetupLargeSaveTestIO, "outfile");
+}
+END_TEST
+
+
 START_TEST (test_save_kept_decoded_header)
 {
 	char buffer[] = "H\344der\n(;CA[ISO-8859-1]N[start])";
@@ -104,6 +123,7 @@ TCase *sgfc_tc_save(void)
 
 	tcase_add_test(tc, test_extend_save_buffer);
 	tcase_add_test(tc, test_save_kept_header);
+	tcase_add_test(tc, test_save_kept_empty_header);
 	tcase_add_test(tc, test_save_kept_decoded_header);
 	return tc;
 }

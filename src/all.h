@@ -150,8 +150,9 @@ struct SGFCError {
 #define WS_CA_DIFFERS			(74UL | E_WARNING_STRICT | E_SEARCHPOS | E_CRITICAL)
 #define FE_MULTIPLE_ENCODINGS	(75UL | E_FATAL_ERROR | E_SEARCHPOS)
 #define FE_DEEP_NESTING			(76UL | E_FATAL_ERROR | E_SEARCHPOS)
+#define FE_INTERNAL_ERROR		(77UL | E_FATAL_ERROR)
 
-#define MAX_ERROR_NUM	76UL
+#define MAX_ERROR_NUM	77UL
 
 
 /* order must match order in sgf_token[] !! */
@@ -239,8 +240,6 @@ struct BoardStatus
 	bool markup_changed;	/* markup field changed */
 	struct PathBoard *paths;	/* board for capturing stones */
 };
-
-#define MXY(x,y) ((y)*st->bwidth + (x))
 
 
 struct PropValue

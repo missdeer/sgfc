@@ -4,14 +4,23 @@
 
 CC := gcc
 
-OPTFLAGS  ?= -O1
-STD       := -std=c99
-WARNFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter
+ifeq ($(CC), gcc)
+	WARNFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter
+endif
 
-CPPFLAGS += -I../src
-CFLAGS   += $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS) $(SANFLAGS)
-LDFLAGS  += $(SANFLAGS)
-LDLIBS   += -lcheck -lpthread -lrt -lsubunit -lm
+ifeq ($(CC), clang)
+	WARNFLAGS := -Weverything -Wno-padded -Wno-unused-parameter \
+			  -Wno-documentation-unknown-command -Wno-declaration-after-statement \
+			  -Wno-format-nonliteral -Wno-disabled-macro-expansion \
+			  -Wno-switch-enum -Wno-unsafe-buffer-usage
+endif
+
+OPTFLAGS := -O1
+STD      := -std=c99
+CPPFLAGS := -I../src
+CFLAGS   := $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS) $(SANFLAGS) $(USER_CFLAGS)
+LDFLAGS  := $(SANFLAGS)
+LDLIBS   := -lcheck -lpthread -lrt -lsubunit -lm
 
 OBJ := test-runner.o test-helper.o position.o parse-text.o check-value.o \
 	trigger-errors.o test-files.o load-properties.o check-encoding.o parse-move.o delete-node.o \
@@ -29,7 +38,7 @@ tests: sgfc-test
 sgfc-test: $(OBJ) $(SRC_OBJ)
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
-%.o: %.c test-common.h ../src/all.h ../src/protos.h
+%.o: %.c test-common.h ../src/all.h ../src/protos.h ../src/helpers.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 clean:

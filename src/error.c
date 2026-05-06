@@ -14,12 +14,13 @@
 
 #include "all.h"
 #include "protos.h"
+#include "helpers.h"
 
 
 /* Error reporting hooks */
 bool (*print_error_handler)(U_LONG, struct SGFInfo *, va_list) = PrintErrorHandler;
 void (*print_error_output_hook)(struct SGFCError *) = PrintErrorOutputHook;
-void (*oom_panic_hook)(const char *) = ExitWithOOMError;
+panic_hook_t panic_hook = ExitWithFatalError;
 
 
 static const char *error_mesg[] =
@@ -116,6 +117,7 @@ static const char *error_mesg[] =
 		"different encodings in one file detected. Use option -E2/3 to parse this file\n",
 /* 75 */
 		"nesting of branches is too deep and exceeds limit of %d nested branches\n",
+		"internal error occured (%s) - that shouldn't happen. Sorry.\n",
 };
 
 
@@ -171,15 +173,17 @@ int PrintError(U_LONG type, struct SGFInfo *sgfc, ...) {
 
 
 /**************************************************************************
-*** Function:	ExitWithOOMError
-***				Special error printer in case when memory runs out
+*** Function:	ExitWithFatalError
+***				Special error printer in case when something fatal happens,
+***             e.g. running out of memory, invalid internal state, etc.
 ***				Panics: does not return; does not free up resources; just dies
-***				Might be called, when SGFInfo is not properly set up yet.
+***				Might be called, while SGFInfo is not properly set up yet.
 **************************************************************************/
 
-void ExitWithOOMError(const char *detail)
+ATTRIBUTE_NORETURN
+void ExitWithFatalError(U_LONG error, const char *detail)
 {
-	int err_num = FE_OUT_OF_MEMORY & M_ERROR_NUM;
+	int err_num = error & M_ERROR_NUM;
 	fprintf(E_OUTPUT, "Fatal error %d: ", err_num);
 	fprintf(E_OUTPUT, error_mesg[err_num - 1], detail);
 	exit(20);
@@ -294,8 +298,6 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 					PrintError(sgfc->_error_c->acc_type, sgfc,
 							   sgfc->_error_c->acc_row, sgfc->_error_c->acc_col, false);
 			}
-
-			va_end(arglist);
 			return true;
 		}
 		/* false: don't accumulate, print it */
@@ -405,6 +407,7 @@ void CommonPrintErrorOutputHook(struct SGFCError *error, FILE *stream)
 			break;
 		case E_WARNING:		fprintf(stream, "Warning %d", (int)(error->error & M_ERROR_NUM));
 			break;
+		default:			panic_impossible();
 	}
 
 	if(error->error & E_CRITICAL)

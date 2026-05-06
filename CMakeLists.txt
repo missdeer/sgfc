@@ -9,6 +9,7 @@ include_directories(tests)
 set(src_files
         src/all.h
         src/protos.h
+        src/helpers.h
         src/encoding.c
         src/error.c
         src/execute.c

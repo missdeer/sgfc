@@ -109,12 +109,14 @@ bool Check_GameInfo(struct SGFInfo *, struct Property *, struct PropValue *);
 
 struct ErrorC_internal *SetupErrorC_internal(void);
 
+typedef void (*panic_hook_t)(U_LONG, const char *) ATTRIBUTE_NORETURN;
+
 extern bool (*print_error_handler)(U_LONG, struct SGFInfo *, va_list);
 extern void (*print_error_output_hook)(struct SGFCError *);
-extern void (*oom_panic_hook)(const char *);
+extern panic_hook_t panic_hook;
 
 int PrintError(U_LONG, struct SGFInfo *, ...);
-ATTRIBUTE_NORETURN void ExitWithOOMError(const char *);
+ATTRIBUTE_NORETURN void ExitWithFatalError(U_LONG, const char *);
 bool PrintErrorHandler(U_LONG, struct SGFInfo *, va_list);
 void PrintErrorOutputHook(struct SGFCError *);
 void CommonPrintErrorOutputHook(struct SGFCError *, FILE *);
@@ -129,8 +131,9 @@ void f_AddTail(struct ListHead *, struct ListNode *);
 void f_Enqueue(struct ListHead *, struct ListNode *);
 void f_Delete(struct ListHead *, struct ListNode *);
 
-char *SafeDupString(const char *, size_t, const char *);
-char *SafeDupString2(const char *, size_t, size_t, const char *);
+char *SafeDupString(const char *, const char *);
+char *SafeDupText(const char *, size_t, const char *);
+char *SafeDupText2(const char *, size_t, size_t, const char *);
 void *SafeMalloc(size_t , const char *);
 void *SafeCalloc(size_t , const char *);
 
@@ -157,10 +160,3 @@ bool CalcGameSig(struct TreeInfo *, char *);
 /**** strict.c ****/
 
 void StrictChecking(struct SGFInfo *);
-
-
-/**** protos.h ****/
-
-#define AddTail(h,n) f_AddTail((struct ListHead *)(h), (struct ListNode *)(n))
-#define Enqueue(h,n) f_Enqueue((struct ListHead *)(h), (struct ListNode *)(n))
-#define Delete(h,n) f_Delete((struct ListHead *)(h), (struct ListNode *)(n))

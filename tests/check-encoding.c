@@ -132,6 +132,17 @@ START_TEST (test_no_encoding_specified)
 	char buffer2[] = "you're not gonna CA[it";
 	result = DetectEncoding(buffer2, buffer2 + strlen(buffer2));
 	ck_assert_ptr_eq(result, NULL);
+
+	char buffer3[] = "(;CA[])";
+	result = DetectEncoding(buffer3, buffer3 + strlen(buffer3));
+	ck_assert_ptr_eq(result, NULL);
+
+	char tiny[] = "abc";
+	for(size_t len = 0; len < 4; len++)
+	{
+		result = DetectEncoding(tiny, tiny + len);
+		ck_assert_ptr_eq(result, NULL);
+	}
 }
 END_TEST
 

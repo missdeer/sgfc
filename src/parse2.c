@@ -9,9 +9,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
+#include <errno.h>
 
 #include "all.h"
 #include "protos.h"
+#include "helpers.h"
 
 
 /**************************************************************************
@@ -632,6 +635,7 @@ static bool GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 {
 	char *v;
 	size_t *v_len;
+	long parsed;
 
 	if(!p)				/* no property? -> set default value */
 	{
@@ -657,18 +661,19 @@ static bool GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 				DelProperty(n, p);
 				return false;
 
-		case -1:
-			PrintError(E_BAD_VALUE_CORRECTED, sgfc, p->value->row, p->value->col,
-					   p->value->value, p->idstr, v);
-			ATTRIBUTE_FALLTHROUGH;
-		case 1:	*d = atoi(v);
-				if(*d < 1)
+		case -1: PrintError(E_BAD_VALUE_CORRECTED, sgfc, p->value->row, p->value->col,
+						 p->value->value, p->idstr, v);
+				ATTRIBUTE_FALLTHROUGH;
+		case 1:	errno = 0;
+				parsed = strtol(v, NULL, 10);
+				if(errno || parsed < 1 || parsed > INT_MAX)
 				{
 					PrintError(E_BAD_ROOT_PROP, sgfc, p->value->row, p->value->col, p->idstr, err_action);
 					*d = def;
 					DelProperty(n, p);
 					return false;
 				}
+				*d = (int)parsed;
 				break;
 	}
 
@@ -809,9 +814,12 @@ bool InitAllTreeInfo(struct SGFInfo *sgfc)
 
 	for(; root; root = root->sibling)
 	{
-		ti = SafeMalloc(sizeof(struct TreeInfo), "tree info structure");
+		ti = SafeCalloc(sizeof(struct TreeInfo), "tree info structure");
 		if(!InitTreeInfo(sgfc, ti, root))
+		{
+			FreeTreeInfo(ti);
 			return false;
+		}
 		AddTail(&sgfc->tree, ti);		/* add to SGFInfo */
 	}
 

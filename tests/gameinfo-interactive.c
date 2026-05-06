@@ -47,7 +47,7 @@ START_TEST (test_interactive_invalid_result_keeps_value)
 	int stdin_copy, stdout_copy;
 	FILE *tmp_in, *tmp_out;
 	char value[] = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-	struct PropValue v = { .value = SafeDupString(value, 0, "value"), .value_len = strlen(value) };
+	struct PropValue v = { .value = SafeDupString(value, "value"), .value_len = strlen(value) };
 	struct Property p = { .id = TKN_RE, .idstr = "RE", .value = &v };
 
 	sgfc->options->interactive = true;
@@ -70,7 +70,7 @@ START_TEST (test_interactive_corrected_result_keeps_value)
 	int stdin_copy, stdout_copy;
 	FILE *tmp_in, *tmp_out;
 	char value[] = "White wins by 3 1/2 points";
-	struct PropValue v = { .value = SafeDupString(value, 0, "value"), .value_len = strlen(value) };
+	struct PropValue v = { .value = SafeDupString(value, "value"), .value_len = strlen(value) };
 	struct Property p = { .id = TKN_RE, .idstr = "RE", .value = &v };
 
 	sgfc->options->interactive = true;
@@ -93,7 +93,7 @@ START_TEST (test_interactive_corrected_input)
 	int stdin_copy, stdout_copy;
 	FILE *tmp_in, *tmp_out;
 	char value[] = "White wins by 3 points";
-	struct PropValue v = { .value = SafeDupString(value, 0, "value"), .value_len = strlen(value) };
+	struct PropValue v = { .value = SafeDupString(value, "value"), .value_len = strlen(value) };
 	struct Property p = { .id = TKN_RE, .idstr = "RE", .value = &v };
 
 	sgfc->options->interactive = true;
@@ -116,7 +116,7 @@ START_TEST (test_interactive_delete_value)
 	int stdin_copy, stdout_copy;
 	FILE *tmp_in, *tmp_out;
 	char value[] = "White wins by 3 points";
-	struct PropValue v = { .value = SafeDupString(value, 0, "value"), .value_len = strlen(value) };
+	struct PropValue v = { .value = SafeDupString(value, "value"), .value_len = strlen(value) };
 	struct Property p = { .id = TKN_RE, .idstr = "RE", .value = &v };
 
 	sgfc->options->interactive = true;

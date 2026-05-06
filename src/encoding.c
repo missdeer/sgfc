@@ -8,14 +8,15 @@
 **************************************************************************/
 
 #include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
 #include <iconv.h>
 #include <errno.h>
 #include <math.h>
+#include <stdint.h>
 
 #include "all.h"
 #include "protos.h"
+#include "helpers.h"
 
 
 /**************************************************************************
@@ -76,7 +77,7 @@ char *DetectEncoding(const char *c, const char *b_end)
 {
 	int state = 1, brace_state = 1, brace_count = 0;
 
-	if(c+3 >= b_end)
+	if((size_t)(b_end - c) < 4)
 		/* no encoding found (not even enough place for BOM) --> assume default */
 		return NULL;
 
@@ -85,17 +86,17 @@ char *DetectEncoding(const char *c, const char *b_end)
 
 	/* check for Unicode BOM */
 	if(*c == (char)0xFE && *(c+1) == (char)0xFF)
-		return SafeDupString("UTF-16BE", 0, "encoding");
+		return SafeDupString("UTF-16BE", "encoding");
 	if(*c == (char)0xFF && *(c+1) == (char)0xFE)
 	{
 		if(!*(c+2) && !*(c+3))
-			return SafeDupString("UTF-32LE", 0, "encoding");
-		return SafeDupString("UTF-16LE", 0, "encoding");
+			return SafeDupString("UTF-32LE", "encoding");
+		return SafeDupString("UTF-16LE", "encoding");
 	}
 	if(!*c && !*(c+1) && *(c+2) == (char)0xFE && *(c+3) == (char)0xFF)
-		return SafeDupString("UTF-32BE", 0, "encoding");
+		return SafeDupString("UTF-32BE", "encoding");
 	if(*c == (char)0xEF && *(c+1) == (char)0xBB && *(c+2) == (char)0xBF)
-		return SafeDupString("UTF-8", 0, "encoding");
+		return SafeDupString("UTF-8", "encoding");
 
 	/* assume that while not necessarily ASCII-safe, that the encoding
 	 * has ASCII characters at ASCII codepoints, i.e. we can search for "(CA[]".
@@ -119,14 +120,14 @@ char *DetectEncoding(const char *c, const char *b_end)
 						else		   state = brace_state;
 						break;
 			default:
-				if(isupper((unsigned char)*c))
+				if(ch_isupper(*c))
 					state = brace_state;
-				else if(isspace((unsigned char)*c))
+				else if(ch_isspace(*c))
 				{
 					if(state != 4)
 						state = brace_state;
 				}
-				else if(!islower((unsigned char)*c))
+				else if(!ch_islower(*c))
 					state = brace_state;
 				break;
 		}
@@ -145,7 +146,7 @@ char *DetectEncoding(const char *c, const char *b_end)
 	while(c_end < b_end && *c_end != ']')
 		c_end++;
 	size_t len = (size_t)(c_end - c);
-	char *ca_value = SafeDupString(c, len, "encoding");
+	char *ca_value = SafeDupText(c, len, "encoding");
 	if(!Parse_Charset(ca_value, &len) || !len)
 	{
 		free(ca_value);
@@ -177,6 +178,9 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 	size_t in_left, out_size, result, out_left, err_left = 0;
 	bool resize_out = false, add_replacement = false;
 	bool illegal_sequence_error = false;
+
+	if(size == SIZE_MAX)
+		panic_out_of_memory("buffer for encoding conversion");
 
 	in_buffer = buffer;
 	out_size = in_left = size;
@@ -217,6 +221,11 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 				 * +1 because of edge case of out_size==in_left */
 				float needed = (float)in_left * (float)out_size / (float)(out_size - in_left + 1);
 				size_t increase = (size_t)(lrintf(needed*1.05f)) + 12; /* +5% + 3x 4 byte wide chars */
+				if(out_size > SIZE_MAX - increase - 1)
+				{
+					free(out_buffer);
+					panic_out_of_memory("temporary buffer for encoding conversion");
+				}
 				size_t new_size = out_size + increase;
 				/* +1 for \0 termination of buffer */
 				char *new_buffer = SafeMalloc(new_size+1, "temporary buffer for encoding conversion");
@@ -270,7 +279,7 @@ char *DecodeSGFBuffer(struct SGFInfo *sgfc, const char **encbuffer_end, char **e
 	if(encoding != selected_encoding)
 	{
 		free(encoding);
-		*encoding_name = SafeDupString(selected_encoding, 0, "encoding name");
+		*encoding_name = SafeDupString(selected_encoding, "encoding name");
 	}
 	else
 		*encoding_name = encoding;

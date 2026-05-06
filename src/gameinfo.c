@@ -9,10 +9,10 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "all.h"
 #include "protos.h"
+#include "helpers.h"
 
 
 /**************************************************************************
@@ -391,7 +391,7 @@ static int CorrectDate(char *value, size_t *len)
 	s = value;
 	while(*s)
 	{
-		if(isdigit((unsigned char)*s))
+		if(ch_isdigit(*s))
 		{
 			n = strtol(s, &s, 10);
 
@@ -467,10 +467,10 @@ static int Parse_Date(char *value, size_t *len, ...)
 	c = d = value;
 	while(*c)				/* remove spaces, and unnecessary '-', ',' */
 	{
-		if(isspace((unsigned char)*c))		/* keep spaces in between numbers */
+		if(ch_isspace(*c))		/* keep spaces in between numbers */
 		{
 			if(ret)	ret = -1;
-			if((d != value) && isdigit((unsigned char)*(d-1)) && isdigit((unsigned char)*(c+1)))
+			if((d != value) && ch_isdigit(*(d-1)) && ch_isdigit(*(c+1)))
 			{
 				*d++ = *c++;	/* space between two numbers */
 				ret = 0;
@@ -481,7 +481,7 @@ static int Parse_Date(char *value, size_t *len, ...)
 		else
 		if(*c == '-')		/* remove all '-' not in between two numbers */
 		{
-			if((d != value) && isdigit((unsigned char)*(d-1)) && (isdigit((unsigned char)*(c+1)) || isspace((unsigned char)*(c+1))))
+			if((d != value) && ch_isdigit(*(d-1)) && (ch_isdigit(*(c+1)) || ch_isspace(*(c+1))))
 				*d++ = *c++;
 			else
 			{
@@ -492,7 +492,7 @@ static int Parse_Date(char *value, size_t *len, ...)
 		else
 		if(*c == ',')		/* remove all ',' not preceeded by a number */
 		{
-			if((d != value) && isdigit((unsigned char)*(d-1)) && *(c+1))
+			if((d != value) && ch_isdigit(*(d-1)) && *(c+1))
 				*d++ = *c++;
 			else
 			{
@@ -604,14 +604,14 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 		struct PropValue *v, int (*Parse_Value)(char *, size_t *, ...))
 {
 	char *newgi, inp[2001];
-	size_t size;
+	size_t size, inp_len;
 	int ret;
 
 	PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "");
 
 	/* correct functions may use up to 25 bytes; +7 because time in hours multiplies by 3600 and adds ".0" */
 	size = (v->value_len > 25-7) ? (v->value_len + 7) : 25;
-	newgi = SafeDupString2(v->value, v->value_len, size, "gameinfo value buffer");
+	newgi = SafeDupText2(v->value, v->value_len, size, "gameinfo value buffer");
 
 	while(true)
 	{
@@ -624,22 +624,20 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 		if(ret)	printf("--> Use [%s] (enter), delete (d) or type in new value? ", newgi);
 		else	printf("--> Keep faulty value [%s] (enter), delete (d) or type in new value? ", newgi);
 
-		fgets(inp, 2000, stdin);
-		if(strlen(inp))
-			inp[strlen(inp)-1] = 0;	/* delete last char, it is a newline */
+		if(!fgets(inp, sizeof(inp), stdin))
+			inp[0] = 0;
 
-		if(!strlen(inp))			/* [return] */
+		inp_len = strlen(inp);
+		if (inp_len <= 1)			/* [return] or fgets failure */
 			break;
 
 		free(newgi);
+		inp[inp_len-1] = 0;			/* delete last char, it is a newline */
 
-		if(!strnccmp(inp, "d", 0))	/* delete */
+		if(!strnccmp(inp, "d", 0))	/* [d] == delete */
 			return false;
 
-		size = strlen(inp);
-		if (size < 25)
-			size = 25;
-		newgi = SafeDupString(inp, size, "game info value buffer");
+		newgi = SafeDupText2(inp, inp_len-1, 25, "game info value buffer");
 	}
 
 	free(v->value);
@@ -679,7 +677,7 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 
 	/* correct functions may use up to 25 bytes; +7 because time in hours multiplies by 3600 and adds ".0" */
 	size = (v->value_len > 25-7) ? (v->value_len + 7) : 25;
-	val = SafeDupString2(v->value, v->value_len, size, "result value buffer");
+	val = SafeDupText2(v->value, v->value_len, size, "result value buffer");
 	val_len = v->value_len;
 	res = (*parse)(val, &val_len);
 

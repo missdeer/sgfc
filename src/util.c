@@ -8,11 +8,11 @@
 **************************************************************************/
 
 #include <stdlib.h>
-#include <ctype.h>
 #include <string.h>
 
 #include "all.h"
 #include "protos.h"
+#include "helpers.h"
 
 
 /**************************************************************************
@@ -33,9 +33,9 @@ char EncodePosChar(int c)
 
 int DecodePosChar(char c)
 {
-	if(islower((unsigned char)c))
+	if(ch_islower(c))
 		return c-'a'+1;
-	if(isupper((unsigned char)c))
+	if(ch_isupper(c))
 		return c-'A'+27;
 	return false;
 }
@@ -133,11 +133,7 @@ void *SafeMalloc(size_t size, const char *err)
 {
 	void *mem = malloc(size);
 	if(!mem)
-	{
-		(*oom_panic_hook)(err); /* function will not return */
-		/* exit() will never be reached; safe-guard and hint for linting */
-		exit(20);
-	}
+		panic_out_of_memory(err); /* function will not return */
 	return mem;
 }
 
@@ -154,28 +150,38 @@ void *SafeCalloc(size_t size, const char *err)
 {
 	void *mem = calloc(size, 1);
 	if(!mem)
-	{
-		(*oom_panic_hook)(err); /* function will not return */
-		/* exit() will never be reached; safe-guard and hint for linting */
-		exit(20);
-	}
+		panic_out_of_memory(err); /* function will not return */
 	return mem;
 }
 
 
 /**************************************************************************
 *** Function:	SafeDupString
-***				Safely duplicate a string (possibly not \0 terminated)
+***				Safely duplicate a \0-terminated string
 *** Parameters: src ... source buffer
 ***				len	... size of buffer
 ***				err	... error message
 *** Returns:	pointer to \0-terminated duplicate (or termination in case of error)
 **************************************************************************/
 
-char *SafeDupString(const char *src, size_t len, const char *err)
+char *SafeDupString(const char *src, const char *err)
 {
-	if(!len)
-		len = strlen(src);
+	size_t len = strlen(src);
+	return SafeDupText(src, len, err);
+}
+
+
+/**************************************************************************
+*** Function:	SafeDupText
+***				Safely duplicate a text (possibly not \0 terminated)
+*** Parameters: src ... source buffer
+***				len	... size of buffer
+***				err	... error message
+*** Returns:	pointer to \0-terminated duplicate (or termination in case of error)
+**************************************************************************/
+
+char *SafeDupText(const char *src, size_t len, const char *err)
+{
 	char *dst = SafeMalloc(len+1, err);
 	memcpy(dst, src, len);
 	*(dst+len) = 0;	/* 0-terminate */
@@ -185,7 +191,7 @@ char *SafeDupString(const char *src, size_t len, const char *err)
 
 /**************************************************************************
 *** Function:	SafeDupString2
-***				Safely duplicate a string (possibly not \0 terminated)
+***				Safely duplicate a text (possibly not \0 terminated)
 *** Parameters: src ... source buffer
 ***				len	... size of buffer
 ***             min_capacity ... minimal capacity to allocate (excluding trailing \0)
@@ -193,10 +199,8 @@ char *SafeDupString(const char *src, size_t len, const char *err)
 *** Returns:	pointer to \0-terminated duplicate (or termination in case of error)
 **************************************************************************/
 
-char *SafeDupString2(const char *src, size_t len, size_t min_capacity, const char *err)
+char *SafeDupText2(const char *src, size_t len, size_t min_capacity, const char *err)
 {
-	if(!len)
-		len = strlen(src);
 	size_t capacity = len > min_capacity ? len : min_capacity;
 	char *dst = SafeMalloc(capacity+1, err);
 	memcpy(dst, src, len);
@@ -245,16 +249,16 @@ bool stridcmp(const char *a, const char *b)
 {
 	while(*a && *b)
 	{
-		if(islower((unsigned char)*a)) { a++; continue; }
-		if(islower((unsigned char)*b)) { b++; continue; }
+		if(ch_islower(*a)) { a++; continue; }
+		if(ch_islower(*b)) { b++; continue; }
 		if(*a != *b)
 			return true;
 		a++;
 		b++;
 	}
 
-	while(islower((unsigned char)*a))	a++;
-	while(islower((unsigned char)*b))	b++;
+	while(ch_islower(*a))	a++;
+	while(ch_islower(*b))	b++;
 
 	if(*a || *b)
 		return true;
@@ -278,9 +282,9 @@ void strnpcpy(char *dst, const char *src, size_t len)
 {
 	for(; len>0; len--)
 	{
-		if(isspace((unsigned char)*src))
+		if(ch_isspace(*src))
 			*dst = ' ';
-		else if(iscntrl((unsigned char)*src))
+		else if(ch_iscntrl(*src))
 			*dst = '.';
 		else
 			*dst = *src;
@@ -315,8 +319,8 @@ U_LONG KillChars(char *value, size_t *len, U_SHORT kill, const char *cset)
 
 	for(c = d = value; i; c++, i--)
 	{
-		if(((kill & C_ISSPACE) && isspace((unsigned char)*c)) ||
-		   ((kill & C_NOT_ISALPHA) && !isalpha(*c)))
+		if(((kill & C_ISSPACE) && ch_isspace(*c)) ||
+		   ((kill & C_NOT_ISALPHA) && !ch_isalpha(*c)))
 			err = 1;
 		else
 			if(kill & C_NOTinSET)
@@ -360,10 +364,10 @@ U_LONG TestChars(const char *value, U_SHORT test, const char *cset)
 
 	for(c = value; *c; c++)
 	{
-		if(isspace((unsigned char)*c))		/* WhiteSpace are ignored !! */
+		if(ch_isspace(*c))		/* WhiteSpace are ignored !! */
 			continue;
 
-		if((test & C_ISALPHA) && isalpha(*c))
+		if((test & C_ISALPHA) && ch_isalpha(*c))
 			faulty++;
 		else
 			if(test & C_NOTinSET)
@@ -418,7 +422,7 @@ struct Property *AddProperty(struct Node *n, token id, U_LONG row, U_LONG col, c
 	struct Property *newp = SafeMalloc(sizeof(struct Property), "property structure");
 	/* init property structure */
 	newp->id = id;
-	newp->idstr = SafeDupString(id_str, 0, "ID string");
+	newp->idstr = SafeDupString(id_str, "ID string");
 	newp->priority = sgf_token[id].priority;
 	newp->flags = sgf_token[id].flags;		/* local copy */
 	newp->row = row;

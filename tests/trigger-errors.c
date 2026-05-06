@@ -231,6 +231,17 @@ START_TEST (test_E_BAD_ROOT_PROP)
 END_TEST
 
 
+START_TEST (test_E_BAD_ROOT_PROP_huge_number)
+{
+	allowed_error = E_BAD_VALUE_CORRECTED;
+	trigger_error(E_BAD_ROOT_PROP,
+				  "(;FF[999999999999999999999999999999999999999]"
+				  "SZ[999999999999999999999999999999999999999]GM[1])",
+				  "(;FF[4]CA[UTF-8]GM[1]SZ[19])\n");
+}
+END_TEST
+
+
 START_TEST (test_WCS_GAME_NOT_GO)
 {
 	trigger_error(WCS_GAME_NOT_GO,
@@ -263,6 +274,15 @@ START_TEST (test_E_COMPOSE_EXPECTED)
 	trigger_error(E_COMPOSE_EXPECTED,
 				  "(;FF[4];LB[aa][bb][cc])",
 				  "(;FF[4]CA[UTF-8]GM[1]SZ[19];)\n");
+}
+END_TEST
+
+
+START_TEST (test_E_COMPOSE_EXPECTED_empty_value)
+{
+	trigger_error(E_COMPOSE_EXPECTED,
+				  "(;FF[4]AP[])",
+				  "(;FF[4]CA[UTF-8]GM[1]SZ[19])\n");
 }
 END_TEST
 
@@ -646,12 +666,14 @@ TCase *sgfc_tc_trigger_errors(void)
 	tcase_add_test(tc, test_E_EMPTY_VALUE_DELETED);
 	tcase_add_test(tc, test_W_EMPTY_VALUE_DELETED);
 	tcase_add_test(tc, test_E_BAD_ROOT_PROP);
+	tcase_add_test(tc, test_E_BAD_ROOT_PROP_huge_number);
 	tcase_add_test(tc, test_WCS_GAME_NOT_GO);
 	tcase_add_test(tc, test_E_NO_PROP_VALUES);
 
 	tcase_add_test(tc, test_E_VARIATION_START);
 	/* error 22 missing */
 	tcase_add_test(tc, test_E_COMPOSE_EXPECTED);
+	tcase_add_test(tc, test_E_COMPOSE_EXPECTED_empty_value);
 	tcase_add_test(tc, test_WS_MOVE_IN_ROOT);
 	tcase_add_test(tc, test_E_BAD_COMPOSE_CORRECTED);
 	/* errors 26+27 missing */
