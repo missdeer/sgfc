@@ -73,12 +73,14 @@ int main(const int argc, const char *argv[])
 	if(sgfc->options->outfile)
 	{
 		if(sgfc->options->write_critical || !sgfc->critical_count)
+			/* return value ignored, because errors are tracked already */
 			SaveSGF(sgfc, SetupSaveFileIO, sgfc->options->outfile);
 		else
 			PrintError(E_CRITICAL_NOT_SAVED, sgfc);
 	}
 
-	if(sgfc->error_count)			ret = 10;
+	if(sgfc->fatal_error_count)		ret = 20;
+	else if(sgfc->error_count)		ret = 10;
 	else if (sgfc->warning_count)	ret = 5;
 	else							ret = 0;
 

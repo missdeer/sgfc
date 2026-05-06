@@ -446,7 +446,8 @@ struct SGFInfo
 
 	struct SGFCOptions *options;
 
-	int error_count;	/* message count filled during parsing */
+	int fatal_error_count;	/* message count filled during parsing */
+	int error_count;
 	int critical_count;
 	int warning_count;
 	int ignored_count;

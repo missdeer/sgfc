@@ -89,6 +89,7 @@ The program source files are located in the src/ subdirectory:
 
 all.h           general include file with all structures and defines
 protos.h        contains all function prototypes and 'extern' variables
+helpers.h       contains small helper/convenience macros and functions
 main.c          contains main()
 options.c       contains argument parsing
 load.c          contains all routines necessary for loading the SGF file

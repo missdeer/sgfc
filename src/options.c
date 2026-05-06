@@ -90,8 +90,11 @@ void PrintHelp(const enum option_help format)
 void PrintStatusLine(const struct SGFInfo *sgfc) {
 	fprintf(E_OUTPUT, "%s: ", sgfc->options->infile);
 
-	if(sgfc->error_count || sgfc->warning_count)	/* errors & warnings */
+	if(sgfc->fatal_error_count || sgfc->error_count || sgfc->warning_count)
 	{
+		if(sgfc->fatal_error_count)
+			fprintf(E_OUTPUT, "%d fatal error(s)  ", sgfc->fatal_error_count);
+
 		if(sgfc->error_count)
 			fprintf(E_OUTPUT, "%d error(s)  ", sgfc->error_count);
 

@@ -252,7 +252,7 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 	else
 		sgfc->_error_c->last_type = E_NO_ERROR;
 
-	// FIXME: maybe avoid duplicate error messages (compressed point list, delete CTRL byte)
+	// TODO: maybe avoid duplicate error messages (compressed point list, delete CTRL byte)
 
 	if((type & E_ACCUMULATE))			/* accumulate error messages? */
 	{
@@ -318,7 +318,9 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 		error.col = col;
 	}
 
-	if(type & E_ERROR)
+	if(type & E_FATAL_ERROR)
+		sgfc->fatal_error_count++;
+	else if(type & E_ERROR)
 		sgfc->error_count++;
 	else if(type & E_WARNING)
 		sgfc->warning_count++;
