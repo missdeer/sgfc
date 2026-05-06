@@ -51,12 +51,13 @@ static int GetFraction(char *val)
 ***				Checks komi value and corrects it if possible
 *** Parameters: value ... pointer to KM string
 *** 			len ... length of string
-*** Returns:	-1/0/1/2: corrected error / error / ok / corrected
+*** Returns:	parse_result_t enum
 **************************************************************************/
 
-static int Parse_Komi(char *value, size_t *len, ...)
+static parse_result_t Parse_Komi(char *value, size_t *len, ...)
 {
-	int fraction, ret;
+	int fraction;
+	parse_result_t ret;
 	double points = 0.0;
 
 	fraction = GetFraction(value);
@@ -71,14 +72,14 @@ static int Parse_Komi(char *value, size_t *len, ...)
 		if(fraction > 0)
 		{
 			points = fraction / 4.0;
-			if(ret)
+			if(ret != PARSE_ERROR)
 				points += atof(value);
 		}
 
 		sprintf(value, "%f", points);
 		*len = strlen(value);
 		Parse_Float(value, len, 0);		/* remove trailing '0' */
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 	}
 
 	return ret;
@@ -90,29 +91,30 @@ static int Parse_Komi(char *value, size_t *len, ...)
 ***				Checks time value and corrects it if possible
 *** Parameters: val ... pointer to TM string
 ***				len ... length of string
-*** Returns:	-1/0/1/2: corrected error / error / ok / corrected
+*** Returns:	parse_result_t enum
 **************************************************************************/
 
-static int Parse_Time(char *val, size_t *len, ...)
+static parse_result_t Parse_Time(char *val, size_t *len, ...)
 {
-	int ret = 1, hour = 0, min = 0;
+	parse_result_t ret = PARSE_OK;
+	int hour = 0, min = 0;
 	double time;
 	char *s;
 
 	if(KillChars(val, len, C_ISSPACE, NULL))
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 
 	if(!*len)		/* only empty value left -> error */
-		return 0;
+		return PARSE_ERROR;
 
 	/* ":/;+" indicate that there's byo-yomi time given too */
 	/* &val[1] because of possible leading '+' */
 	if(*len > 1 && TestChars(&val[1], C_inSET, ":/;+"))
-		return 0;
+		return PARSE_ERROR;
 
 	if(TestChars(val, C_ISALPHA, NULL))
 	{
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 
 		s = val + *len - 1;
 		if(strstr(val, "hr"))		hour = 3600;
@@ -121,10 +123,10 @@ static int Parse_Time(char *val, size_t *len, ...)
 		if(strstr(val, "min"))		min = 60;
 		if(*s == 'm')				min = 60;
 
-		if(hour && min)		return 0;		/* can't handle both */
+		if(hour && min)		return PARSE_ERROR;		/* can't handle both */
 		if(!hour)			hour = min;
 
-		if(Parse_Float(val, len, 0))
+		if(Parse_Float(val, len, 0) != PARSE_ERROR)
 		{
 			time = atof(val) * hour;
 			sprintf(val, "%.1f", time);		/* limit time resolution to 0.1 seconds */
@@ -132,15 +134,21 @@ static int Parse_Time(char *val, size_t *len, ...)
 			Parse_Float(val, len, 0);		/* remove trailing '0' */
 		}
 		else
-			return 0;
+			return PARSE_ERROR;
 	}
 	else
 		switch(Parse_Float(val, len, 0))
 		{
-			case 0:		return 0;
-			case -1:	return -1;
-			case 2:		if(ret == 1)
-							return 2;
+			case PARSE_ERROR:
+						return PARSE_ERROR;
+			case PARSE_CORRECTED_ERROR:
+						return PARSE_CORRECTED_ERROR;
+			case PARSE_CORRECTED:
+						if(ret == PARSE_OK)
+							return PARSE_CORRECTED;
+						break;
+			case PARSE_OK:
+						break;
 		}
 
 	return ret;
@@ -152,58 +160,59 @@ static int Parse_Time(char *val, size_t *len, ...)
 ***				Checks result value and corrects it if possible
 *** Parameters: value ... pointer to RE string
 ***				len ... length of string
-*** Returns:	-1/0/1/2: corrected error / error / ok / corrected
+*** Returns:	parse_result_t enum
 **************************************************************************/
 
-static int Parse_Result(char *value, size_t *len, ...)
+static parse_result_t Parse_Result(char *value, size_t *len, ...)
 {
 	char *s, *d;
-	int err = 1, charpoints;
+	parse_result_t err = PARSE_OK;
+	int charpoints;
 	unsigned int type = 0;
 	double points = 0.0;
 
 	if(KillChars(value, len, C_ISSPACE, NULL))
-		err = -1;
+		err = PARSE_CORRECTED_ERROR;
 
 	switch(value[0])
 	{
 		case '0':
 		case '?':	if(*len > 1)
 					{
-						err = -1;
+						err = PARSE_CORRECTED_ERROR;
 						value[1] = 0;
 						*len = 1;
 					}
 					break;
 		case 'j':
 		case 'J':	if(strnccmp(value, "jigo", 4))
-						return 0;
+						return PARSE_ERROR;
 					ATTRIBUTE_FALLTHROUGH;
-		case 'd':	err = -1;
+		case 'd':	err = PARSE_CORRECTED_ERROR;
 					value[0] = 'D';
 					ATTRIBUTE_FALLTHROUGH;
 		case 'D':	if(!strcmp(value, "Draw"))
 						break;
-					err = -1;
+					err = PARSE_CORRECTED_ERROR;
 					strcpy(value, "0");	/* use shortcut for draw */
 					*len = 1;
 					break;
-		case 'v':	err = -1;
+		case 'v':	err = PARSE_CORRECTED_ERROR;
 					value[0] = 'V';
 					ATTRIBUTE_FALLTHROUGH;
 		case 'V':	if(!strcmp(value, "Void"))
 						break;
-					err = -1;
+					err = PARSE_CORRECTED_ERROR;
 					strcpy(value, "Void");
 					*len = 4;
 					break;
 		case 'z':
 		case 'Z':	if(strnccmp(value, "zwart", 5))
-						return 0;
+						return PARSE_ERROR;
 					value[0] = 'B';
 					ATTRIBUTE_FALLTHROUGH;
 		case 'b':
-		case 'w':	err = -1;
+		case 'w':	err = PARSE_CORRECTED_ERROR;
 					value[0] = (char)toupper((unsigned char)value[0]);
 					ATTRIBUTE_FALLTHROUGH;
 		case 'B':
@@ -214,7 +223,7 @@ static int Parse_Result(char *value, size_t *len, ...)
 						for(s=value; *s && *s != '+'; s++);
 						if(*s)
 						{
-							err = -1;
+							err = PARSE_CORRECTED_ERROR;
 							d = &value[1];
 							while((*d++ = *s++));  /* copy must be left2right */
 							*len = strlen(value);
@@ -238,7 +247,7 @@ static int Parse_Result(char *value, size_t *len, ...)
 							if((!(type & 7) && !charpoints) ||
 								((type & 2) && (type & 4)))	/* win and lose? */
 							{
-								return 0;
+								return PARSE_ERROR;
 							}
 
 							if(type & 1)	/* resignation */
@@ -254,16 +263,16 @@ static int Parse_Result(char *value, size_t *len, ...)
 								{
 									err = Parse_Float_Offset(value, len, 1);
 
-									if(!err && !charpoints)	/* no points found */
+									if(err == PARSE_ERROR && !charpoints)	/* no points found */
 									{
 										if(type & 16)
-											return 0;		/* info would be lost */
+											return PARSE_ERROR;		/* info would be lost */
 										strcpy(&value[1], "+");
 										*len = 2;
 									}
 									else
 									{
-										if(err)
+										if(err != PARSE_ERROR)
 											points = atof(&value[1]);
 
 										points += (charpoints / 4.0);
@@ -283,7 +292,7 @@ static int Parse_Result(char *value, size_t *len, ...)
 								if(value[0] == 'B')		value[0] = 'W';
 								else					value[0] = 'B';
 							}
-							err = -1;
+							err = PARSE_CORRECTED_ERROR;
 							break;
 						}
 					}
@@ -300,14 +309,14 @@ static int Parse_Result(char *value, size_t *len, ...)
 						{				/* or win by points		 */
 							case 'r':
 							case 't':
-							case 'f':	err = -1;
+							case 'f':	err = PARSE_CORRECTED_ERROR;
 										value[2] = (char)toupper((unsigned char)value[2]);
 										ATTRIBUTE_FALLTHROUGH;
 							case 'R':
 							case 'T':
 							case 'F':	if(*len > 3)
 										{
-											err = -1;
+											err = PARSE_CORRECTED_ERROR;
 											value[3] = 0;
 											*len = 3;
 										}
@@ -315,35 +324,41 @@ static int Parse_Result(char *value, size_t *len, ...)
 
 							default:	switch(Parse_Float_Offset(value, len, 2))
 										{
-											case 0:		err = 0;	break;
-											case -1:	err = -1;	break;
-											case 1:		break;
-											case 2:		if(err == 1)
-															err = 2;
+											case PARSE_ERROR:
+														err = PARSE_ERROR;
+														break;
+											case PARSE_CORRECTED_ERROR:
+														err = PARSE_CORRECTED_ERROR;
+														break;
+											case PARSE_OK:
+														break;
+											case PARSE_CORRECTED:
+														if(err == PARSE_OK)
+															err = PARSE_CORRECTED;
 														break;
 										}
 
 										if(charpoints)
 										{
-											err = -1;
+											err = PARSE_CORRECTED_ERROR;
 											points = atof(&value[2]) + (charpoints / 4.0);
 											sprintf(&value[2], "%f", points);
 											*len = strlen(value);
 											Parse_Float_Offset(value, len, 2);
 										}
 										else
-											if(!err)
+											if(err == PARSE_ERROR)
 											{
 												value[2] = 0;	/* win without reason */
 												*len = 2;
-												err = -1;
+												err = PARSE_CORRECTED_ERROR;
 											}
 										break;
 						}
 					}
 					break;
 
-		default:	err = 0;
+		default:	err = PARSE_ERROR;
 					break;
 	}
 
@@ -356,10 +371,10 @@ static int Parse_Result(char *value, size_t *len, ...)
 ***				Tries to fix date value
 *** Parameters: value ... pointer to date string
 ***				len ... length of string
-*** Returns:	-1/0: corrected error / error
+*** Returns:	PARSE_CORRECTED_ERROR/PARSE_ERROR
 **************************************************************************/
 
-static int CorrectDate(char *value, size_t *len)
+static parse_result_t CorrectDate(char *value, size_t *len)
 {
 	long year = -1, month = -1, day = -1, day2 = -1;
 	int i;
@@ -380,7 +395,7 @@ static int CorrectDate(char *value, size_t *len)
 		if(s)
 		{
 			if(char_month)		/* found TWO month names */
-				return 0;
+				return PARSE_ERROR;
 			month = i/2 + 1;
 			char_month = true;
 		}
@@ -397,23 +412,23 @@ static int CorrectDate(char *value, size_t *len)
 
 			if(n > 31)
 				if(year < 0)	year = n;
-				else			return 0;	/* two values >31 */
+				else			return PARSE_ERROR;	/* two values >31 */
 			else
 			if(n > 12 || char_month)
 				if(day < 0)		day = n;
 				else
 				if(day2 < 0)	day2 = n;
-				else			return 0;	/* more than two days found */
+				else			return PARSE_ERROR;	/* more than two days found */
 			else
 				if(month < 0)	month = n;
-				else			return 0;	/* can't tell if MM or DD */
+				else			return PARSE_ERROR;	/* can't tell if MM or DD */
 		}
 		else
 			s++;
 	}
 
 	if(year < 0 || year > 9999)	/* year is missing or false */
-		return 0;
+		return PARSE_ERROR;
 
 	if(year < 100)				/* only two digits? -> 20th century */
 		year += 1900;
@@ -432,7 +447,7 @@ static int CorrectDate(char *value, size_t *len)
 			sprintf(value, "%04ld", year);
 
 	*len = strlen(value);
-	return -1;
+	return PARSE_CORRECTED_ERROR;
 }
 
 
@@ -442,12 +457,13 @@ static int CorrectDate(char *value, size_t *len)
 ***				Tough cases are passed on to CorrectDate
 *** Parameters: value ... pointer to date string
 ***				len	  ... length of string
-*** Returns:	-1/0/1: corrected error / error / ok
+*** Returns:	parse_result_t enum
 **************************************************************************/
 
-static int Parse_Date(char *value, size_t *len, ...)
+static parse_result_t Parse_Date(char *value, size_t *len, ...)
 {
-	int ret = 1, allowed, type, turn, oldtype;
+	parse_result_t ret = PARSE_OK;
+	int allowed, type, turn, oldtype;
 	bool has_year;
 	char *c, *d;
 	long num;
@@ -469,11 +485,11 @@ static int Parse_Date(char *value, size_t *len, ...)
 	{
 		if(ch_isspace(*c))		/* keep spaces in between numbers */
 		{
-			if(ret)	ret = -1;
+			if(ret != PARSE_ERROR)	ret = PARSE_CORRECTED_ERROR;
 			if((d != value) && ch_isdigit(*(d-1)) && ch_isdigit(*(c+1)))
 			{
 				*d++ = *c++;	/* space between two numbers */
-				ret = 0;
+				ret = PARSE_ERROR;
 			}
 			else
 				c++;
@@ -485,7 +501,7 @@ static int Parse_Date(char *value, size_t *len, ...)
 				*d++ = *c++;
 			else
 			{
-				if(ret)	ret = -1;
+				if(ret != PARSE_ERROR)	ret = PARSE_CORRECTED_ERROR;
 				c++;
 			}
 		}
@@ -496,7 +512,7 @@ static int Parse_Date(char *value, size_t *len, ...)
 				*d++ = *c++;
 			else
 			{
-				if(ret)	ret = -1;
+				if(ret != PARSE_ERROR)	ret = PARSE_CORRECTED_ERROR;
 				c++;
 			}
 		}
@@ -523,7 +539,7 @@ static int Parse_Date(char *value, size_t *len, ...)
 			/* illegal number or != 2 or 4 digits
 			   or start number isn't year when required
 			   or digits inside date (MM,DD part) */
-			ret = 0;
+			ret = PARSE_ERROR;
 			break;
 		}
 
@@ -533,11 +549,11 @@ static int Parse_Date(char *value, size_t *len, ...)
 		switch(*c)
 		{
 			case '-':	if(((c-d) == 2) && num > 31)
-							ret = 0;
+							ret = PARSE_ERROR;
 						c++;			/* loop inc */
 						turn++;
 						if(turn == 4)
-							ret = 0;
+							ret = PARSE_ERROR;
 						break;
 
 			case ',':	c++;			/* loop inc */
@@ -561,7 +577,7 @@ static int Parse_Date(char *value, size_t *len, ...)
 
 						if(!(allowed & (1 << type)))
 						{
-							ret = 0;	/* is current type allowed? */
+							ret = PARSE_ERROR;	/* is current type allowed? */
 							break;
 						}
 
@@ -583,7 +599,7 @@ static int Parse_Date(char *value, size_t *len, ...)
 	}
 
 	*len = strlen(value);
-	if(!ret)		/* date has got tough errors -> pass on to CorrectDate */
+	if(ret == PARSE_ERROR)		/* date has got tough errors -> pass on to CorrectDate */
 		ret = CorrectDate(value, len);
 
 	return ret;
@@ -601,11 +617,11 @@ static int Parse_Date(char *value, size_t *len, ...)
 **************************************************************************/
 
 static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
-		struct PropValue *v, int (*Parse_Value)(char *, size_t *, ...))
+		struct PropValue *v, parse_result_t (*Parse_Value)(char *, size_t *, ...))
 {
 	char *newgi, inp[2001];
 	size_t size, inp_len;
-	int ret;
+	parse_result_t ret;
 
 	PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "");
 
@@ -618,11 +634,11 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 		size = strlen(newgi);
 		ret = (*Parse_Value)(newgi, &size);
 
-		if(ret == 1)	/* correct value */
+		if(ret == PARSE_OK)	/* correct value */
 			break;
 
-		if(ret)	printf("--> Use [%s] (enter), delete (d) or type in new value? ", newgi);
-		else	printf("--> Keep faulty value [%s] (enter), delete (d) or type in new value? ", newgi);
+		if(ret != PARSE_ERROR)	printf("--> Use [%s] (enter), delete (d) or type in new value? ", newgi);
+		else					printf("--> Keep faulty value [%s] (enter), delete (d) or type in new value? ", newgi);
 
 		if(!fgets(inp, sizeof(inp), stdin))
 			inp[0] = 0;
@@ -660,8 +676,8 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 {
 	char *val;
 	size_t size, val_len;
-	int res;
-	int (*parse)(char *, size_t *, ...);
+	parse_result_t res;
+	parse_result_t (*parse)(char *, size_t *, ...);
 
 	if(!Check_Text(sgfc, p, v))		/* parse text (converts spaces) */
 		return false;
@@ -681,7 +697,7 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 	val_len = v->value_len;
 	res = (*parse)(val, &val_len);
 
-	if(sgfc->options->interactive && res < 1)
+	if(sgfc->options->interactive && res < PARSE_OK)
 	{
 		free(val);
 		return PromptGameInfo(sgfc, p, v, parse);
@@ -689,18 +705,20 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 
 	switch(res)
 	{
-		case 0:
+		case PARSE_ERROR:
 			PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "(NOT CORRECTED!)");
 			break;
-		case -1:
+		case PARSE_CORRECTED_ERROR:
 			PrintError(E4_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, p->idstr, val);
 			free(v->value);
 			v->value = val;
 			v->value_len = val_len;
 			return true;
-		case 2:
+		case PARSE_CORRECTED:
 			strcpy(v->value, val);
 			v->value_len = val_len;
+			break;
+		case PARSE_OK:
 			break;
 	}
 

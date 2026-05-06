@@ -65,8 +65,8 @@ START_TEST (test_lowercase_missing_semicolon)
 END_TEST
 
 
-int test_lwic_errors_seen = -1;
-struct SGFCError test_lwic_errors[] =
+static int test_lwic_errors_seen = -1;
+static struct SGFCError test_lwic_errors[] =
 {
 	/* 13x {err, msg, row, col, errno} */
 	{E_ILLEGAL_OUTSIDE_CHARS, "\"xx\"", 1,  3, 0},
@@ -88,7 +88,7 @@ struct SGFCError test_lwic_errors[] =
 void test_lwic_error_output(struct SGFCError *error)
 {
 	test_lwic_errors_seen++;
-	ck_assert_msg(test_lwic_errors_seen <= 12, "too many errors, latest %lx at %ld:%ld:%s",
+	ck_assert_msg(test_lwic_errors_seen <= 12, "too many errors, latest %lx at %lu:%lu:%s",
 				  error->error, error->row, error->col, error->message);
 	struct SGFCError expect = test_lwic_errors[test_lwic_errors_seen];
 	ck_assert_uint_eq(error->error, expect.error);

@@ -21,8 +21,8 @@ START_TEST (test_ff4_pass_converted_on_19_board)
 
 	char move[] = "tt";
 	size_t len = 2;
-	int ret = Parse_Move(move, &len, PARSE_MOVE, sgfc);
-	ck_assert_int_eq(ret, true);
+	parse_result_t ret = Parse_Move(move, &len, PARSE_MOVE, sgfc, NULL);
+	ck_assert_int_eq(ret, PARSE_OK);
 	ck_assert_int_eq(len, 0);
 	ck_assert_int_eq(move[0], 0);
 }
@@ -40,8 +40,8 @@ START_TEST (test_ff4_pass_kept_on_20_board)
 
 	char move[] = "tt";
 	size_t len = 2;
-	int ret = Parse_Move(move, &len, PARSE_MOVE, sgfc);
-	ck_assert_int_eq(ret, true);
+	parse_result_t ret = Parse_Move(move, &len, PARSE_MOVE, sgfc, NULL);
+	ck_assert_int_eq(ret, PARSE_OK);
 	ck_assert_int_eq(len, 2);
 	ck_assert_str_eq(move, "tt");
 }
@@ -50,6 +50,7 @@ END_TEST
 
 START_TEST (test_empty_pass_in_old_ff)
 {
+	U_LONG error;
 	struct TreeInfo info = {0};
 	info.GM = 1;
 	info.FF = 3;
@@ -59,8 +60,9 @@ START_TEST (test_empty_pass_in_old_ff)
 
 	char move[] = "   ";
 	size_t len = 3;
-	int ret = Parse_Move(move, &len, PARSE_MOVE, sgfc);
-	ck_assert_int_eq(ret, -101);
+	parse_result_t ret = Parse_Move(move, &len, PARSE_MOVE, sgfc, &error);
+	ck_assert_int_eq(ret, PARSE_CORRECTED_ERROR);
+	ck_assert_uint_eq(error, E_FF4_PASS_IN_OLD_FF);
 	ck_assert_int_eq(len, 0);
 }
 END_TEST
@@ -74,8 +76,8 @@ START_TEST (test_non_go_move_keeps_text_but_drops_ctrl_bytes)
 
 	char move[] = {'a', 0, 'b', 0};
 	size_t len = 3;
-	int ret = Parse_Move(move, &len, PARSE_MOVE, sgfc);
-	ck_assert_int_eq(ret, -1);
+	parse_result_t ret = Parse_Move(move, &len, PARSE_MOVE, sgfc, NULL);
+	ck_assert_int_eq(ret, PARSE_CORRECTED_ERROR);
 	ck_assert_int_eq(len, 2);
 	ck_assert_str_eq(move, "ab");
 }

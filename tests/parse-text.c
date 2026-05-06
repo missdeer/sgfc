@@ -9,7 +9,7 @@
 
 #include "test-common.h"
 
-struct PropValue *prop_value;
+static struct PropValue *prop_value;
 static bool ctrl_byte_warning_seen;
 
 static bool parse_text_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglist)

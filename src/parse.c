@@ -263,17 +263,17 @@ int Parse_Text(struct SGFInfo *sgfc, struct PropValue *v, int prop_num, U_SHORT 
 ***				Checks for illegal chars and for LONG INT range
 *** Parameters: value ... pointer to value string
 ***				len		... length of string
-*** Returns:	-1/0/1 for corrected error / error / OK
+*** Returns:	parse_result_t enum
 **************************************************************************/
 
-int Parse_Number(char *value, size_t *len, ...)
+parse_result_t Parse_Number(char *value, size_t *len, ...)
 {
 	long i;
-	int ret = 1;
+	parse_result_t ret = PARSE_OK;
 	char *d;
 
 	if(KillChars(value, len, C_NOTinSET, "+-0123456789"))
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 
 	if(*len)							/* empty? */
 	{
@@ -284,19 +284,19 @@ int Parse_Number(char *value, size_t *len, ...)
 		{
 			*d = 0;
 			*len = strlen(value);
-			if(*len)	ret = -1;
-			else		ret = 0;
+			if(*len)	ret = PARSE_CORRECTED_ERROR;
+			else		ret = PARSE_ERROR;
 		}
 
 		if(errno == ERANGE)				/* out of range? */
 		{
 			sprintf(value, "%ld", i);	/* set to max range value */
 			*len = strlen(value);
-			ret = -1;
+			ret = PARSE_CORRECTED_ERROR;
 		}
 	}
 	else
-		ret = 0;
+		ret = PARSE_ERROR;
 
 	return ret;
 }
@@ -310,39 +310,42 @@ int Parse_Number(char *value, size_t *len, ...)
 ***				len		... length of string
 ***				flags ... PARSE_MOVE or PARSE_POS (treats 'tt' as error)
 ***				sgfc  ... pointer to SGFInfo
-*** Returns:	-101/-1/0/1	for wrong pass / corrected error / error / OK
+*** Returns:	parse_result_t enum
 **************************************************************************/
 
-int Parse_Move(char *value, size_t *len, ...)
+parse_result_t Parse_Move(char *value, size_t *len, ...)
 {
-	int ret = 1, c;
+	parse_result_t ret = PARSE_OK;
+	int c;
 	bool emptyOrSpace = false;
 	struct SGFInfo *sgfc;
 	U_INT flags;
+	U_LONG *error_code;
 	va_list arglist;
 
 	va_start(arglist, len);
 	flags = va_arg(arglist, U_INT);
 	sgfc = va_arg(arglist, struct SGFInfo *);
+	error_code = va_arg(arglist, U_LONG *);
 	va_end(arglist);
 
 	if(sgfc->info->GM != 1)			/* game != GO ? */
 	{
 		ParseText_Unescape(value, len);
 		if (KillChars(value, len, C_inSET, "\x00"))
-			return -1;
-		return 1;
+			return PARSE_CORRECTED_ERROR;
+		return PARSE_OK;
 	}
 
 	/* At first only delete space so that we can distinguish
 	 * FF4 pass move from erroneous property values */
 	if(KillChars(value, len, C_ISSPACE, NULL))
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 	if(!*len)
 		emptyOrSpace = true;
 
 	if(KillChars(value, len, C_NOT_ISALPHA, NULL))
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 
 	if(!*len)				/* empty value? */
 	{
@@ -351,19 +354,21 @@ int Parse_Move(char *value, size_t *len, ...)
 			if(sgfc->info->FF >= 4)
 				return ret;
 			/* new pass '[]' in old FF[1-3], possible cause: missing FF */
-			return -101;
+			if(error_code)
+				*error_code = E_FF4_PASS_IN_OLD_FF;
+			return PARSE_CORRECTED_ERROR;
 		}
-		return 0;
+		return PARSE_ERROR;
 	}
 
 	if(*len < 2)			/* value too short */
-		return 0;
+		return PARSE_ERROR;
 
 	if(*len != 2)			/* value too long? */
 	{
 		*(value+2) = 0;
 		*len = 2;
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 	}
 
 	if((flags & PARSE_MOVE) && !strcmp(value, "tt"))
@@ -378,15 +383,15 @@ int Parse_Move(char *value, size_t *len, ...)
 
 	c = DecodePosChar(*value);
 	if(!c)								/* check range */
-		return 0;
+		return PARSE_ERROR;
 	if(c > sgfc->info->bwidth)
-		return 0;
+		return PARSE_ERROR;
 
 	c = DecodePosChar(*(value+1));
 	if(!c)
-		return 0;
+		return PARSE_ERROR;
 	if(c > sgfc->info->bheight)
-		return 0;
+		return PARSE_ERROR;
 
 	return ret;
 }
@@ -398,12 +403,13 @@ int Parse_Move(char *value, size_t *len, ...)
 *** Parameters: value ... pointer to value string
 ***				len		... length of string
 ***				flags ... TYPE_GINFO => disallow '-' and '+' characters
-*** Returns:	-1/0/1/2 for corrected error / error / OK / corrected
+*** Returns:	parse_result_t enum
 **************************************************************************/
 
-int Parse_Float(char *value, size_t *len, ...)
+parse_result_t Parse_Float(char *value, size_t *len, ...)
 {
-	int ret = 1, where = 0;
+	parse_result_t ret = PARSE_OK;
+	int where = 0;
 	/* where (bits): 0-minus / 1-int / 2-fraction / 3-'.' / 4-plus */
 	char *s, *d;
 	char *allowed;
@@ -416,29 +422,29 @@ int Parse_Float(char *value, size_t *len, ...)
 	allowed = (flags & TYPE_GINFO) ? "0123456789.," : "0123456789+-.,";
 
 	if(KillChars(value, len, C_NOTinSET, allowed))
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 
 	s = d = value;
 	while(*s)
 	{
 		switch(*s)
 		{
-			case '+':	if(where)	ret = -1;		/* '+' gets swallowed */
+			case '+':	if(where)	ret = PARSE_CORRECTED_ERROR;	/* '+' gets swallowed */
 						else	{
 									where = 16;
-									ret = 2;
+									ret = PARSE_CORRECTED;
 								}
 						break;
-			case '-':	if(where)	ret = -1;
+			case '-':	if(where)	ret = PARSE_CORRECTED_ERROR;
 						else	{
 									*d++ = *s;
 									where = 1;
 								}
 						break;
-			case ',':	ret = -1;
+			case ',':	ret = PARSE_CORRECTED_ERROR;
 						*s = '.';
 						ATTRIBUTE_FALLTHROUGH;
-			case '.':	if(where & 8)	ret = -1;
+			case '.':	if(where & 8)	ret = PARSE_CORRECTED_ERROR;
 						else	{
 										*d++ = *s;
 										where |= 8;
@@ -456,13 +462,13 @@ int Parse_Float(char *value, size_t *len, ...)
 	*len = strlen(value);
 
 	if(!*len || !(where & 6))	/* empty || no digits? */
-		ret = 0;
+		ret = PARSE_ERROR;
 	else
 	{
 		if((where & 8) && !(where & 2))		/* missing '0' in front of '.' */
 		{
 			size_t i = *len;
-			ret = -1;
+			ret = PARSE_CORRECTED_ERROR;
 			d = value + i;
 			s = d - 1;
 
@@ -494,13 +500,13 @@ int Parse_Float(char *value, size_t *len, ...)
 				mod = 1;
 			}
 
-			if(ret == 1 && mod == 1)
-				ret = 2;
+			if(ret == PARSE_OK && mod == 1)
+				ret = PARSE_CORRECTED;
 		}
 
 		if((where & 8) && !(where & 4))		/* '.' without digits following */
 		{
-			ret = -1;
+			ret = PARSE_CORRECTED_ERROR;
 			(*len)--;
 			*(value + *len) = 0;
 		}
@@ -517,13 +523,13 @@ int Parse_Float(char *value, size_t *len, ...)
 *** Parameters: value	... pointer to value string
 ***				len		... length of string
 ***				offset  ... offset into string for parser start
-*** Returns:	see Parse_Float
+*** Returns:	parse_result_t enum
 **************************************************************************/
 
-int Parse_Float_Offset(char *value, size_t *len, size_t offset)
+parse_result_t Parse_Float_Offset(char *value, size_t *len, size_t offset)
 {
 	size_t len_offset = *len - offset;
-	int result = Parse_Float(&value[offset], &len_offset, TYPE_GINFO);
+	parse_result_t result = Parse_Float(&value[offset], &len_offset, TYPE_GINFO);
 	*len = len_offset + offset;
 	return result;
 }
@@ -534,34 +540,34 @@ int Parse_Float_Offset(char *value, size_t *len, size_t offset)
 ***				Checks & corrects color value
 *** Parameters: value	... pointer to value string
 ***				len		... length of string
-*** Returns:	-1/0/1	for corrected error / error / OK
+*** Returns:	parse_result_t enum
 **************************************************************************/
 
-int Parse_Color(char *value, size_t *len, ...)
+parse_result_t Parse_Color(char *value, size_t *len, ...)
 {
-	int ret = 1;
+	parse_result_t ret = PARSE_OK;
 
 	if(KillChars(value, len, C_NOTinSET, "BbWw"))
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 
 	switch(*value)
 	{
 		case 'B':
 		case 'W':	break;
 		case 'b':	*value = 'B';	/* uppercase required */
-					ret = -1;
+					ret = PARSE_CORRECTED_ERROR;
 					break;
 		case 'w':	*value = 'W';
-					ret = -1;
+					ret = PARSE_CORRECTED_ERROR;
 					break;
-		default:	return 0;		/* unknown char -> error */
+		default:	return PARSE_ERROR;		/* unknown char -> error */
 	}
 
 	if(*len != 1)			/* string too long? */
 	{
 		*(value+1) = 0;
 		(*len) = 1;
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 	}
 
 	return ret;
@@ -573,32 +579,32 @@ int Parse_Color(char *value, size_t *len, ...)
 ***				Checks & corrects triple value
 *** Parameters: value	... pointer to value string
 ***				len		... length of string
-*** Returns:	-1/0/1	for corrected error / error / OK
+*** Returns:	parse_result_t enum
 **************************************************************************/
 
-int Parse_Triple(char *value, size_t *len, ...)
+parse_result_t Parse_Triple(char *value, size_t *len, ...)
 {
-	int ret = 1;
+	parse_result_t ret = PARSE_OK;
 
 	if(KillChars(value, len, C_NOTinSET, "12"))
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 
 	if(!*len)
 	{
 		*value = '1';
 		*(value+1) = 0;
 		*len = 1;
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 	}
 
 	if(*value != '1' && *value != '2')
-		return 0;
+		return PARSE_ERROR;
 
 	if(*len != 1)		/* string too long? */
 	{
 		*(value+1) = 0;
 		*len = 1;
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 	}
 
 	return ret;
@@ -610,20 +616,20 @@ int Parse_Triple(char *value, size_t *len, ...)
 ***				Checks & corrects charset values
 *** Parameters: value	... pointer to value string
 ***				len		... length of string
-*** Returns:	-1/0/1	for corrected error / error / OK
+*** Returns:	parse_result_t enum
 **************************************************************************/
 
-int Parse_Charset(char *value, size_t *len, ...)
+parse_result_t Parse_Charset(char *value, size_t *len, ...)
 {
-	int ret = 1;
+	parse_result_t ret = PARSE_OK;
 
 	if(KillChars(value, len, C_NOTinSET, "-_:.0123456789"
 										 "abcdefghijklmnopqrstuvwxyz"
 										 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
-		ret = -1;
+		ret = PARSE_CORRECTED_ERROR;
 
 	if(!*len)
-		return 0;
+		return PARSE_ERROR;
 	return ret;
 }
 
@@ -641,29 +647,31 @@ int Parse_Charset(char *value, size_t *len, ...)
 
 static bool Check_Single_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
 							   char *value, size_t *value_len, U_SHORT flags,
-							   int (*Parse_Value)(char *, size_t *, ...))
+							   parse_result_t (*Parse_Value)(char *, size_t *, ...))
 {
+	U_LONG error_code = E_BAD_VALUE_CORRECTED;
 	char *before = SafeDupString(value, "prop value before checking");
+	parse_result_t result = (*Parse_Value)(value, value_len, flags, sgfc, &error_code);
 
-	switch((*Parse_Value)(value, value_len, flags, sgfc))
+	switch(result)
 	{
-		case -101:	/* special case for Parse_Move */
-					PrintError(E_FF4_PASS_IN_OLD_FF, sgfc, v->row, v->col);
-					break;
-		case -1:	PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, before, p->idstr, value);
-					break;
-		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
-					free(before);
-					return false;
-		case 1:
-		case 2:		break;
+		case PARSE_CORRECTED_ERROR:
+			PrintError(error_code, sgfc, v->row, v->col, before, p->idstr, value);
+			break;
+		case PARSE_ERROR:
+			PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
+			free(before);
+			return false;
+		case PARSE_OK:
+		case PARSE_CORRECTED:
+			break;
 	}
 	free(before);
 	return true;
 }
 
 bool Check_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
-				 U_SHORT flags, int (*Parse_Value)(char *, size_t *, ...))
+				 U_SHORT flags, parse_result_t (*Parse_Value)(char *, size_t *, ...))
 {
 	if (!Check_Single_Value(sgfc, p, v, v->value, &v->value_len, flags, Parse_Value))
 		return false;
@@ -723,13 +731,17 @@ bool Check_Pos(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 		if(sgfc->info->FF < 4)
 			PrintError(E_VERSION_CONFLICT, sgfc, v->row, v->col, sgfc->info->FF);
 
-		switch(Parse_Move(v->value2, &v->value2_len, PARSE_POS, sgfc))
+		switch(Parse_Move(v->value2, &v->value2_len, PARSE_POS, sgfc, v))
 		{
-			case -1:	PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, p->idstr, v->value2);
+			case PARSE_CORRECTED_ERROR:
+						PrintError(E_BAD_VALUE_CORRECTED, sgfc, v->row, v->col, v->value, p->idstr, v->value2);
 						break;
-			case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, v->value, p->idstr);
+			case PARSE_ERROR:
+						PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, v->value, p->idstr);
 						return false;
-			case 1:		break;
+			case PARSE_OK:
+			case PARSE_CORRECTED:
+						break;
 		}
 
 		if(sgfc->info->GM == 1)
@@ -794,13 +806,17 @@ bool Check_Label(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	char *before = SafeMalloc(before_size, "AR_LN value");
 	sprintf(before, "%s:%s", v->value, v->value2);
 
-	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc))
+	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc, v))
 	{
-		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
+		case PARSE_ERROR:
+					PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 					goto done;
-		case -1:	error = 1;
+		case PARSE_CORRECTED_ERROR:
+					error = 1;
 					ATTRIBUTE_FALLTHROUGH;
-		case 1:		switch(Parse_Text(sgfc, v, 2, p->flags))
+		case PARSE_OK:
+		case PARSE_CORRECTED:
+					switch(Parse_Text(sgfc, v, 2, p->flags))
 					{
 						case 0:	PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 								goto done;
@@ -843,20 +859,27 @@ bool Check_AR_LN(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 	char *before = SafeMalloc(before_size, "AR_LN value");
 	sprintf(before, "%s:%s", v->value, v->value2);
 
-	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc))
+	switch(Parse_Move(v->value, &v->value_len, PARSE_POS, sgfc, v))
 	{
-		case 0:		PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
+		case PARSE_ERROR:
+					PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 					goto done;
-		case -1:	error = 1;
+		case PARSE_CORRECTED_ERROR:
+					error = 1;
 					ATTRIBUTE_FALLTHROUGH;
-		case 1:		switch(Parse_Move(v->value2, &v->value2_len, PARSE_POS, sgfc))
+		case PARSE_OK:
+		case PARSE_CORRECTED:
+					switch(Parse_Move(v->value2, &v->value2_len, PARSE_POS, sgfc, v))
 					{
-						case 0:	PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
+						case PARSE_ERROR:
+								PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 								goto done;
-						case -1:
+						case PARSE_CORRECTED_ERROR:
 								error = 1;
 								ATTRIBUTE_FALLTHROUGH;
-						case 1:	if(!strcmp(v->value, v->value2))
+						case PARSE_OK:
+						case PARSE_CORRECTED:
+								if(!strcmp(v->value, v->value2))
 								{
 									PrintError(E_BAD_VALUE_DELETED, sgfc, v->row, v->col, before, p->idstr);
 									goto done;
@@ -907,13 +930,16 @@ bool Check_Figure(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v)
 		Parse_Text(sgfc, v, 2, PVT_SIMPLE|PVT_COMPOSE);
 		switch(Parse_Number(v->value, &v->value_len))
 		{
-			case 0:	strcpy(v->value, "0");
+			case PARSE_ERROR:
+					strcpy(v->value, "0");
 					ATTRIBUTE_FALLTHROUGH;
-			case -1:
+			case PARSE_CORRECTED_ERROR:
 					PrintError(E_BAD_COMPOSE_CORRECTED, sgfc, v->row, v->col, v->value,
 							   "FG", v->value, v->value2);
 					break;
-			case 1:	break;
+			case PARSE_CORRECTED:
+			case PARSE_OK:
+					break;
 		}
 	}
 

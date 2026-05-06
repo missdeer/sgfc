@@ -672,15 +672,19 @@ static bool GetNumber(struct SGFInfo *sgfc, struct Node *n, struct Property *p,
 
 	switch(Parse_Number(v, v_len))
 	{
-		case 0: PrintError(E_BAD_ROOT_PROP, sgfc, p->value->row, p->value->col, p->idstr, err_action);
+		case PARSE_ERROR:
+				PrintError(E_BAD_ROOT_PROP, sgfc, p->value->row, p->value->col, p->idstr, err_action);
 				*d = def;
 				DelProperty(n, p);
 				return false;
 
-		case -1: PrintError(E_BAD_VALUE_CORRECTED, sgfc, p->value->row, p->value->col,
-						 p->value->value, p->idstr, v);
+		case PARSE_CORRECTED_ERROR:
+				PrintError(E_BAD_VALUE_CORRECTED, sgfc, p->value->row, p->value->col,
+						   p->value->value, p->idstr, v);
 				ATTRIBUTE_FALLTHROUGH;
-		case 1:	errno = 0;
+		case PARSE_OK:
+		case PARSE_CORRECTED:
+				errno = 0;
 				parsed = strtol(v, NULL, 10);
 				if(errno || parsed < 1 || parsed > INT_MAX)
 				{

@@ -467,6 +467,14 @@ struct SGFToken
 	U_SHORT data;	/* for Do_XXX */
 };
 
+/* return value of many parse functions */
+typedef enum parse_result {
+	PARSE_CORRECTED_ERROR = -1,
+	PARSE_ERROR,
+	PARSE_OK,
+	PARSE_CORRECTED
+} parse_result_t;
+
 
 /* defines for compiler attributes */
 #if __STDC_VERSION__ >= 202311L

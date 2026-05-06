@@ -13,7 +13,7 @@ ifeq ($(CC), clang)
 	WARNFLAGS := -Weverything -Wno-padded -Wno-unused-parameter \
 			  -Wno-documentation-unknown-command -Wno-declaration-after-statement \
 			  -Wno-format-nonliteral -Wno-disabled-macro-expansion \
-			  -Wno-switch-enum -Wno-unsafe-buffer-usage
+			  -Wno-switch-enum -Wno-unsafe-buffer-usage -Wno-switch-default
 endif
 
 OPTFLAGS := -O1

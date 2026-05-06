@@ -147,7 +147,7 @@ char *DetectEncoding(const char *c, const char *b_end)
 		c_end++;
 	size_t len = (size_t)(c_end - c);
 	char *ca_value = SafeDupText(c, len, "encoding");
-	if(!Parse_Charset(ca_value, &len) || !len)
+	if(Parse_Charset(ca_value, &len) == PARSE_ERROR || !len)
 	{
 		free(ca_value);
 		return NULL;

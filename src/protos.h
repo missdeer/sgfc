@@ -26,6 +26,7 @@ void FreeSGFInfo(struct SGFInfo *);
 
 bool LoadSGF(struct SGFInfo *, const char *);
 bool LoadSGFFromFileBuffer(struct SGFInfo *);
+bool LoadSGFFromStdin(struct SGFInfo *);
 
 
 /**** encoding.c ****/
@@ -55,18 +56,18 @@ extern const struct SGFToken sgf_token[];
 
 /**** parse.c ****/
 
-int Parse_Number(char *, size_t *, ...);
-int Parse_Move(char *, size_t *, ...);
-int Parse_Float(char *, size_t *, ...);
-int Parse_Color(char *, size_t *, ...);
-int Parse_Triple(char *, size_t *, ...);
-int Parse_Charset(char *, size_t *, ...);
+parse_result_t Parse_Number(char *, size_t *, ...);
+parse_result_t Parse_Move(char *, size_t *, ...);
+parse_result_t Parse_Float(char *, size_t *, ...);
+parse_result_t Parse_Color(char *, size_t *, ...);
+parse_result_t Parse_Triple(char *, size_t *, ...);
+parse_result_t Parse_Charset(char *, size_t *, ...);
 
-int Parse_Float_Offset(char *, size_t *, size_t);
+parse_result_t Parse_Float_Offset(char *, size_t *, size_t);
 int Parse_Text(struct SGFInfo *, struct PropValue *, int prop_num, U_SHORT flags);
 
 bool Check_Value(struct SGFInfo *, struct Property *, struct PropValue *,
-				U_SHORT, int (*)(char *, size_t *, ...));
+				U_SHORT, parse_result_t (*)(char *, size_t *, ...));
 bool Check_Text(struct SGFInfo *, struct Property *, struct PropValue *);
 bool Check_Label(struct SGFInfo *, struct Property *, struct PropValue *);
 bool Check_Pos(struct SGFInfo *, struct Property *, struct PropValue *);

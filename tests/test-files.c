@@ -9,7 +9,7 @@
 
 #include "test-common.h"
 
-FILE *testout;
+static FILE *testout;
 
 static char *ReadTestFile(const char *path, size_t *length)
 {

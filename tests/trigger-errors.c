@@ -23,7 +23,7 @@ static bool mock_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglis
 		expected_error_occurred = true;
 	else if(type != E_NO_ERROR && type != allowed_error)
 	{
-		ck_assert_msg(type == expected_error, "expected error: %ld (%lx); received: %ld (%lx)",
+		ck_assert_msg(type == expected_error, "expected error: %lu (%lx); received: %lu (%lx)",
 					  expected_error & M_ERROR_NUM, expected_error, type & M_ERROR_NUM, type);
 	}
 	return true;
