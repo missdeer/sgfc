@@ -1,11 +1,27 @@
 Checks: >-
+  bugprone-*,
+  misc-*,
+  modernize-*,
+  performance-*,
   readability-*,
-  -readability-braces-around-statements,
+  -bugprone-assignment-in-if-condition,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-switch-missing-default-case,
   -clang-analyzer-security.insecureAPI.strcpy,
+  -misc-no-recursion,
+  -misc-unused-parameters,
+  -modernize-macro-to-enum,
+  -performance-no-int-to-ptr,
+  -readability-braces-around-statements,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-length,
+  -readability-isolate-declaration,
+  -readability-magic-numbers,
+  -readability-math-missing-parentheses,
+  -readability-math-missing-parentheses,
   -readability-misleading-indentation
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
-AnalyzeTemporaryDtors: false
 FormatStyle:     none
 User:            arno
 

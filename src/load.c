@@ -14,6 +14,7 @@
 **************************************************************************/
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <limits.h>
 #include <stdint.h>
@@ -889,7 +890,7 @@ bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc)
 			free(decode_buffer);
 			return false;
 		}
-		else if(result)
+		if(result)
 			break;
 		miss = FindStart(&load, false);		/* skip junk in front of '(;' */
 	}

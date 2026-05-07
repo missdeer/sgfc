@@ -17,3 +17,5 @@ sonar-project.properties
 *.gcno
 coverage.info
 coverage-html/
+build
+.cache/

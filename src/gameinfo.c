@@ -7,7 +7,9 @@
 ***
 **************************************************************************/
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 
 #include "all.h"
@@ -27,10 +29,10 @@ static int GetFraction(char *val)
 	int fraction = 0;
 	char *t;
 
-	if		((t = strstr(val, "1/2")))	fraction = 2;
+	if		((t = strstr(val, "1/4")))	fraction = 1;
+	else if	((t = strstr(val, "2/4")) ||
+			 (t = strstr(val, "1/2")))	fraction = 2;
 	else if ((t = strstr(val, "3/4")))	fraction = 3;
-	else if ((t = strstr(val, "1/4")))	fraction = 1;
-	else if ((t = strstr(val, "2/4")))	fraction = 2;
 
 	if(t)
 		strcpy(t, "   ");		/* remove fraction */
@@ -584,10 +586,10 @@ static parse_result_t Parse_Date(char *value, size_t *len, ...)
 						switch(type)	/* set new allow mask */
 						{
 							case 0:	allowed = 0x07;	break;
-							case 1:	allowed = 0x1f;	break;
-							case 2:	allowed = 0x2f;	break;
-							case 3:	allowed = 0x2f;	break;
+							case 1:
 							case 4:	allowed = 0x1f;	break;
+							case 2:
+							case 3:
 							case 5:	allowed = 0x2f;	break;
 						}
 

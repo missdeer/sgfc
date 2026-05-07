@@ -120,9 +120,7 @@ char *DetectEncoding(const char *c, const char *b_end)
 						else		   state = brace_state;
 						break;
 			default:
-				if(ch_isupper(*c))
-					state = brace_state;
-				else if(ch_isspace(*c))
+				if(ch_isspace(*c))
 				{
 					if(state != 4)
 						state = brace_state;
@@ -220,7 +218,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 				/* bytes needed are estimated based on encoding progress so far
 				 * +1 because of edge case of out_size==in_left */
 				float needed = (float)in_left * (float)out_size / (float)(out_size - in_left + 1);
-				size_t increase = safe_add((size_t)(lrintf(needed*1.05f)), 12);		/* +5% + 3x 4 byte wide chars */
+				size_t increase = safe_add((size_t)(lrintf(needed*1.05F)), 12);		/* +5% + 3x 4 byte wide chars */
 				size_t new_size = safe_add(out_size, increase);
 				/* +1 for \0 termination of buffer */
 				char *new_buffer = SafeMalloc(safe_add(new_size, 1),

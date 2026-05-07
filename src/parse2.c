@@ -91,7 +91,7 @@ void CompressPointList(struct SGFInfo *sgfc, struct Property *p)
 	struct PropValue *v;
 	char val1[12], val2[2];
 
-	memset(board, 0, (MAX_BOARDSIZE+2)*(MAX_BOARDSIZE+2));
+	memset(board, 0, (size_t)((MAX_BOARDSIZE+2)*(MAX_BOARDSIZE+2)));
 
 	x = yy = MAX_BOARDSIZE+10;
 	mx = my = 0;
@@ -209,7 +209,7 @@ static void CorrectVariation(struct SGFInfo *sgfc, struct Node *n)
 		{
 			if(ae->value->next)			/* AE has more than one value */
 				continue;
-			if(strcmp(ae->value->value, pmv->value->value))
+			if(strcmp(ae->value->value, pmv->value->value) != 0)
 				continue;				/* AE doesn't undo parent move */
 
 			w = FindProperty(j, TKN_AW);
@@ -727,7 +727,7 @@ static bool InitTreeInfo(struct SGFInfo *sgfc, struct TreeInfo *ti, struct Node 
 	if(!GetNumber(sgfc, r, ff, 1, &ti->FF, 1, "FF[1]"))
 		ff = NULL;
 
-	if(ti->FF > 4)
+	if(ti->FF > 4 && ff)	/* just to please linter: ff is always non-NULL if ti->FF>4 */
 		PrintError(E_UNKNOWN_FILE_FORMAT, sgfc, ff->value->row, ff->value->col, ti->FF);
 
 	ca = FindProperty(r, TKN_CA);

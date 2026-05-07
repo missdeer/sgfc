@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "all.h"
@@ -183,7 +184,7 @@ int PrintError(U_LONG type, struct SGFInfo *sgfc, ...) {
 ATTRIBUTE_NORETURN
 void ExitWithFatalError(U_LONG error, const char *detail)
 {
-	int err_num = error & M_ERROR_NUM;
+	int err_num = (int)(error & M_ERROR_NUM);
 	fprintf(E_OUTPUT, "Fatal error %d: ", err_num);
 	fprintf(E_OUTPUT, error_mesg[err_num - 1], detail);
 	exit(20);

@@ -8,6 +8,7 @@
 **************************************************************************/
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <iconv.h>
 
@@ -167,7 +168,7 @@ static int ParsePropertyArg(struct SGFInfo *sgfc, const char **str)
 	{
 		/* check for known property name */
 		for(m = 1; sgf_token[m].id; m++)
-			if(!strnccmp(c, sgf_token[m].id, (size_t)n))
+			if(!strnccmp(c, sgf_token[m].id, n))
 				break;
 	}
 	/* no property specified or unknown property -> error */

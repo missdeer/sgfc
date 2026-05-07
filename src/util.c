@@ -8,8 +8,10 @@
 **************************************************************************/
 
 #include <stdlib.h>
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
+#include <ctype.h>
+#include <iconv.h>
 
 #include "all.h"
 #include "protos.h"
@@ -325,7 +327,7 @@ void strnpcpy(char *dst, const char *src, size_t len)
 
 U_LONG KillChars(char *value, size_t *len, U_SHORT kill, const char *cset)
 {
-	U_LONG faulty = 0, err = 0;
+	U_LONG faulty = 0;
 	size_t i;
 	char *c, *d;
 
@@ -337,22 +339,10 @@ U_LONG KillChars(char *value, size_t *len, U_SHORT kill, const char *cset)
 	for(c = d = value; i; c++, i--)
 	{
 		if(((kill & C_ISSPACE) && ch_isspace(*c)) ||
-		   ((kill & C_NOT_ISALPHA) && !ch_isalpha(*c)))
-			err = 1;
-		else
-			if(kill & C_NOTinSET)
-			{
-				if(!strchr(cset, *c))
-					err = 1;
-			}
-			else
-				if(kill & C_inSET && strchr(cset, *c))
-					err = 1;
-		if(err)
-		{
+		   ((kill & C_NOT_ISALPHA) && !ch_isalpha(*c)) ||
+		   ((kill & C_NOTinSET) && !strchr(cset, *c)) ||
+		   ((kill & C_inSET) && strchr(cset, *c)))
 			faulty++;
-			err = 0;
-		}
 		else
 			*d++ = *c;
 	}
