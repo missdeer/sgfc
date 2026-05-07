@@ -2,11 +2,18 @@ cmake_minimum_required(VERSION 3.10)
 project(sgfc C)
 
 set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
 
-include_directories(src)
-include_directories(tests)
+include(CTest)
 
-set(src_files
+if(BUILD_TESTING)
+        find_package(Threads REQUIRED)
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(CHECK REQUIRED IMPORTED_TARGET check)
+endif()
+
+set(sgfc_core_sources
         src/all.h
         src/protos.h
         src/helpers.h
@@ -23,31 +30,55 @@ set(src_files
         src/strict.c
         src/util.c)
 
+add_library(sgfc_core STATIC ${sgfc_core_sources})
+
+target_include_directories(sgfc_core
+        PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+target_link_libraries(sgfc_core
+        PUBLIC
+        m)
+
 add_executable(sgfc
-        ${src_files}
         src/main.c)
 
-target_link_libraries(sgfc m)
+target_link_libraries(sgfc
+        PRIVATE
+        sgfc_core)
 
-add_executable(sgfc-test
-        ${src_files}
-        tests/test-runner.c
-        tests/test-common.h
-        tests/test-helper.c
-        tests/check-encoding.c
-        tests/check-options.c
-        tests/check-value.c
-        tests/delete-node.c
-        tests/gameinfo-interactive.c
-        tests/load-properties.c
-        tests/nesting.c
-        tests/other-games.c
-        tests/parse-move.c
-        tests/parse-text.c
-        tests/position.c
-        tests/saving.c
-        tests/test-files.c
-        tests/trigger-errors.c
-        tests/value-length.c)
+if(BUILD_TESTING)
+        add_executable(sgfc-test
+                tests/test-runner.c
+                tests/test-common.h
+                tests/test-helper.c
+                tests/check-encoding.c
+                tests/check-options.c
+                tests/check-value.c
+                tests/delete-node.c
+                tests/gameinfo-interactive.c
+                tests/load-properties.c
+                tests/nesting.c
+                tests/other-games.c
+                tests/parse-move.c
+                tests/parse-text.c
+                tests/position.c
+                tests/saving.c
+                tests/test-files.c
+                tests/trigger-errors.c
+                tests/value-length.c)
 
-target_link_libraries(sgfc-test check rt pthread subunit m)
+        target_include_directories(sgfc-test
+                PRIVATE
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests")
+
+        target_link_libraries(sgfc-test
+                PRIVATE
+                sgfc_core
+                PkgConfig::CHECK
+                Threads::Threads)
+
+        add_test(NAME sgfc-test COMMAND sgfc-test)
+        set_tests_properties(sgfc-test PROPERTIES
+                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests")
+endif()

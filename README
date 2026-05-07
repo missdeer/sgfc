@@ -126,10 +126,30 @@ If you've an ANSI compliant C compiler on your system just type 'make'.
 The include files have to be ANSI compliant too! If your system does not fit
 these requirements then ask a local system guru to help you.
 
-Note: on some machines, you may have to specify a shell and the processor
-      type in the Makefile -- in that case you have to edit the Makefile.
-      Right now it does not specify either in order to be machine independent.
-      See additional defines below too.
+The top-level Makefile provides the following targets:
+
+	make          builds the sgfc binary
+	make tests    builds sgfc-test and runs the unit tests
+	make all      cleans, builds sgfc, and runs the unit tests
+
+The unit tests use the Check unit test framework (https://libcheck.github.io/check/).
+You need to install it (and its dependencies) first, before you can run the tests.
+
+Alternatively, SGFC can be built with CMake:
+
+	cmake -B build .
+	cmake --build build
+
+If tests are enabled, which is the default, the CMake build also builds the
+sgfc-test binary. Run the registered tests with:
+
+	ctest --test-dir build --output-on-failure
+
+To configure a CMake build without tests and without the Check/pkg-config
+test dependencies, use:
+
+	cmake -B build . -DBUILD_TESTING=OFF
+	cmake --build build
 
 If you are compiling SGFC manually then just compile each file to get the
 object files and link those object files together (using a proper link
