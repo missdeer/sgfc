@@ -1,4 +1,4 @@
-SGF Syntax Checker & Converter: SGFC V2.2
+SGF Syntax Checker & Converter: SGFC V2.3
 =========================================
 
 SGFC Copyright (C) 1996-2026 by Arno Hollosi <ahollosi@xmp.net>
@@ -43,6 +43,7 @@ Fatal error 73: charset encoding detection went wrong
 Warning 74: different charset encodings in file. Use 'sgfc -E2 test-file/mixed-encoding.sgf'
 Fatal error 75: different charset encodings in file. Use 'sgfc test-file/mixed-encoding.sgf'
 Fatal error 76: nesting of branches exceeds limit of 10000 nested branches
+Fatal error 77: internal error (this should never happen :o)
 
 Every line yields one or more errors/warnings.
 test.sgf is compiled in a way that error/warning x occurs in line x, e.g.

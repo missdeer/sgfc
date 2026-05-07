@@ -1,4 +1,4 @@
-SGF Syntax Checker & Converter: SGFC V2.2
+SGF Syntax Checker & Converter: SGFC V2.3
 =========================================
 
 SGFC Copyright (C) 1996-2026 by Arno Hollosi <ahollosi@xmp.net>
@@ -161,9 +161,8 @@ EOLCHAR:
 --------
 You can define the character used to indicate the end of line. This is only
 used when SGFC writes a file, because SGFC automatically detects any kind
-of linebreak during reading. 
-This define is useful if you want SGFC to write SGF files using the
-linebreak-code specific to your machine (e.g. Mac or MSDos).
+of line break during reading.  This define is useful if you want SGFC to
+write SGF files using the line break code specific to your machine.
 
 VERSION_NO_MAIN:
 ----------------
@@ -241,19 +240,19 @@ information about your system.
     -h  ... print a help message with all options
     -i  ... interactive mode (faulty game-info values only)
     -k  ... keep header in front of SGF data
-    -lx ... x = 1,2,3: a hard linebreak is
-                1 - any linebreak encountered (default)
-                2 - any linebreak not preceded by a space (MGT)
-                3 - two linebreaks in a row
+    -lx ... x = 1,2,3: a hard line break is
+                1 - any line break encountered (default)
+                2 - any line break not preceded by a space (MGT)
+                3 - two line breaks in a row
                 4 - paragraph style (ISHI format, MFGO)
-    -L  ... try to keep linebreaks at the end of nodes
+    -L  ... try to keep line breaks at the end of nodes
     -m  ... delete markup on current move
     -n  ... delete empty nodes
     -o  ... delete obsolete properties
     -p  ... write pass moves as '[tt]' if possible
     -r  ... restrictive checking
     -s  ... split game collection into single files
-    -t  ... do not insert any soft linebreaks into text values
+    -t  ... do not insert any soft line breaks into text values
     -u  ... delete unknown properties
     -U  ... alias for '--default-encoding=UTF-8'
     -v  ... correct variation level and root moves
@@ -276,12 +275,12 @@ information about your system.
 
     'sgfc -pet game.sgf game.sgf' ... Check and overwrite 'game.sgf'
           with expanded point lists, '[tt]' pass moves and no soft
-          linebreaks - writing FF[4] files like this is the most
+          line breaks - writing FF[4] files like this is the most
           compatible way for old (FF[3]) applications
 
     'sgfc -wd20d12el2 game.sgf game2.sgf' ... disable all warnings and
           messages #20, #12; expand compressed point lists and apply
-          linebreakstyle 2. The outputfile is saved to 'game2.sgf'.
+          line break style 2. The output file is saved to 'game2.sgf'.
 
     'sgfc -w -d20 -d12 -e -l2 game.sgf game2.sgf' ... same as above
 
@@ -390,7 +389,7 @@ SGF specification. It currently has the limitation, that only a single
 encoding is allowed for the whole file. On the upside, '\'-escaping does
 not occur within multi-byte characters.
 
-Mode -E2 (specification conformant):
+Mode -E2 (specification-conformant):
 In this mode SGFC parses SGF files according to the spec: only text
 property values are decoded according to the charset given. Note that in
 this mode escaping is done first, i.e. in non-ASCII-safe encodings
@@ -482,25 +481,25 @@ this header as it should not contain relevant information.
 
 Option -l:
 ----------
-Define the way SGFC treats linebreaks within texts.
+Define the way SGFC treats line breaks within texts.
 
-FF[4] distinguishes two types of linebreaks: hard and soft ones.
-Hard linebreaks are linebreaks that are displayed.
-Soft linebreaks are not displayed by the application.
+FF[4] distinguishes two types of line breaks: hard and soft ones.
+Hard line breaks are line breaks that are displayed.
+Soft line breaks are not displayed by the application.
 This is useful for limiting line lengths for mailing/posting SGF files.
 
 SGFC offers 4 different styles for reading in text.
 Text is ALWAYS written in a FF[4] compatible way.
-During reading, a hard linebreak is
-        1 - any linebreak encountered (default)
-        2 - any linebreak not preceded by a space (MGT)
-        3 - two linebreaks in a row
+During reading, a hard line break is
+        1 - any line break encountered (default)
+        2 - any line break not preceded by a space (MGT)
+        3 - two line breaks in a row
         4 - paragraph style (ISHI format, MFGO)
 
 
 Option -L:
 ----------
-Try to keep linebreaks at the end of nodes.
+Try to keep line breaks at the end of nodes.
 
 When writing the output file, SGFC will try to make each line end at
 the end of a node.  This is purely cosmetic, but may make the
@@ -590,16 +589,16 @@ Example: 'sgfc -s in.sgf out' produces 'out_001.sgf', 'out_002.sgf' etc.
 
 Option -t:
 ----------
-Do not insert soft linebreaks into text.
+Do not insert soft line breaks into text.
 
-FF[4] specifies two types of linebreaks: hard and soft ones.
-Soft linebreaks are linebreaks which are not displayed.
-By default SGFC inserts soft linebreaks wherever necessary to limit the
+FF[4] specifies two types of line breaks: hard and soft ones.
+Soft line breaks are line breaks which are not displayed.
+By default SGFC inserts soft line breaks wherever necessary to limit the
 line length to 76 chars.
 
-However old applications cannot deal with soft linebreaks.
+However old applications cannot deal with soft line breaks.
 If you are concerned about compatibility to old applications you should
-avoid soft linebreaks and specify this option.
+avoid soft line breaks and specify this option.
 
 
 Option -U:
@@ -720,6 +719,17 @@ Examples:
 Appendix A: History
 ===================
 
+V2.3 (2026-xxxxx)
+-----------------
+- Added stdin/stdout support using "-"
+  Due to this, error messages are now written to stderr.
+- Security fixes: fixed out-of-bounds writes and read-after-free bugs
+- Security hardening: additional overflow guards, recursion limits,
+  ASAN compilation targert, and more defense-in-depth
+- Clean up: small refactorings, updated linting tools, and resolved
+  resulting new warnings
+
+
 V2.2 (2026-02-18)
 -----------------
 - some clean up and compiler compatibility (patch by Patrick Näf)
@@ -734,7 +744,7 @@ V2.0 (2021-02-14)
 -----------------
 - made sgfc charset aware by using iconv library (see section 4.1,
   and options -E, -U, --default-encoding, --encoding)
-- several bug fixes related to soft linebreaks, wrong property flags,
+- several bug fixes related to soft line breaks, wrong property flags,
   memory leaks, backslash escaping
 - added ability to save resulting SGF file to memory (SaveFileHandler)
 - reorganized sourced code (src/ subdirectory, options.c file, ...)
@@ -752,7 +762,7 @@ V1.18 (2018-06-23)
 V1.17 (2009-11-30/2014-03-25)
 ------------------
 - fixed broken '\' backslash handling (reported by Matthias Krings)
-- added patch for -L option: try to keep linebreaks at the end of nodes.
+- added patch for -L option: try to keep line breaks at the end of nodes.
   Patch provided by Eric Backus. Thanks.
 - removed DIRTY_FREE compile option
 - fixed empty DD values (which are allowed and should not be deleted)
@@ -785,7 +795,7 @@ V1.14 (2003-06-09)
 
 - added option -m (delete markup on current move) for deletion of
   KGS' CR[] properties to mark the current move.
-- BUGFIX: if soft linebreak was to be inserted just after a
+- BUGFIX: if soft line break was to be inserted just after a
   '\' character the result would not be correct.
   (thanks to Stuart Yeates for reporting this bug)
 - changed distribution license from GNU to BSD to make it easier
@@ -834,8 +844,8 @@ V1.10 (1997-06-08)
 
 V1.03 (1997-06-03)
 ------------------
-- fixed bug: MSDOS linebreaks (CR/LF) were sometimes transformed to two
-  linebreaks
+- fixed bug: MSDOS line breaks (CR/LF) were sometimes transformed to two
+  line breaks
 
 V1.02 (1997-05-26)
 ------------------
@@ -854,7 +864,7 @@ V1.0 (1997-05-23)
 V0.6 (1997-05)
 --------------
 - added missing FF[1] & FF[3] properties
-- check property vs. fileformat added
+- check property vs. file format added
 - new options:
   -o (remove obsolete properties)
   -i (interactive mode)
@@ -872,19 +882,19 @@ V0.5 (1997-04)
 - FindStart got more sophisticated (checking for missing ';')
 - added LN, HO properties
 - saving FF[3] option removed - added pass '[tt]' option instead
-- updated soft linebreak handling according to draft
-- added linebreak style 4: ISHI format, MFGO
+- updated soft line break handling according to draft
+- added line break style 4: ISHI format, MFGO
 - some bug fixes
 
 V0.4 (1997-02)
 --------------
 - reformatted message output; added status line
-- some messages give more informaion now (e.g. which property caused error)
+- some messages give more information now (e.g. which property caused error)
 - rewritten argument parsing
-- improved ParseText: removes trailing spaces and unnecessary escapings '\';
-  applies given linebreak style
+- improved ParseText: removes trailing spaces and unnecessary escaping '\';
+  applies given line break style
 - added better date and result parsing (DT, RE)
-- added handling of boards bigger than 19x19 (upto 52x52 now)
+- added handling of boards bigger than 19x19 (up to 52x52 now)
 - added compressed point lists
 - many minor bug fixes, new error cases (messages) added
 
@@ -1229,4 +1239,7 @@ Classes:
         Example same as in #74; using default option of -E1
 
 76:FE   "nesting of branches is too deep and exceeds limit of 10000 nested branches"
-        Example: create a file with more than 10000 repititions of "(;", i.e. "(;(;(;..."
+        Example: create a file with more than 10000 repetitions of "(;", i.e. "(;(;(;..."
+
+77:FE   "internal error occured (%s) - that shouldn't happen. Sorry."
+        You should never see this error :o) If so, please send me an email.
