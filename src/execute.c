@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include "all.h"
 #include "protos.h"
@@ -310,7 +311,7 @@ bool Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct 
 {
 	int x, y;
 	struct PropValue *v;
-	U_SHORT flag;
+	uint16_t flag;
 	bool empty, not_empty;
 
 	if(sgfc->info->GM != 1)		/* game != Go? */
@@ -383,7 +384,7 @@ bool Do_Markup(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct 
 bool Do_Annotate(struct SGFInfo *sgfc, struct Node *n, struct Property *p, struct BoardStatus *st)
 {
 	struct Property *hlp;
-	U_SHORT flag;
+	uint16_t flag;
 
 	flag = sgf_token[p->id].data;
 

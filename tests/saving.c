@@ -10,7 +10,7 @@
 #include "test-common.h"
 
 
-int Large_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
+int Large_BufferIO_Close(struct SaveFileHandler *sfh, uint32_t error)
 {
 	ck_assert_uint_eq(error, E_NO_ERROR);
 	*sfh->fh.memh.pos = 0;
@@ -38,7 +38,7 @@ START_TEST (test_extend_save_buffer)
 {
 	char buffer[DEFAULT_BUFFER_SIZE + 100];
 
-	for(U_LONG i=0; i < DEFAULT_BUFFER_SIZE + 100; i++)
+	for(uint32_t i=0; i < DEFAULT_BUFFER_SIZE + 100; i++)
 		buffer[i] = (char)('a' + (i % 26));
 	strcpy(buffer, "(;FF[4]CA[UTF-8]GM[1]SZ[19]XX["); // fragile: header as output by SGFC
 	buffer[strlen(buffer)] = 'x';

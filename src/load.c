@@ -34,9 +34,9 @@ struct LoadInfo
 	const char *b_end;
 
 	const char *current;	/* actual read position (cursor) in buffer */
-	U_LONG cur_row;			/* row & column associated with current */
-	U_LONG cur_col;
-	U_LONG lowercase;		/* load.c: number of lowercase chars in front of propID */
+	uint32_t cur_row;			/* row & column associated with current */
+	uint32_t cur_col;
+	uint32_t lowercase;		/* load.c: number of lowercase chars in front of propID */
 
 	bool is_utf8;			/* if buffer is already decoded, it's in UTF-8 */
 };
@@ -61,8 +61,8 @@ struct LoadInfo
 *** Returns:	current position; row & col are updated accordingly
 **************************************************************************/
 
-static const char *NextCharInBuffer(const char **c, const char *end, U_LONG step,
-									U_LONG *row, U_LONG *col, bool is_utf8)
+static const char *NextCharInBuffer(const char **c, const char *end, uint32_t step,
+									uint32_t *row, uint32_t *col, bool is_utf8)
 {
 	for(; step > 0 && *c < end; step--)
 	{
@@ -129,7 +129,7 @@ static const char *NextChar(struct LoadInfo *load)
 **************************************************************************/
 
 static const char *SkipText(struct LoadInfo *load, const char *s, const char *e,
-							char end, unsigned int mode, U_LONG *row, U_LONG *col)
+							char end, unsigned int mode, uint32_t *row, uint32_t *col)
 {
 	while(s < e)
 	{
@@ -200,9 +200,9 @@ static bool SkipSGFText(struct LoadInfo *load, char brk, unsigned int mode)
 *** Returns:	true or false
 **************************************************************************/
 
-static bool GetNextSGFChar(struct LoadInfo *load, bool print_error, U_LONG error)
+static bool GetNextSGFChar(struct LoadInfo *load, bool print_error, uint32_t error)
 {
-	U_LONG lc = 0;
+	uint32_t lc = 0;
 
 	while(!SGF_EOF)
 	{
@@ -289,10 +289,10 @@ static bool SkipValues(struct LoadInfo *load, bool print_error)
 *** Returns:	true or false
 **************************************************************************/
 
-static bool NewValue(struct LoadInfo *load, struct Property *p, U_SHORT flags)
+static bool NewValue(struct LoadInfo *load, struct Property *p, uint16_t flags)
 {
-	U_LONG row = load->cur_row;
-	U_LONG col = load->cur_col;
+	uint32_t row = load->cur_row;
+	uint32_t col = load->cur_col;
 
 	const char *s = NextChar(load);		/* points to char after '[' */
 	if(!s)
@@ -339,11 +339,11 @@ static bool NewValue(struct LoadInfo *load, struct Property *p, U_SHORT flags)
 *** Returns:	true or false
 **************************************************************************/
 
-static bool NewProperty(struct LoadInfo *load, struct Node *n, token id, U_LONG row, U_LONG col, char *idstr)
+static bool NewProperty(struct LoadInfo *load, struct Node *n, token id, uint32_t row, uint32_t col, char *idstr)
 {
 	struct Property *newp;
 	bool ret = true;
-	U_LONG tooMany_row = 0, tooMany_col = 0;
+	uint32_t tooMany_row = 0, tooMany_col = 0;
 
 	if(!n)	return true;
 
@@ -403,7 +403,7 @@ static bool NewProperty(struct LoadInfo *load, struct Node *n, token id, U_LONG 
 static bool MakeProperties(struct LoadInfo *load, struct Node *n)
 {
 	char propid[100], full_propid[300];
-	U_LONG id_row, id_col, pi, pi_lc;
+	uint32_t id_row, id_col, pi, pi_lc;
 
 	while(true)
 	{
@@ -431,7 +431,7 @@ static bool MakeProperties(struct LoadInfo *load, struct Node *n)
 
 				if(load->lowercase)
 				{
-					U_LONG lc = load->lowercase >= 200 ? 199 : load->lowercase;
+					uint32_t lc = load->lowercase >= 200 ? 199 : load->lowercase;
 					strncpy(full_propid, load->current - load->lowercase, lc);
 					pi_lc = lc;
 					id_col -= load->lowercase;

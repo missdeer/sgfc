@@ -50,7 +50,7 @@ END_TEST
 
 START_TEST (test_empty_pass_in_old_ff)
 {
-	U_LONG error;
+	uint32_t error;
 	struct TreeInfo info = {0};
 	info.GM = 1;
 	info.FF = 3;

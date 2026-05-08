@@ -12,7 +12,7 @@
 struct SGFInfo *sgfc;
 char *expected_output;
 
-int Test_BufferIO_Close(struct SaveFileHandler *sfh, U_LONG error)
+int Test_BufferIO_Close(struct SaveFileHandler *sfh, uint32_t error)
 {
 	ck_assert_uint_eq(error, E_NO_ERROR);
 	*sfh->fh.memh.pos = 0;

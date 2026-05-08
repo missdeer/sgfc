@@ -76,7 +76,7 @@ static int SaveFileIO_open(struct SaveFileHandler *sfh, const char *path, const 
 *** Returns:	true on success, false on error
 **************************************************************************/
 
-static int SaveFileIO_close(struct SaveFileHandler *sfh, U_LONG error)
+static int SaveFileIO_close(struct SaveFileHandler *sfh, uint32_t error)
 {
 	FILE *file = sfh->fh.file;
 	if(!file)
@@ -148,7 +148,7 @@ int SaveBufferIO_open(struct SaveFileHandler *sfh, const char *path, const char 
 *** Returns:	true
 **************************************************************************/
 
-int SaveBufferIO_close(struct SaveFileHandler *sfh, U_LONG error)
+int SaveBufferIO_close(struct SaveFileHandler *sfh, uint32_t error)
 {
 	free(sfh->fh.memh.buffer);
 	sfh->fh.memh.buffer = NULL;
@@ -199,7 +199,7 @@ static int SaveBufferIO_putc(struct SaveFileHandler *sfh, int c)
 
 struct SaveFileHandler *SetupSaveBufferIO(
 	int (*open)(struct SaveFileHandler *, const char *, const char *),
-	int (*close)(struct SaveFileHandler *, U_LONG))
+	int (*close)(struct SaveFileHandler *, uint32_t))
 {
 	struct SaveFileHandler *sfh = SafeMalloc(sizeof(struct SaveFileHandler), "memory file handler");
 	sfh->open = SaveBufferIO_open;
@@ -226,7 +226,7 @@ struct SaveFileHandler *SetupSaveBufferIO(
 *** Returns:	true or false
 **************************************************************************/
 
-static int WriteChar(struct SaveInfo *save, char c, U_SHORT spc)
+static int WriteChar(struct SaveInfo *save, char c, uint16_t spc)
 {
 	save->chars_in_node++;
 
@@ -271,7 +271,7 @@ static int WriteChar(struct SaveInfo *save, char c, U_SHORT spc)
 *** Returns:	true or false
 **************************************************************************/
 
-static int WritePropValue(struct SaveInfo *save, const char *v, bool second, U_SHORT flags)
+static int WritePropValue(struct SaveInfo *save, const char *v, bool second, uint16_t flags)
 {
 	bool fl;
 

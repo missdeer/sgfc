@@ -325,9 +325,9 @@ void strnpcpy(char *dst, const char *src, size_t len)
 *** Returns:	number of chars removed from string
 **************************************************************************/
 
-U_LONG KillChars(char *value, size_t *len, U_SHORT kill, const char *cset)
+uint32_t KillChars(char *value, size_t *len, uint16_t kill, const char *cset)
 {
-	U_LONG faulty = 0;
+	uint32_t faulty = 0;
 	size_t i;
 	char *c, *d;
 
@@ -364,9 +364,9 @@ U_LONG KillChars(char *value, size_t *len, U_SHORT kill, const char *cset)
 *** Returns:	number of selected chars found in value
 **************************************************************************/
 
-U_LONG TestChars(const char *value, U_SHORT test, const char *cset)
+uint32_t TestChars(const char *value, uint16_t test, const char *cset)
 {
-	U_LONG faulty = 0;
+	uint32_t faulty = 0;
 	const char *c;
 
 	for(c = value; *c; c++)
@@ -424,7 +424,7 @@ struct Property *FindProperty(struct Node *n, token id)
 ***				(exits on fatal error)
 **************************************************************************/
 
-struct Property *AddProperty(struct Node *n, token id, U_LONG row, U_LONG col, const char *id_str)
+struct Property *AddProperty(struct Node *n, token id, uint32_t row, uint32_t col, const char *id_str)
 {
 	struct Property *newp = SafeMalloc(sizeof(struct Property), "property structure");
 	/* init property structure */
@@ -483,7 +483,7 @@ struct Property *DelProperty(struct Node *n, struct Property *p)
 ***				(exits on fatal error)
 **************************************************************************/
 
-struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, U_LONG row, U_LONG col, bool new_child)
+struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, uint32_t row, uint32_t col, bool new_child)
 {
 	struct Node *newn, *hlp;
 
@@ -554,7 +554,7 @@ struct Node *NewNode(struct SGFInfo *sgfc, struct Node *parent, U_LONG row, U_LO
 *** Returns:	-
 **************************************************************************/
 
-void DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error)
+void DelNode(struct SGFInfo *sgfc, struct Node *n, uint32_t error)
 {
 	struct Node *p, *h;
 	struct Property *i;
@@ -683,7 +683,7 @@ void DelNode(struct SGFInfo *sgfc, struct Node *n, U_LONG error)
 **************************************************************************/
 
 struct PropValue *AddPropValue(struct SGFInfo *sgfc,
-							   struct Property *p, U_LONG row, U_LONG col,
+							   struct Property *p, uint32_t row, uint32_t col,
 							   const char *value, size_t size,
 							   const char *value2, size_t size2)
 {

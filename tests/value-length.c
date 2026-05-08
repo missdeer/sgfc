@@ -7,8 +7,9 @@
 ***
 **************************************************************************/
 
-#include "test-common.h"
 #include <stdbool.h>
+
+#include "test-common.h"
 
 
 void VerifyTreeValueLength(struct Node *n, int phase)
@@ -23,11 +24,11 @@ void VerifyTreeValueLength(struct Node *n, int phase)
 			{
 				/* brittle test: row=22, col=2: prop value with \00 byte, still present after load */
 				ck_assert_msg(strlen(v->value) == v->value_len || (phase == 1 && v->row == 22 && v->col == 2),
-							  "phase %d: %s_v1 at %lu:%lu, strlen=%lu != value_len=%lu",
+							  "phase %d: %s_v1 at %u:%u, strlen=%lu != value_len=%lu",
 							  phase, p->idstr, v->row, v->col, strlen(v->value), v->value_len);
 				if(v->value2)
 					ck_assert_msg(strlen(v->value2) == v->value2_len,
-								  "phase %d: %s_v2 at %lu:%lu, strlen=%lu != value_len=%lu",
+								  "phase %d: %s_v2 at %u:%u, strlen=%lu != value_len=%lu",
 								  phase, p->idstr, v->row, v->col, strlen(v->value2), v->value2_len);
 				v = v->next;
 			}

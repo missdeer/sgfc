@@ -8,10 +8,11 @@
 **************************************************************************/
 
 #include <stdlib.h>
-#include <errno.h>
-#include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
+#include <stdarg.h>
+#include <errno.h>
 
 #include "all.h"
 #include "protos.h"
@@ -97,7 +98,7 @@ static bool ParseText_Decode(struct SGFInfo *sgfc, char **value_ptr, size_t *len
 *** Returns:	-
 **************************************************************************/
 
-static void ParseText_NormalizeWhitespace(struct SGFInfo *sgfc, char *s, size_t *len, U_LONG row, U_LONG col)
+static void ParseText_NormalizeWhitespace(struct SGFInfo *sgfc, char *s, size_t *len, uint32_t row, uint32_t col)
 {
 	char old = 0;
 	char *d = s;
@@ -146,7 +147,7 @@ static void ParseText_NormalizeWhitespace(struct SGFInfo *sgfc, char *s, size_t 
 *** Returns:	-
 **************************************************************************/
 
-static void ParseText_ApplyLinebreakStyle(struct SGFInfo *sgfc, char *value, size_t *len, U_SHORT flags)
+static void ParseText_ApplyLinebreakStyle(struct SGFInfo *sgfc, char *value, size_t *len, uint16_t flags)
 {
 	char *end = value + *len;
 	char *d = value, *s = value;
@@ -238,7 +239,7 @@ static void ParseText_StripTrailingSpace(char *value, size_t *len)
 *** Returns:	length of converted string (0 for empty string)
 **************************************************************************/
 
-int Parse_Text(struct SGFInfo *sgfc, struct PropValue *v, int prop_num, U_SHORT flags)
+int Parse_Text(struct SGFInfo *sgfc, struct PropValue *v, int prop_num, uint16_t flags)
 {
 	char **value_ptr = &v->value;
 	size_t *value_len = &v->value_len;
@@ -319,16 +320,16 @@ parse_result_t Parse_Move(char *value, size_t *len, ...)
 {
 	parse_result_t ret = PARSE_OK;
 	int c;
+	unsigned int flags;
 	bool emptyOrSpace = false;
 	struct SGFInfo *sgfc;
-	U_INT flags;
-	U_LONG *error_code;
+	uint32_t *error_code;
 	va_list arglist;
 
 	va_start(arglist, len);
-	flags = va_arg(arglist, U_INT);
+	flags = va_arg(arglist, unsigned int);
 	sgfc = va_arg(arglist, struct SGFInfo *);
-	error_code = va_arg(arglist, U_LONG *);
+	error_code = va_arg(arglist, uint32_t *);
 	va_end(arglist);
 
 	if(sgfc->info->GM != 1)			/* game != GO ? */
@@ -412,14 +413,14 @@ parse_result_t Parse_Float(char *value, size_t *len, ...)
 {
 	parse_result_t ret = PARSE_OK;
 	int where = 0;
+	unsigned int flags;
 	/* where (bits): 0-minus / 1-int / 2-fraction / 3-'.' / 4-plus */
 	char *s, *d;
 	char *allowed;
-	U_INT flags;
 	va_list arglist;
 
 	va_start(arglist, len);
-	flags = va_arg(arglist, U_INT);
+	flags = va_arg(arglist, unsigned int);
 	va_end(arglist);
 	allowed = (flags & TYPE_GINFO) ? "0123456789.," : "0123456789+-.,";
 
@@ -648,10 +649,10 @@ parse_result_t Parse_Charset(char *value, size_t *len, ...)
 **************************************************************************/
 
 static bool Check_Single_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
-							   char *value, size_t *value_len, U_SHORT flags,
+							   char *value, size_t *value_len, uint16_t flags,
 							   parse_result_t (*Parse_Value)(char *, size_t *, ...))
 {
-	U_LONG error_code = E_BAD_VALUE_CORRECTED;
+	uint32_t error_code = E_BAD_VALUE_CORRECTED;
 	char *before = SafeDupString(value, "prop value before checking");
 	parse_result_t result = (*Parse_Value)(value, value_len, flags, sgfc, &error_code);
 
@@ -673,7 +674,7 @@ static bool Check_Single_Value(struct SGFInfo *sgfc, struct Property *p, struct 
 }
 
 bool Check_Value(struct SGFInfo *sgfc, struct Property *p, struct PropValue *v,
-				 U_SHORT flags, parse_result_t (*Parse_Value)(char *, size_t *, ...))
+				 uint16_t flags, parse_result_t (*Parse_Value)(char *, size_t *, ...))
 {
 	if (!Check_Single_Value(sgfc, p, v, v->value, &v->value_len, flags, Parse_Value))
 		return false;

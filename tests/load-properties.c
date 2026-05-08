@@ -88,7 +88,7 @@ static struct SGFCError test_lwic_errors[] =
 void test_lwic_error_output(struct SGFCError *error)
 {
 	test_lwic_errors_seen++;
-	ck_assert_msg(test_lwic_errors_seen <= 12, "too many errors, latest %lx at %lu:%lu:%s",
+	ck_assert_msg(test_lwic_errors_seen <= 12, "too many errors, latest %x at %u:%u:%s",
 				  error->error, error->row, error->col, error->message);
 	struct SGFCError expect = test_lwic_errors[test_lwic_errors_seen];
 	ck_assert_uint_eq(error->error, expect.error);

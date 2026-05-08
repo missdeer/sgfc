@@ -8,6 +8,7 @@
 **************************************************************************/
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <limits.h>
 #include <errno.h>
@@ -455,7 +456,7 @@ static void DelEmptyNodes(struct SGFInfo *sgfc)
 *** Returns:	-
 **************************************************************************/
 
-void SplitNode(struct SGFInfo *sgfc, struct Node *n, U_SHORT flags, token id, bool move)
+void SplitNode(struct SGFInfo *sgfc, struct Node *n, uint16_t flags, token id, bool move)
 {
 	struct Property *p, *hlp;
 	struct Node *newnode;
@@ -491,7 +492,7 @@ void SplitNode(struct SGFInfo *sgfc, struct Node *n, U_SHORT flags, token id, bo
 static int SplitMoveSetup(struct SGFInfo *sgfc, struct Node *n)
 {
 	struct Property *p, *s = NULL;
-	U_SHORT f, sc = 0;
+	uint16_t f, sc = 0;
 
 	p = n->prop;
 	f = 0;
@@ -859,7 +860,7 @@ static bool CheckDifferingRootProperties(struct SGFInfo *sgfc)
 {
 	struct TreeInfo *ti = sgfc->tree->next;
 	struct Property *gm, *ff, *ca;
-	U_LONG row, col;
+	uint32_t row, col;
 	const char *first_encoding = sgfc->tree->encoding_name;
 
 	if(sgfc->options->encoding == OPTION_ENCODING_EVERYTHING &&
@@ -948,7 +949,7 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 		{
 			st->annotate = 0;
 			if(st->markup_changed && st->markup)
-				memset(st->markup, 0, area * sizeof(U_SHORT));
+				memset(st->markup, 0, area * sizeof(uint16_t));
 			st->markup_changed = false;
 
 			/* for n=r loop is done outside */
@@ -1007,7 +1008,7 @@ static void CheckSGFTree(struct SGFInfo *sgfc, struct TreeInfo *ti)
 		if(area)
 		{
 			st->board = SafeCalloc(area * sizeof(char), "goban buffer");
-			st->markup = SafeMalloc(area * sizeof(U_SHORT), "markup buffer");
+			st->markup = SafeMalloc(area * sizeof(uint16_t), "markup buffer");
 			st->paths = SafeCalloc(sizeof(struct PathBoard), "path_board buffer");
 		}
 		st->markup_changed = true;

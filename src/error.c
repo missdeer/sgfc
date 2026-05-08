@@ -8,10 +8,11 @@
 **************************************************************************/
 
 #include <stdlib.h>
-#include <stdarg.h>
-#include <errno.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
+#include <stdint.h>
+#include <errno.h>
 
 #include "all.h"
 #include "protos.h"
@@ -19,7 +20,7 @@
 
 
 /* Error reporting hooks */
-bool (*print_error_handler)(U_LONG, struct SGFInfo *, va_list) = PrintErrorHandler;
+bool (*print_error_handler)(uint32_t, struct SGFInfo *, va_list) = PrintErrorHandler;
 void (*print_error_output_hook)(struct SGFCError *) = PrintErrorOutputHook;
 panic_hook_t panic_hook = ExitWithFatalError;
 
@@ -127,15 +128,15 @@ static const char *error_mesg[] =
 #define ACCUMULATE_SIZE 80
 
 struct ErrorC_internal {
-	U_LONG last_row;	/* type & position of last error */
-	U_LONG last_col;
-	U_LONG last_type;
+	uint32_t last_row;	/* type & position of last error */
+	uint32_t last_col;
+	uint32_t last_type;
 
 	char accumulate[ACCUMULATE_SIZE];
 	size_t acc_count;
-	U_LONG acc_row;		/* type & position of last accumulate error */
-	U_LONG acc_col;
-	U_LONG acc_type;
+	uint32_t acc_row;		/* type & position of last accumulate error */
+	uint32_t acc_col;
+	uint32_t acc_type;
 
 	bool error_seen[MAX_ERROR_NUM];	/* used for E_ONLY_ONCE */
 };
@@ -161,7 +162,7 @@ struct ErrorC_internal *SetupErrorC_internal(void)
 ***				Variadic wrapper around PrintErrorHandler
 **************************************************************************/
 
-int PrintError(U_LONG type, struct SGFInfo *sgfc, ...) {
+int PrintError(uint32_t type, struct SGFInfo *sgfc, ...) {
 	int result = 0;
 
 	va_list arglist;
@@ -182,7 +183,7 @@ int PrintError(U_LONG type, struct SGFInfo *sgfc, ...) {
 **************************************************************************/
 
 ATTRIBUTE_NORETURN
-void ExitWithFatalError(U_LONG error, const char *detail)
+void ExitWithFatalError(uint32_t error, const char *detail)
 {
 	int err_num = (int)(error & M_ERROR_NUM);
 	fprintf(E_OUTPUT, "Fatal error %d: ", err_num);
@@ -202,11 +203,11 @@ void ExitWithFatalError(U_LONG error, const char *detail)
 ***				false: error disabled
 **************************************************************************/
 
-bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
+bool PrintErrorHandler(uint32_t type, struct SGFInfo *sgfc, va_list arglist) {
 	int print_c = 0;
 	struct SGFCError error = {0, NULL, 0, 0, 0};
 	char *error_msg_buffer = NULL, *val_pos = NULL, *illegal = NULL;
-	U_LONG row = 0, col = 0;
+	uint32_t row = 0, col = 0;
 	size_t illegal_count;
 	va_list argtmp;
 
@@ -238,8 +239,8 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 
 	if(type & E_SEARCHPOS)			/* get pointer to position if required */
 	{
-		row = va_arg(arglist, U_LONG);
-		col = va_arg(arglist, U_LONG);
+		row = va_arg(arglist, uint32_t);
+		col = va_arg(arglist, uint32_t);
 
 		if(row == sgfc->_error_c->last_row && col == sgfc->_error_c->last_col &&
 		   type == sgfc->_error_c->last_type && type & E_DEL_DOUBLE)
@@ -281,7 +282,7 @@ bool PrintErrorHandler(U_LONG type, struct SGFInfo *sgfc, va_list arglist) {
 			}
 
 			illegal = va_arg(arglist, char *);
-			if(type & E_MULTIPLE)	illegal_count = va_arg(arglist, U_LONG);
+			if(type & E_MULTIPLE)	illegal_count = va_arg(arglist, uint32_t);
 			else					illegal_count = 1;
 
 			/* illegal_count might be larger than ACCUMULATE_SIZE -> process in chunks */
@@ -410,7 +411,7 @@ void PrintErrorOutputHook(struct SGFCError *error)
 void CommonPrintErrorOutputHook(struct SGFCError *error, FILE *stream)
 {
 	if(error->row && error->col)		/* print position if required */
-		fprintf(stream, "Line:%lu Col:%lu - ", error->row, error->col);
+		fprintf(stream, "Line:%u Col:%u - ", error->row, error->col);
 
 	switch(error->error & M_ERROR_TYPE)
 	{

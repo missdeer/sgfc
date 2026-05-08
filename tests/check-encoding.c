@@ -13,7 +13,7 @@
 
 static bool encoding_fallback_seen;
 
-static bool encoding_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglist)
+static bool encoding_error_handler(uint32_t type, struct SGFInfo *sgfi, va_list arglist)
 {
 	(void)sgfi;
 	(void)arglist;
@@ -165,7 +165,7 @@ START_TEST (test_basic_conversion)
 
 	/* ... and convert text back */
 	cd = iconv_open("UTF-8", "UTF-16LE");
-	result = DecodeBuffer(sgfc, cd, dst_buffer, (U_LONG)(dst_pos - dst_buffer), 0, NULL);
+	result = DecodeBuffer(sgfc, cd, dst_buffer, (uint32_t)(dst_pos - dst_buffer), 0, NULL);
 	ck_assert_ptr_ne(result, NULL);
 	ck_assert_str_eq(result, src_buffer);
 	free(result);

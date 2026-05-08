@@ -9,21 +9,21 @@
 
 #include "test-common.h"
 
-static U_LONG expected_error;
-static U_LONG allowed_error;	/* additional error that might occur */
+static uint32_t expected_error;
+static uint32_t allowed_error;	/* additional error that might occur */
 static bool expected_error_occurred;
 static char accumulated_illegal[256];
 static size_t accumulated_illegal_len;
 static int accumulated_flush_count;
 
 
-static bool mock_error_handler(U_LONG type, struct SGFInfo *sgfi, va_list arglist)
+static bool mock_error_handler(uint32_t type, struct SGFInfo *sgfi, va_list arglist)
 {
 	if(type == expected_error)
 		expected_error_occurred = true;
 	else if(type != E_NO_ERROR && type != allowed_error)
 	{
-		ck_assert_msg(type == expected_error, "expected error: %lu (%lx); received: %lu (%lx)",
+		ck_assert_msg(type == expected_error, "expected error: %lu (%x); received: %lu (%x)",
 					  expected_error & M_ERROR_NUM, expected_error, type & M_ERROR_NUM, type);
 	}
 	return true;
@@ -39,7 +39,7 @@ static void setup(void)
 }
 
 
-static void trigger_error(U_LONG type, char *buffer, char *expected)
+static void trigger_error(uint32_t type, char *buffer, char *expected)
 {
 	sgfc->buffer = buffer;
 	sgfc->b_end = buffer + strlen(buffer);
@@ -91,7 +91,7 @@ START_TEST (test_E_ILLEGAL_OUTSIDE_CHARS_large_accumulation)
 	accumulated_illegal_len = 0;
 	accumulated_flush_count = 0;
 
-	PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, 1UL, 1UL, true, illegal, (U_LONG)strlen(illegal));
+	PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, 1UL, 1UL, true, illegal, (uint32_t)strlen(illegal));
 	PrintError(E_NO_ERROR, sgfc);	/* flush the final partial chunk */
 
 	print_error_output_hook = PrintErrorOutputHook;

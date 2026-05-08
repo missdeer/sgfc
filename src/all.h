@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <iconv.h>
 
 /* #define VERSION_NO_MAIN */		/* In case you've written a new main()
@@ -27,20 +28,15 @@
 #endif
 
 
-typedef unsigned char	U_CHAR;
-typedef unsigned short	U_SHORT;
-typedef unsigned int	U_INT;
-typedef unsigned long	U_LONG;
-
 /* defines for error handling */
 
 #define E_OUTPUT	stderr				/* output channel for error messages */
 
 struct SGFCError {
-	U_LONG error;			/* type and number of error */
+	uint32_t error;			/* type and number of error */
 	const char *message;	/* message buffer (freed after output handler returns!) */
-	U_LONG row;				/* row number or 0 if no position */
-	U_LONG col;				/* column number in buffer or 0 if no position */
+	uint32_t row;				/* row number or 0 if no position */
+	uint32_t col;				/* column number in buffer or 0 if no position */
 	int lib_errno;			/* copy of errno in case of file errors */
 };
 
@@ -227,18 +223,18 @@ typedef enum {
 /* separate structure, so that it can be re-used when iterating the node tree */
 struct PathBoard
 {
-	U_LONG board[MAX_BOARDSIZE*MAX_BOARDSIZE];
-	U_LONG num;
+	uint32_t board[MAX_BOARDSIZE*MAX_BOARDSIZE];
+	uint32_t num;
 };
 
 struct BoardStatus
 {
-	U_SHORT annotate;		/* flags for annotation props, etc. */
+	uint16_t annotate;		/* flags for annotation props, etc. */
 	struct Node *ginfo;		/* pointer to first node containing GINFO properties */
 	int bwidth;				/* copy of sgf->info->bwidth */
 	int bheight;			/* copy of sgf->info->bheight */
 	unsigned char *board;
-	U_SHORT *markup;
+	uint16_t *markup;
 	bool markup_changed;	/* markup field changed */
 	struct PathBoard *paths;	/* board for capturing stones */
 };
@@ -254,8 +250,8 @@ struct PropValue
 	char *value2;				/* value2 for compose value type */
 	size_t value2_len;
 
-	U_LONG row;
-	U_LONG col;
+	uint32_t row;
+	uint32_t col;
 };
 
 
@@ -263,17 +259,17 @@ struct Property
 {
 	struct Property *next;		/* list */
 	struct Property *prev;
-	U_CHAR  priority;			/* for sorting properties within a node */
+	uint8_t  priority;			/* for sorting properties within a node */
 
 	token id;
 	char *idstr;				/* original ID string including lowercase (for TKN_UNKNOWN, error reporting, ...) */
-	U_SHORT flags;				/* copy of sgf_token[].flags (may get changed programmatically) */
+	uint16_t flags;				/* copy of sgf_token[].flags (may get changed programmatically) */
 
 	struct PropValue *value;	/* value list head */
 	struct PropValue *valend;
 
-	U_LONG row;
-	U_LONG col;
+	uint32_t row;
+	uint32_t col;
 };
 
 
@@ -289,8 +285,8 @@ struct Node
 	struct Property *prop;		/* prop list head */
 	struct Property *last;
 
-	U_LONG row;
-	U_LONG col;
+	uint32_t row;
+	uint32_t col;
 };
 
 
@@ -316,7 +312,7 @@ struct ListNode
 {
 	struct ListNode *next;
 	struct ListNode *prev;
-	U_CHAR priority;		/* is only used by Enqueue function */
+	uint8_t priority;		/* is only used by Enqueue function */
 };
 
 struct ListHead
@@ -420,7 +416,7 @@ struct MemoryIOHandle {
 struct SaveFileHandler {
 	int (*open)(struct SaveFileHandler *, const char *, const char *);
 	/* close() also gets error code, so that it knows whether writing finished successfully */
-	int (*close)(struct SaveFileHandler *, U_LONG);
+	int (*close)(struct SaveFileHandler *, uint32_t);
 	int (*putc)(struct SaveFileHandler *, int);
 	union {
 		FILE *file;
@@ -461,12 +457,12 @@ struct SGFInfo
 struct SGFToken
 {
 	char *id;
-	U_CHAR priority;
-	U_CHAR ff;		/* file format */
+	uint8_t priority;
+	uint8_t ff;		/* file format */
 	bool (*CheckValue)(struct SGFInfo *, struct Property *, struct PropValue *);
 	bool (*Execute_Prop)(struct SGFInfo *, struct Node *, struct Property *, struct BoardStatus *);
-	U_SHORT flags;
-	U_SHORT data;	/* for Do_XXX */
+	uint16_t flags;
+	uint16_t data;	/* for Do_XXX */
 };
 
 /* return value of many parse functions */
