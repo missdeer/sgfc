@@ -325,9 +325,9 @@ void strnpcpy(char *dst, const char *src, size_t len)
 *** Returns:	number of chars removed from string
 **************************************************************************/
 
-uint32_t KillChars(char *value, size_t *len, uint16_t kill, const char *cset)
+size_t KillChars(char *value, size_t *len, uint16_t kill, const char *cset)
 {
-	uint32_t faulty = 0;
+	size_t faulty = 0;
 	size_t i;
 	char *c, *d;
 
@@ -364,9 +364,9 @@ uint32_t KillChars(char *value, size_t *len, uint16_t kill, const char *cset)
 *** Returns:	number of selected chars found in value
 **************************************************************************/
 
-uint32_t TestChars(const char *value, uint16_t test, const char *cset)
+size_t TestChars(const char *value, uint16_t test, const char *cset)
 {
-	uint32_t faulty = 0;
+	size_t faulty = 0;
 	const char *c;
 
 	for(c = value; *c; c++)

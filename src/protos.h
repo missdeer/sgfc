@@ -144,8 +144,8 @@ size_t SafeAddSize(size_t a, size_t b, const char *err);
 bool strnccmp(const char *a, const char *b, size_t len);
 bool stridcmp(const char *a, const char *b);
 void strnpcpy(char *dst, const char *src, size_t len);
-uint32_t KillChars(char *value, size_t *len, uint16_t kill, const char *cset);
-uint32_t TestChars(const char *value, uint16_t test, const char *cset);
+size_t KillChars(char *value, size_t *len, uint16_t kill, const char *cset);
+size_t TestChars(const char *value, uint16_t test, const char *cset);
 
 struct Property *FindProperty(struct Node *n, token id);
 struct Property *AddProperty(struct Node *n, token id, uint32_t row, uint32_t col, const char *id_str);
