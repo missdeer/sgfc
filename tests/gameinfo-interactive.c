@@ -132,6 +132,55 @@ START_TEST (test_interactive_delete_value)
 END_TEST
 
 
+START_TEST (test_interactive_long_time_input_has_correction_slack)
+{
+	int stdin_copy, stdout_copy;
+	FILE *tmp_in, *tmp_out;
+	char value[] = "bad time";
+	struct PropValue v = { .value = SafeDupString(value, "value"), .value_len = strlen(value) };
+	struct Property p = { .id = TKN_TM, .idstr = "TM", .value = &v };
+
+	sgfc->options->interactive = true;
+
+	RedirectPromptIO("12345678901234567890123456h\n\n", &stdin_copy, &stdout_copy, &tmp_in, &tmp_out);
+	bool result = Check_GameInfo(sgfc, &p, &v);
+	RestorePromptIO(stdin_copy, stdout_copy, tmp_in, tmp_out);
+
+	ck_assert(result);
+	ck_assert_uint_eq(v.value_len, strlen(v.value));
+	ck_assert_uint_gt(v.value_len, strlen("12345678901234567890123456h"));
+	ck_assert_uint_eq(strspn(v.value, "0123456789."), v.value_len);
+
+	free(v.value);
+}
+END_TEST
+
+
+START_TEST (test_interactive_long_result_input_has_correction_slack)
+{
+	int stdin_copy, stdout_copy;
+	FILE *tmp_in, *tmp_out;
+	char value[] = "bad result";
+	struct PropValue v = { .value = SafeDupString(value, "value"), .value_len = strlen(value) };
+	struct Property p = { .id = TKN_RE, .idstr = "RE", .value = &v };
+
+	sgfc->options->interactive = true;
+
+	RedirectPromptIO("B+12345678901234567890123456half\n\n", &stdin_copy, &stdout_copy, &tmp_in, &tmp_out);
+	bool result = Check_GameInfo(sgfc, &p, &v);
+	RestorePromptIO(stdin_copy, stdout_copy, tmp_in, tmp_out);
+
+	ck_assert(result);
+	ck_assert_uint_eq(v.value_len, strlen(v.value));
+	ck_assert_uint_eq(v.value[0], 'B');
+	ck_assert_uint_eq(v.value[1], '+');
+	ck_assert_uint_eq(strspn(&v.value[2], "0123456789."), v.value_len - 2);
+
+	free(v.value);
+}
+END_TEST
+
+
 TCase *sgfc_tc_gameinfo_interactive(void)
 {
 	TCase *tc;
@@ -143,5 +192,7 @@ TCase *sgfc_tc_gameinfo_interactive(void)
 	tcase_add_test(tc, test_interactive_corrected_result_keeps_value);
 	tcase_add_test(tc, test_interactive_corrected_input);
 	tcase_add_test(tc, test_interactive_delete_value);
+	tcase_add_test(tc, test_interactive_long_time_input_has_correction_slack);
+	tcase_add_test(tc, test_interactive_long_result_input_has_correction_slack);
 	return tc;
 }

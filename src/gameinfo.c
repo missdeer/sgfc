@@ -18,6 +18,23 @@
 
 
 /**************************************************************************
+*** Function:	GameInfoBufferSize
+***				Ensures the size is large enough to hold any modifications
+***				or corrections that happen during Parse_* functions.
+***				Examples: TM[] value x3600 to get from hours to seconds
+***						  RE[] might add ".0"
+*** Parameters: len ... length of buffer
+*** Returns:	adjusted length of buffer that should be used
+**************************************************************************/
+
+static inline size_t GameInfoBufferSize(size_t len)
+{
+	/* corrections may use up to 25 bytes; +7 because e.g. 1h=3600s */
+	return (len > 25-7) ? safe_add(len, 7) : 25;
+}
+
+
+/**************************************************************************
 *** Function:	GetFraction
 ***				Checks for written out fractions and small numbers
 *** Parameters: val ... pointer to string
@@ -627,8 +644,7 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 
 	PrintError(E4_FAULTY_GC, sgfc, v->row, v->col, v->value, p->idstr, "");
 
-	/* correct functions may use up to 25 bytes; +7 because time in hours multiplies by 3600 and adds ".0" */
-	size = (v->value_len > 25-7) ? safe_add(v->value_len, 7) : 25;
+	size = GameInfoBufferSize(v->value_len);
 	newgi = SafeDupText2(v->value, v->value_len, size, "gameinfo value buffer");
 
 	while(true)
@@ -655,7 +671,8 @@ static int PromptGameInfo(struct SGFInfo *sgfc, struct Property *p,
 		if(!strnccmp(inp, "d", 0))	/* [d] == delete */
 			return false;
 
-		newgi = SafeDupText2(inp, inp_len-1, 25, "game info value buffer");
+		size = GameInfoBufferSize(inp_len-1);
+		newgi = SafeDupText2(inp, inp_len-1, size, "game info value buffer");
 	}
 
 	free(v->value);
@@ -693,8 +710,7 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 		default:		return true;
 	}
 
-	/* correct functions may use up to 25 bytes; +7 because time in hours multiplies by 3600 and adds ".0" */
-	size = (v->value_len > 25-7) ? safe_add(v->value_len, 7) : 25;
+	size = GameInfoBufferSize(v->value_len);
 	val = SafeDupText2(v->value, v->value_len, size, "result value buffer");
 	val_len = v->value_len;
 	res = (*parse)(val, &val_len);
