@@ -8,10 +8,12 @@
 **************************************************************************/
 
 #include <iconv.h>
+#include <stdint.h>
 
 #include "test-common.h"
 
 static bool encoding_fallback_seen;
+
 
 static bool encoding_error_handler(uint32_t type, struct SGFInfo *sgfi, va_list arglist)
 {
@@ -23,58 +25,86 @@ static bool encoding_error_handler(uint32_t type, struct SGFInfo *sgfi, va_list 
 }
 
 
+static bool LoadParseBuffer(char *buffer, size_t size)
+{
+	sgfc->buffer = buffer;
+	sgfc->b_end = buffer + size;
+	ck_assert_int_eq(LoadSGFFromFileBuffer(sgfc), true);
+	return ParseSGF(sgfc);
+}
+
+
+static void AssertRootComment(const char *expected)
+{
+	struct Property *comment = FindProperty(sgfc->root, TKN_C);
+	ck_assert_ptr_nonnull(comment);
+	ck_assert_ptr_nonnull(comment->value);
+	ck_assert_str_eq(comment->value->value, expected);
+}
+
+
 START_TEST (test_detect_encoding_BOM)
 {
 	char *result;
+	enum encoding_source source;
 	char buffer[4] = {'\xFE', '\xFF', ' ', ' '};
 
-	result = DetectEncoding(buffer, buffer+4);
+	result = DetectEncoding(buffer, buffer+4, &source);
 	ck_assert_str_eq(result, "UTF-16BE");
+	ck_assert_int_eq(source, ENCODING_SOURCE_BOM);
 	free(result);
 
 	buffer[0] = '\xFF';
 	buffer[1] = '\xFE';
-	result = DetectEncoding(buffer, buffer+4);
+	result = DetectEncoding(buffer, buffer+4, &source);
 	ck_assert_str_eq(result, "UTF-16LE");
+	ck_assert_int_eq(source, ENCODING_SOURCE_BOM);
 	free(result);
 
 	buffer[2] = 0;
 	buffer[3] = 0;
-	result = DetectEncoding(buffer, buffer+4);
+	result = DetectEncoding(buffer, buffer+4, &source);
 	ck_assert_str_eq(result, "UTF-32LE");
+	ck_assert_int_eq(source, ENCODING_SOURCE_BOM);
 	free(result);
 
 	buffer[0] = 0;
 	buffer[1] = 0;
 	buffer[2] = '\xFE';
 	buffer[3] = '\xFF';
-	result = DetectEncoding(buffer, buffer+4);
+	result = DetectEncoding(buffer, buffer+4, &source);
 	ck_assert_str_eq(result, "UTF-32BE");
+	ck_assert_int_eq(source, ENCODING_SOURCE_BOM);
 	free(result);
 
 	buffer[0] = '\xEF';
 	buffer[1] = '\xBB';
 	buffer[2] = '\xBF';
 	buffer[3] = '\n';
-	result = DetectEncoding(buffer, buffer+4);
+	result = DetectEncoding(buffer, buffer+4, &source);
 	ck_assert_str_eq(result, "UTF-8");
+	ck_assert_int_eq(source, ENCODING_SOURCE_BOM);
 	free(result);
 }
 END_TEST
 
+
 START_TEST (test_detect_encoding_limits)
 {
 	char nested[] = "(((CA[UTF-8]))";
-	char *result = DetectEncoding(nested, nested + strlen(nested));
+	enum encoding_source source;
+	char *result = DetectEncoding(nested, nested + strlen(nested), &source);
 	ck_assert_ptr_eq(result, NULL);
+	ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 
 	char delayed[ENCODING_DETECT_SCAN_LIMIT + 200];
 	memset(delayed, 'a', sizeof(delayed));
 	delayed[0] = '(';
 	memcpy(delayed + ENCODING_DETECT_SCAN_LIMIT + 5, "CA[UTF-8]", 9);
 	delayed[sizeof(delayed)-1] = 0;
-	result = DetectEncoding(delayed, delayed + sizeof(delayed) - 1);
+	result = DetectEncoding(delayed, delayed + sizeof(delayed) - 1, &source);
 	ck_assert_ptr_eq(result, NULL);
+	ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 }
 END_TEST
 
@@ -82,40 +112,48 @@ END_TEST
 START_TEST (test_detect_encoding)
 {
 	char *result;
+	enum encoding_source source;
 
 	char buffer[] = "some (text CA[basic-case] more text";
-	result = DetectEncoding(buffer, buffer + strlen(buffer));
+	result = DetectEncoding(buffer, buffer + strlen(buffer), &source);
 	ck_assert_str_eq(result, "basic-case");
+	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer2[] = "some (CA\n [ spaces \n] ";
-	result = DetectEncoding(buffer2, buffer2 + strlen(buffer2));
+	result = DetectEncoding(buffer2, buffer2 + strlen(buffer2), &source);
 	ck_assert_str_eq(result, "spaces");
+	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer3[] = "some text in (front ClowerAcase\n [ lower-case]";
-	result = DetectEncoding(buffer3, buffer3 + strlen(buffer3));
+	result = DetectEncoding(buffer3, buffer3 + strlen(buffer3), &source);
 	ck_assert_str_eq(result, "lower-case");
+	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer4[] = "(CCA[one]CA[second]";
-	result = DetectEncoding(buffer4, buffer4 + strlen(buffer4));
+	result = DetectEncoding(buffer4, buffer4 + strlen(buffer4), &source);
 	ck_assert_str_eq(result, "second");
+	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer5[] = "(xCyAzA[one]CxA[second-lower]";
-	result = DetectEncoding(buffer5, buffer5 + strlen(buffer5));
+	result = DetectEncoding(buffer5, buffer5 + strlen(buffer5), &source);
 	ck_assert_str_eq(result, "second-lower");
+	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer6[] = "(xCyA.CzA[word-boundary] more";
-	result = DetectEncoding(buffer6, buffer6 + strlen(buffer6));
+	result = DetectEncoding(buffer6, buffer6 + strlen(buffer6), &source);
 	ck_assert_str_eq(result, "word-boundary");
+	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer7[] = "no:CA[one] (CA[after-brace]";
-	result = DetectEncoding(buffer7, buffer7 + strlen(buffer7));
+	result = DetectEncoding(buffer7, buffer7 + strlen(buffer7), &source);
 	ck_assert_str_eq(result, "after-brace");
+	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 }
 END_TEST
@@ -124,25 +162,76 @@ END_TEST
 START_TEST (test_no_encoding_specified)
 {
 	char *result;
+	enum encoding_source source;
 
 	char buffer[] = "you're not gonna find it";
-	result = DetectEncoding(buffer, buffer + strlen(buffer));
+	result = DetectEncoding(buffer, buffer + strlen(buffer), &source);
 	ck_assert_ptr_eq(result, NULL);
+	ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 
 	char buffer2[] = "you're not gonna CA[it";
-	result = DetectEncoding(buffer2, buffer2 + strlen(buffer2));
+	result = DetectEncoding(buffer2, buffer2 + strlen(buffer2), &source);
 	ck_assert_ptr_eq(result, NULL);
+	ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 
 	char buffer3[] = "(;CA[])";
-	result = DetectEncoding(buffer3, buffer3 + strlen(buffer3));
+	result = DetectEncoding(buffer3, buffer3 + strlen(buffer3), &source);
 	ck_assert_ptr_eq(result, NULL);
+	ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 
 	char tiny[] = "abc";
 	for(size_t len = 0; len < 4; len++)
 	{
-		result = DetectEncoding(tiny, tiny + len);
+		result = DetectEncoding(tiny, tiny + len, &source);
 		ck_assert_ptr_eq(result, NULL);
+		ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 	}
+}
+END_TEST
+
+
+START_TEST (test_forced_encoding_overrides_ca)
+{
+	char buffer[] = "(;FF[4]CA[EUC-CN]C[\x99])";
+
+	sgfc->options->forced_encoding = "Windows-1252";
+	ck_assert_int_eq(LoadParseBuffer(buffer, sizeof(buffer)), true);
+	AssertRootComment("\xE2\x84\xA2");
+}
+END_TEST
+
+
+START_TEST (test_default_encoding_used_without_ca)
+{
+	char buffer[] = "(;FF[4]C[\xE1\xD9])";
+
+	sgfc->options->default_encoding = "ISO-8859-7";
+	ck_assert_int_eq(LoadParseBuffer(buffer, sizeof(buffer)), true);
+	AssertRootComment("\xCE\xB1\xCE\xA9");
+}
+END_TEST
+
+
+START_TEST (test_load_big5_escaped_skeleton_byte_with_e1)
+{
+	/* 5D == ']' */
+	char buffer[] = "(;FF[4]CA[Big5]C[\xA6\x5D])";
+
+	sgfc->options->encoding = OPTION_ENCODING_EVERYTHING;
+	ck_assert_int_eq(LoadParseBuffer(buffer, strlen(buffer)), true);
+	AssertRootComment("\xE5\x9B\xA0");
+}
+END_TEST
+
+
+START_TEST (test_load_sjis_escaped_skeleton_byte_with_e1)
+{
+	/* 5C == '\' */
+	char buffer[] = "(;FF[4]CA[SJIS]C[\x90\x5C])";
+
+	sgfc->options->encoding = OPTION_ENCODING_EVERYTHING;
+	ck_assert_int_eq(LoadParseBuffer(buffer, strlen(buffer)), true);
+	AssertRootComment("\xE7\x94\xB3");
 }
 END_TEST
 
@@ -322,6 +411,10 @@ TCase *sgfc_tc_encoding(void)
 	tcase_add_test(tc, test_detect_encoding);
 	tcase_add_test(tc, test_detect_encoding_limits);
 	tcase_add_test(tc, test_no_encoding_specified);
+	tcase_add_test(tc, test_forced_encoding_overrides_ca);
+	tcase_add_test(tc, test_default_encoding_used_without_ca);
+	tcase_add_test(tc, test_load_big5_escaped_skeleton_byte_with_e1);
+	tcase_add_test(tc, test_load_sjis_escaped_skeleton_byte_with_e1);
 	tcase_add_test(tc, test_basic_conversion);
 	tcase_add_test(tc, test_bad_char_conversion);
 	tcase_add_test(tc, test_buffer_overflow_conversion);
@@ -329,5 +422,158 @@ TCase *sgfc_tc_encoding(void)
 	tcase_add_test(tc, test_8bit_value_at_end);
 	tcase_add_test(tc, test_open_iconv_fallback);
 	tcase_add_test(tc, test_open_iconv_forced_encoding);
+	return tc;
+}
+
+
+/**************************************************************************
+*** Test Case 2: also verifies detected errors
+**************************************************************************/
+
+
+static void verifying_setup(void)
+{
+	common_setup();
+
+	print_error_handler = verifying_error_handler;
+	allowed_errors = NULL;
+	expected_error_occurred = false;
+}
+
+
+START_TEST (test_load_utf8_bom)
+{
+	char buffer[] = "\xEF\xBB\xBF(;C[s\xC3\xBC\xC3\x9F])";
+
+	expected_error = E_NO_ERROR;
+	ck_assert_int_eq(LoadParseBuffer(buffer, strlen(buffer)), true);
+	ck_assert(expected_error_occurred);
+	AssertRootComment("süß");
+}
+END_TEST
+
+
+START_TEST (test_load_utf16be_bom)
+{
+	char buffer[] = {
+		'\xFE', '\xFF',
+		0x00, '(', 0x00, ';', 0x00, 'F', 0x00, 'F', 0x00, '[', 0x00, '4', 0x00, ']',
+		0x00, 'C', 0x00, 'A', 0x00, '[', 0x00, 'U', 0x00, 'T', 0x00, 'F', 0x00, '-',
+		0x00, '1', 0x00, '6', 0x00, 'B', 0x00, 'E', 0x00, ']', 0x00, 'C', 0x00, '[',
+		0x00, 'B', 0x00, 'E', 0x00, '!', 0x00, ']', 0x00, ')'
+	};
+
+	expected_error = E_NO_ERROR;
+	ck_assert_int_eq(LoadParseBuffer(buffer, sizeof(buffer)), true);
+	ck_assert(expected_error_occurred);
+	AssertRootComment("BE!");
+}
+END_TEST
+
+
+START_TEST (test_load_utf16le_bom)
+{
+	char buffer[] = {
+		'\xFF', '\xFE', 
+		'(', 0x00, ';', 0x00, 'F', 0x00, 'F', 0x00, '[', 0x00, '4', 0x00, ']', 0x00,
+		'C', 0x00, 'A', 0x00, '[', 0x00, 'U', 0x00, 'T', 0x00, 'F', 0x00, '-', 0x00,
+		'1', 0x00, '6', 0x00, 'L', 0x00, 'E', 0x00, ']', 0x00, 'C', 0x00, '[', 0x00,
+		'L', 0x00, 'E', 0x00, '!', 0x00, ']', 0x00, ')', 0x00
+	};
+
+	expected_error = E_NO_ERROR;
+	ck_assert_int_eq(LoadParseBuffer(buffer, sizeof(buffer)), true);
+	ck_assert(expected_error_occurred);
+	AssertRootComment("LE!");
+}
+END_TEST
+
+
+START_TEST (test_e1_rejects_utf8_bom_ca_mismatch)
+{
+	char buffer[] = "\xEF\xBB\xBF(;FF[4]CA[ISO-8859-15]C[s\xC3\xBC\xC3\x9F])";
+
+	expected_error = FE_WRONG_ENCODING;
+	ck_assert_int_eq(LoadParseBuffer(buffer, strlen(buffer)), false);
+	ck_assert(expected_error_occurred);
+}
+END_TEST
+
+
+START_TEST (test_utf16_without_bom_not_detected)
+{
+	char buffer[] = {
+		0x00, '(', 0x00, ';', 0x00, 'F', 0x00, 'F', 0x00, '[', 0x00, '4', 0x00, ']',
+		0x00, 'C', 0x00, 'A', 0x00, '[', 0x00, 'U', 0x00, 'T', 0x00, 'F', 0x00, '-',
+		0x00, '1', 0x00, '6', 0x00, 'B', 0x00, 'E', 0x00, ']', 0x00, 'C', 0x00, '[',
+		0x00, 'N', 0x00, 'o', 0x00, '!', 0x00, ']', 0x00, ')'
+	};
+	uint32_t allowed[] = {
+		E_ILLEGAL_OUTSIDE_CHAR, E_NO_PROP_VALUES, WS_UNKNOWN_PROPERTY,
+		E_MISSING_SEMICOLON, 0
+	};
+
+	expected_error = W_CTRL_BYTE_DELETED;
+	allowed_errors = allowed;
+	ck_assert_int_eq(LoadParseBuffer(buffer, sizeof(buffer)), true);
+	ck_assert(expected_error_occurred);
+}
+END_TEST
+
+
+START_TEST (test_e1_rejects_multiple_encodings)
+{
+	char buffer[] = "(;FF[4]CA[UTF-8]C[one])(;FF[4]CA[ISO-8859-15]C[two])";
+
+	sgfc->options->encoding = OPTION_ENCODING_EVERYTHING;
+	expected_error = FE_MULTIPLE_ENCODINGS;
+	ck_assert_int_eq(LoadParseBuffer(buffer, strlen(buffer)), false);
+	ck_assert_int_eq(expected_error_occurred, true);
+}
+END_TEST
+
+
+START_TEST (test_e2_warns_for_multiple_encodings)
+{
+	char buffer[] = "(;FF[4]CA[UTF-8]C[one])(;FF[4]CA[ISO-8859-1]C[two])";
+
+	sgfc->options->encoding = OPTION_ENCODING_TEXT_ONLY;
+	expected_error = WS_CA_DIFFERS;
+	ck_assert_int_eq(LoadParseBuffer(buffer, strlen(buffer)), true);
+	ck_assert_int_eq(expected_error_occurred, true);
+}
+END_TEST
+
+
+START_TEST (test_load_big5_skeleton_byte_fails_with_e2)
+{
+	/* 5D == ']' would need to be escaped within multibyte */
+	char buffer[] = "(;FF[4]CA[Big5]C[\xA6\x5D])";
+	uint32_t allowed[] = { E_ILLEGAL_OUTSIDE_CHAR, 0 };
+
+	expected_error = WS_ENCODING_ERRORS;
+	allowed_errors = allowed;
+	sgfc->options->encoding = OPTION_ENCODING_TEXT_ONLY;
+	ck_assert_int_eq(LoadParseBuffer(buffer, strlen(buffer)), true);
+	ck_assert(expected_error_occurred);
+}
+END_TEST
+
+
+TCase *sgfc_tc_encoding2(void)
+{
+	TCase *tc;
+
+	tc = tcase_create("encoding2");
+	tcase_add_checked_fixture(tc, verifying_setup, common_teardown);
+
+	tcase_add_test(tc, test_load_utf8_bom);
+	tcase_add_test(tc, test_load_utf16be_bom);
+	tcase_add_test(tc, test_load_utf16le_bom);
+	tcase_add_test(tc, test_utf16_without_bom_not_detected);
+	tcase_add_test(tc, test_e1_rejects_utf8_bom_ca_mismatch);
+	tcase_add_test(tc, test_e1_rejects_multiple_encodings);
+	tcase_add_test(tc, test_e2_warns_for_multiple_encodings);
+	tcase_add_test(tc, test_load_big5_skeleton_byte_fails_with_e2);
 	return tc;
 }

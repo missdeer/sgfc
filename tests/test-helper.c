@@ -12,6 +12,11 @@
 struct SGFInfo *sgfc;
 char *expected_output;
 
+uint32_t expected_error;
+uint32_t *allowed_errors;		/* additional errors that might occur */
+bool expected_error_occurred;
+
+
 int Test_BufferIO_Close(struct SaveFileHandler *sfh, uint32_t error)
 {
 	ck_assert_uint_eq(error, E_NO_ERROR);
@@ -21,10 +26,28 @@ int Test_BufferIO_Close(struct SaveFileHandler *sfh, uint32_t error)
 	return SaveBufferIO_close(sfh, E_NO_ERROR);
 }
 
+
 struct SaveFileHandler *SetupSaveTestIO(void)
 {
 	return SetupSaveBufferIO(SaveBufferIO_open, Test_BufferIO_Close);
 }
+
+
+bool verifying_error_handler(uint32_t type, struct SGFInfo *sgfi, va_list arglist)
+{
+	if(type == expected_error)
+		expected_error_occurred = true;
+	else if(type != E_NO_ERROR)
+	{
+		for(uint32_t *allowed=allowed_errors; allowed && *allowed; allowed++)
+			if(type == *allowed)
+				return true;
+		ck_assert_msg(type == expected_error, "expected error: %lu (%x); received: %lu (%x)",
+					  expected_error & M_ERROR_NUM, expected_error, type & M_ERROR_NUM, type);
+	}
+	return true;
+}
+
 
 void common_setup(void)
 {

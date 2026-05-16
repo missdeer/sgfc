@@ -862,13 +862,17 @@ static bool CheckDifferingRootProperties(struct SGFInfo *sgfc)
 	struct Property *gm, *ff, *ca;
 	uint32_t row, col;
 	const char *first_encoding = sgfc->tree->encoding_name;
+	bool first_ca_missing = !FindProperty(sgfc->tree->root, TKN_CA);
 
 	if(sgfc->options->encoding == OPTION_ENCODING_EVERYTHING &&
 	   strnccmp(first_encoding, sgfc->global_encoding_name, 0))
 	{
-		/* Detection picked up wrong encoding; oh dear! */
-		PrintError(FE_WRONG_ENCODING, sgfc, sgfc->tree->root->row, sgfc->tree->root->col);
-		return false;
+		if(sgfc->global_encoding_source != ENCODING_SOURCE_BOM || !first_ca_missing)
+		{
+			/* Detection picked up wrong encoding; oh dear! */
+			PrintError(FE_WRONG_ENCODING, sgfc, sgfc->tree->root->row, sgfc->tree->root->col);
+			return false;
+		}
 	}
 
 	for(; ti; ti = ti->next)
@@ -898,7 +902,14 @@ static bool CheckDifferingRootProperties(struct SGFInfo *sgfc)
 
 		if(sgfc->options->encoding == OPTION_ENCODING_EVERYTHING)
 		{
-			if(strnccmp(ti->encoding_name, first_encoding, 0))
+			if(sgfc->global_encoding_source == ENCODING_SOURCE_BOM && first_ca_missing && !ca)
+				continue;
+
+			const char *encoding = first_encoding;
+			if(sgfc->global_encoding_source == ENCODING_SOURCE_BOM && first_ca_missing)
+				encoding = sgfc->global_encoding_name;
+
+			if(strnccmp(ti->encoding_name, encoding, 0))
 			{
 				PrintError(FE_MULTIPLE_ENCODINGS, sgfc, row, col);
 				return false;

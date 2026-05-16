@@ -22,7 +22,7 @@ Checks: >-
   -readability-math-missing-parentheses,
   -readability-misleading-indentation
 WarningsAsErrors: ''
-HeaderFilterRegex: ''
+HeaderFilterRegex: '.*'
 FormatStyle:     none
 User:            arno
 

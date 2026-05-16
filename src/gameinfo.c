@@ -206,7 +206,9 @@ static parse_result_t Parse_Result(char *value, size_t *len, ...)
 		case 'j':
 		case 'J':	if(strnccmp(value, "jigo", 4))
 						return PARSE_ERROR;
-					ATTRIBUTE_FALLTHROUGH;
+					strcpy(value, "Draw");
+					err = PARSE_CORRECTED_ERROR;
+					break;
 		case 'd':	err = PARSE_CORRECTED_ERROR;
 					value[0] = 'D';
 					ATTRIBUTE_FALLTHROUGH;

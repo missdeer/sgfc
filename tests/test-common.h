@@ -20,8 +20,12 @@
 
 extern struct SGFInfo *sgfc;
 extern char *expected_output;
+extern uint32_t expected_error;
+extern uint32_t *allowed_errors;
+extern bool expected_error_occurred;
 
 struct SaveFileHandler *SetupSaveTestIO(void);
+bool verifying_error_handler(uint32_t type, struct SGFInfo *sgfi, va_list arglist);
 void common_setup(void);
 void common_teardown(void);
 

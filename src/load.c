@@ -31,7 +31,7 @@ struct LoadInfo
 	struct SGFInfo *sgfc;
 
 	char *buffer;			/* either copy of sgfc->buffer OR decoded buffer */
-	const char *b_end;
+	const char *b_end;		/* exclusive buffer end, i.e. one past the last valid byte */
 
 	const char *current;	/* actual read position (cursor) in buffer */
 	uint32_t cur_row;			/* row & column associated with current */

@@ -70,12 +70,15 @@ iconv_t OpenIconV(struct SGFInfo *sgfc, const char *encoding, const char **encod
 ***				Contains mini-parser which might pick up different CA[] than load.c
 *** Parameters: c	  ... start of buffer
 ***				b_end ... end of buffer
+***				source ... output variable: where encoding was detected
 *** Returns:	pointer to encoding name (needs to be freed) or NULL
 **************************************************************************/
 
-char *DetectEncoding(const char *c, const char *b_end)
+char *DetectEncoding(const char *c, const char *b_end, enum encoding_source *source)
 {
 	int state = 1, brace_state = 1, brace_count = 0;
+
+	*source = ENCODING_SOURCE_NONE;
 
 	if((size_t)(b_end - c) < 4)
 		/* no encoding found (not even enough place for BOM) --> assume default */
@@ -86,17 +89,27 @@ char *DetectEncoding(const char *c, const char *b_end)
 
 	/* check for Unicode BOM */
 	if(*c == (char)0xFE && *(c+1) == (char)0xFF)
+	{
+		*source = ENCODING_SOURCE_BOM;
 		return SafeDupString("UTF-16BE", "encoding");
+	}
 	if(*c == (char)0xFF && *(c+1) == (char)0xFE)
 	{
+		*source = ENCODING_SOURCE_BOM;
 		if(!*(c+2) && !*(c+3))
 			return SafeDupString("UTF-32LE", "encoding");
 		return SafeDupString("UTF-16LE", "encoding");
 	}
 	if(!*c && !*(c+1) && *(c+2) == (char)0xFE && *(c+3) == (char)0xFF)
+	{
+		*source = ENCODING_SOURCE_BOM;
 		return SafeDupString("UTF-32BE", "encoding");
+	}
 	if(*c == (char)0xEF && *(c+1) == (char)0xBB && *(c+2) == (char)0xBF)
+	{
+		*source = ENCODING_SOURCE_BOM;
 		return SafeDupString("UTF-8", "encoding");
+	}
 
 	/* assume that while not necessarily ASCII-safe, that the encoding
 	 * has ASCII characters at ASCII codepoints, i.e. we can search for "(CA[]".
@@ -150,6 +163,7 @@ char *DetectEncoding(const char *c, const char *b_end)
 		free(ca_value);
 		return NULL;
 	}
+	*source = ENCODING_SOURCE_CA;
 	return ca_value;
 }
 
@@ -267,7 +281,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 
 char *DecodeSGFBuffer(struct SGFInfo *sgfc, const char **encbuffer_end, char **encoding_name)
 {
-	char *encoding = DetectEncoding(sgfc->buffer, sgfc->b_end);		/* might be NULL! */
+	char *encoding = DetectEncoding(sgfc->buffer, sgfc->b_end, &sgfc->global_encoding_source);
 	const char *selected_encoding;
 	iconv_t cd = OpenIconV(sgfc, encoding, &selected_encoding);
 	if(encoding != selected_encoding)

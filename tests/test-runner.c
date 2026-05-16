@@ -1,6 +1,6 @@
 /**************************************************************************
 *** Project: SGF Syntax Checker & Converter
-***	File:	 tests/testrunner.c
+***	File:	 tests/test-runner.c
 ***
 *** Copyright (C) 1996-2026 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
@@ -13,6 +13,7 @@
 TCase *sgfc_tc_check_value(void);
 TCase *sgfc_tc_delete_node(void);
 TCase *sgfc_tc_encoding(void);
+TCase *sgfc_tc_encoding2(void);
 TCase *sgfc_tc_load_properties(void);
 TCase *sgfc_tc_options(void);
 TCase *sgfc_tc_other_games(void);
@@ -24,6 +25,7 @@ TCase *sgfc_tc_trigger_errors(void);
 TCase *sgfc_tc_value_length(void);
 TCase *sgfc_tc_save(void);
 TCase *sgfc_tc_gameinfo_interactive(void);
+TCase *sgfc_tc_gameinfo_correction(void);
 TCase *sgfc_tc_tree_nesting(void);
 
 
@@ -33,6 +35,7 @@ Suite *sgfc_suite(void)
 	suite_add_tcase(s, sgfc_tc_check_value());
 	suite_add_tcase(s, sgfc_tc_delete_node());
 	suite_add_tcase(s, sgfc_tc_encoding());
+	suite_add_tcase(s, sgfc_tc_encoding2());
 	suite_add_tcase(s, sgfc_tc_load_properties());
 	suite_add_tcase(s, sgfc_tc_options());
 	suite_add_tcase(s, sgfc_tc_other_games());
@@ -44,6 +47,7 @@ Suite *sgfc_suite(void)
 	suite_add_tcase(s, sgfc_tc_value_length());
 	suite_add_tcase(s, sgfc_tc_save());
 	suite_add_tcase(s, sgfc_tc_gameinfo_interactive());
+	suite_add_tcase(s, sgfc_tc_gameinfo_correction());
 	suite_add_tcase(s, sgfc_tc_tree_nesting());
 	return s;
 }

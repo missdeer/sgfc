@@ -363,6 +363,12 @@ enum option_encoding {
 	OPTION_ENCODING_NONE,			/* treat file as binary, no encoding/decoding takes place */
 };
 
+enum encoding_source {
+	ENCODING_SOURCE_NONE=0,
+	ENCODING_SOURCE_BOM,
+	ENCODING_SOURCE_CA
+};
+
 struct SGFCOptions
 {
 	const char *infile;
@@ -427,7 +433,7 @@ struct SaveFileHandler {
 /* The big singleton -- contains everything that needs to be known throughout SGFC */
 struct SGFInfo
 {
-	struct Node *first;	/* node list head */
+	struct Node *first;		/* node list head */
 	struct Node *tail;
 
 	struct TreeInfo *tree;	/* Info for GameTrees */
@@ -437,10 +443,11 @@ struct SGFInfo
 	struct Node *root;		/* first root node (tree) */
 
 	char *buffer;			/* file buffer */
-	const char *b_end;		/* file buffer end address */
+	const char *b_end;		/* exclusive buffer end, i.e. one past the last valid byte */
 	char *head;				/* text in front of SGF data (or NULL) */
 	size_t head_len;
 	char *global_encoding_name;		/* only used in case of OPTION_ENCODING_EVERYTHING */
+	enum encoding_source global_encoding_source;
 
 	struct SGFCOptions *options;
 

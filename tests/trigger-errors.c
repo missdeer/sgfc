@@ -1,6 +1,6 @@
 /**************************************************************************
 *** Project: SGF Syntax Checker & Converter
-***	File:	 tests/parse-text.c
+***	File:	 tests/trigger-errors.c
 ***
 *** Copyright (C) 1996-2026 by Arno Hollosi
 *** (see 'main.c' for more copyright information)
@@ -9,33 +9,19 @@
 
 #include "test-common.h"
 
-static uint32_t expected_error;
-static uint32_t allowed_error;	/* additional error that might occur */
-static bool expected_error_occurred;
 static char accumulated_illegal[256];
 static size_t accumulated_illegal_len;
 static int accumulated_flush_count;
-
-
-static bool mock_error_handler(uint32_t type, struct SGFInfo *sgfi, va_list arglist)
-{
-	if(type == expected_error)
-		expected_error_occurred = true;
-	else if(type != E_NO_ERROR && type != allowed_error)
-	{
-		ck_assert_msg(type == expected_error, "expected error: %lu (%x); received: %lu (%x)",
-					  expected_error & M_ERROR_NUM, expected_error, type & M_ERROR_NUM, type);
-	}
-	return true;
-}
-
+static uint32_t allow_this_error[2] = { 0, 0 };
 
 static void setup(void)
 {
 	common_setup();
-	print_error_handler = mock_error_handler;
+
+	print_error_handler = verifying_error_handler;
 	expected_error_occurred = false;
-	allowed_error = E_NO_ERROR;
+	allow_this_error[0] = 0;
+	allowed_errors = allow_this_error;
 }
 
 
@@ -233,7 +219,7 @@ END_TEST
 
 START_TEST (test_E_BAD_ROOT_PROP_huge_number)
 {
-	allowed_error = E_BAD_VALUE_CORRECTED;
+	allow_this_error[0] = E_BAD_VALUE_CORRECTED;
 	trigger_error(E_BAD_ROOT_PROP,
 				  "(;FF[999999999999999999999999999999999999999]"
 				  "SZ[999999999999999999999999999999999999999]GM[1])",
@@ -338,7 +324,7 @@ END_TEST
 
 START_TEST (test_WS_LONG_PROPID)
 {
-	allowed_error = WS_UNKNOWN_PROPERTY;
+	allow_this_error[0] = WS_UNKNOWN_PROPERTY;
 	trigger_error(WS_LONG_PROPID,
 				  "(;PIW[])",
 				  "(;FF[4]CA[UTF-8]GM[1]SZ[19]PIW[])\n");
@@ -504,7 +490,7 @@ END_TEST
 START_TEST (test_WS_GM_DIFFERS)
 {
 {
-	allowed_error = WCS_GAME_NOT_GO;
+	allow_this_error[0] = WCS_GAME_NOT_GO;
 	trigger_error(WS_GM_DIFFERS,
 				  "(;GM[1])(;GM[2])",
 				  "(;FF[4]CA[UTF-8]GM[1]SZ[19])\n(;FF[4]CA[UTF-8]GM[2])\n");
@@ -586,7 +572,7 @@ END_TEST
 START_TEST (test_W_HANDICAP_NOT_SETUP)
 {
 	sgfc->options->strict_checking = true;
-	allowed_error = E_MORE_THAN_ONE_TREE;
+	allow_this_error[0] = E_MORE_THAN_ONE_TREE;
 	trigger_error(W_HANDICAP_NOT_SETUP,
 				  "(;GM[1]AB[aa][bb])(;GM[1]HA[3];B[bb])",
 				  "(;FF[4]CA[UTF-8]GM[1]SZ[19]AB[aa][bb])\n"
