@@ -19,8 +19,8 @@ endif
 OPTFLAGS := -O1
 STD      := -std=c99
 CPPFLAGS :=
-CFLAGS   := $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS) $(SANFLAGS) $(USER_CFLAGS)
-LDFLAGS  := $(SANFLAGS)
+CFLAGS   := $(OPTFLAGS) $(STD) $(WARNFLAGS) $(BUILD_CFLAGS) $(USER_CFLAGS)
+LDFLAGS  :=
 LDLIBS   := -lm
 
 OBJ := execute.o gameinfo.o load.o main.o parse.o parse2.o options.o \

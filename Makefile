@@ -27,20 +27,21 @@ test-files: src/sgfc
 	src/sgfc -cE2 test-files/mixed-encoding.sgf test-files/mixed-encoding-result.sgf 2>test-files/mixed-encoding-output.txt || true
 
 coverage:
-	$(MAKE) -C src sgfc OPTFLAGS='-O0' COVERAGEFLAGS='--coverage -g'
-	$(MAKE) -C tests tests OPTFLAGS='-O0' COVERAGEFLAGS='--coverage -g'
+	$(MAKE) -C src sgfc OPTFLAGS='-O0' BUILD_CFLAGS='--coverage -g' LDFLAGS='--coverage'
+	$(MAKE) -C tests tests OPTFLAGS='-O0' BUILD_CFLAGS='--coverage -g' LDFLAGS='--coverage'
 	lcov --capture --directory src --output-file coverage.info
 	genhtml coverage.info --output-directory coverage-html
 
-SANITIZER_CFLAGS := -g -fno-omit-frame-pointer \
-	-fsanitize=address,undefined,pointer-compare,pointer-subtract,bounds,object-size,return,unreachable
-
+SANITIZERS := -fsanitize=address,undefined,pointer-compare,pointer-subtract,bounds,object-size,return,unreachable
 SANITIZER_OPTIONS := ASAN_OPTIONS=detect_invalid_pointer_pairs=2 \
                      UBSAN_OPTIONS=print_stacktrace=1
 
 sanitize:
-	$(MAKE) -C src sgfc OPTFLAGS='-O0' SANFLAGS='$(SANITIZER_CFLAGS)'
-	$(MAKE) -C tests tests OPTFLAGS='-O0' SANFLAGS='$(SANITIZER_CFLAGS)' RUN_PREFIX='$(SANITIZER_OPTIONS)'
+	$(MAKE) -C src sgfc \
+		OPTFLAGS='-O0' BUILD_CFLAGS='-g -fno-omit-frame-pointer $(SANITIZERS)' LDFLAGS=$(SANITIZERS)
+	$(MAKE) -C tests tests OPTFLAGS='-O0' \
+		BUILD_CFLAGS='-g -fno-omit-frame-pointer $(SANITIZERS)' LDFLAGS=$(SANITIZERS) \
+		RUN_PREFIX='$(SANITIZER_OPTIONS)'
 
 all: clean sgfc tests
 

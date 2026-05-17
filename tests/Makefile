@@ -19,8 +19,8 @@ endif
 OPTFLAGS := -O1
 STD      := -std=c99
 CPPFLAGS := -I../src -D_POSIX_C_SOURCE=200112L
-CFLAGS   := $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS) $(SANFLAGS) $(USER_CFLAGS)
-LDFLAGS  := $(SANFLAGS)
+CFLAGS   := $(OPTFLAGS) $(STD) $(WARNFLAGS) $(BUILD_CFLAGS) $(USER_CFLAGS)
+LDFLAGS  :=
 LDLIBS   := -lcheck -lpthread -lrt -lsubunit -lm
 
 OBJ := test-runner.o test-helper.o position.o parse-text.o check-value.o \

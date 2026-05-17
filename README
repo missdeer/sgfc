@@ -719,7 +719,7 @@ Examples:
 Appendix A: History
 ===================
 
-V2.3 (2026-xxxxx)
+V2.3 (2026-05-17)
 -----------------
 - Added stdin/stdout support using "-"
   Due to this, error messages are now written to stderr.
