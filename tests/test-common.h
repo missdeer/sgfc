@@ -10,9 +10,6 @@
 #ifndef TEST_COMMON_H_
 #define TEST_COMMON_H_
 
-#include <stdlib.h>
-#include <check.h>
-
 #include "all.h"
 #include "protos.h"
 

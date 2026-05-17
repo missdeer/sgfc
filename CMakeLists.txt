@@ -69,6 +69,10 @@ if(BUILD_TESTING)
                 tests/trigger-errors.c
                 tests/value-length.c)
 
+        target_compile_definitions(sgfc-test
+                PRIVATE
+                _POSIX_C_SOURCE=200112L)
+
         target_include_directories(sgfc-test
                 PRIVATE
                 "${CMAKE_CURRENT_SOURCE_DIR}/tests")

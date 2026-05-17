@@ -7,6 +7,11 @@
 ***
 **************************************************************************/
 
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <check.h>
+
 #include "test-common.h"
 
 static struct PropValue *prop_value;

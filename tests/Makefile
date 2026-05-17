@@ -18,7 +18,7 @@ endif
 
 OPTFLAGS := -O1
 STD      := -std=c99
-CPPFLAGS := -I../src
+CPPFLAGS := -I../src -D_POSIX_C_SOURCE=200112L
 CFLAGS   := $(OPTFLAGS) $(STD) $(WARNFLAGS) $(COVERAGEFLAGS) $(SANFLAGS) $(USER_CFLAGS)
 LDFLAGS  := $(SANFLAGS)
 LDLIBS   := -lcheck -lpthread -lrt -lsubunit -lm

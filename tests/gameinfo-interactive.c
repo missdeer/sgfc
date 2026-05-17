@@ -7,11 +7,11 @@
 ***
 **************************************************************************/
 
-#define _POSIX_C_SOURCE 200112L
-
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <check.h>
 
 #include "test-common.h"
 
@@ -23,16 +23,25 @@ static void RedirectPromptIO(const char *input, int *stdin_copy, int *stdout_cop
 	*stdout_copy = dup(STDOUT_FILENO);
 	*tmp_in = tmpfile();
 	*tmp_out = tmpfile();
+	ck_assert_ptr_nonnull(*tmp_in);
+	ck_assert_ptr_nonnull(*tmp_out);
 	fwrite(input, 1, strlen(input), *tmp_in);
-	rewind(*tmp_in);
-	dup2(fileno(*tmp_in), STDIN_FILENO);
-	dup2(fileno(*tmp_out), STDOUT_FILENO);
+	ck_assert_int_eq(fseek(*tmp_in, 0L, SEEK_SET), 0);
+
+	int fno_in = fileno(*tmp_in);
+	int fno_out = fileno(*tmp_out);
+	ck_assert_int_ne(fno_in, -1);
+	ck_assert_int_ne(fno_out, -1);
+	ck_assert_int_ne(dup2(fileno(*tmp_in), STDIN_FILENO), -1);
+	ck_assert_int_ne(dup2(fileno(*tmp_out), STDOUT_FILENO), -1);
 }
 
 
 static void RestorePromptIO(int stdin_copy, int stdout_copy, FILE *tmp_in, FILE *tmp_out)
 {
 	fflush(stdout);
+	ck_assert_int_gt(stdin_copy, 0);
+	ck_assert_int_gt(stdout_copy, 0);
 	dup2(stdin_copy, STDIN_FILENO);
 	dup2(stdout_copy, STDOUT_FILENO);
 	close(stdin_copy);

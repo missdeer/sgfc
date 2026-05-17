@@ -7,7 +7,13 @@
 ***
 **************************************************************************/
 
+#include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <check.h>
+
 #include "test-common.h"
+
 
 struct SGFInfo *sgfc;
 char *expected_output;

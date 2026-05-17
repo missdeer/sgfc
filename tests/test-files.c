@@ -7,9 +7,16 @@
 ***
 **************************************************************************/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <check.h>
+
 #include "test-common.h"
 
+
 static FILE *testout;
+
 
 static char *ReadTestFile(const char *path, size_t *length)
 {

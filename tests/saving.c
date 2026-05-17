@@ -7,6 +7,10 @@
 ***
 **************************************************************************/
 
+#include <stdint.h>
+#include <string.h>
+#include <check.h>
+
 #include "test-common.h"
 
 

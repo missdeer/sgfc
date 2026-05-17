@@ -7,12 +7,18 @@
 ***
 **************************************************************************/
 
+#include <stdint.h>
+#include <string.h>
+#include <check.h>
+
 #include "test-common.h"
+
 
 static char accumulated_illegal[256];
 static size_t accumulated_illegal_len;
 static int accumulated_flush_count;
 static uint32_t allow_this_error[2] = { 0, 0 };
+
 
 static void setup(void)
 {
