@@ -464,7 +464,7 @@ static void SetRootProps(struct SaveInfo *save, struct TreeInfo *info, struct No
 static int WriteTree(struct SaveInfo *save, struct TreeInfo *info,
 					 struct Node *n, int newlines, int nesting)
 {
-	if(nesting > TREE_NESTING_LIMIT)
+	if(nesting > save->sgfc->config->tree_nesting_limit)
 		return false;
 
 	if(newlines && save->linelen > 0)

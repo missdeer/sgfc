@@ -57,7 +57,7 @@ bool verifying_error_handler(uint32_t type, struct SGFInfo *sgfi, va_list arglis
 
 void common_setup(void)
 {
-	sgfc = SetupSGFInfo(NULL);
+	sgfc = SetupSGFInfo(NULL, NULL);
 	sgfc->options->add_sgfc_ap_property = false;
 	/* run tests without PrintError (makes setup easier) */
 	print_error_handler = NULL;

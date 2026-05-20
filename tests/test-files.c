@@ -36,7 +36,7 @@ static void FileTestOutput(struct SGFCError *error)
 
 static void FileTestSetup(void)
 {
-	sgfc = SetupSGFInfo(NULL);
+	sgfc = SetupSGFInfo(NULL, NULL);
 	testout = tmpfile();
 	print_error_output_hook = FileTestOutput;
 }

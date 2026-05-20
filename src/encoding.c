@@ -68,15 +68,17 @@ iconv_t OpenIconV(struct SGFInfo *sgfc, const char *encoding, const char **encod
 *** Function:	DetectEncoding
 ***				Searches for CA[] property in buffer; starts from sgfc->current
 ***				Contains mini-parser which might pick up different CA[] than load.c
-*** Parameters: c	  ... start of buffer
-***				b_end ... end of buffer
+*** Parameters: sgfc   ... pointer to SGFInfo structure
 ***				source ... output variable: where encoding was detected
 *** Returns:	pointer to encoding name (needs to be freed) or NULL
 **************************************************************************/
 
-char *DetectEncoding(const char *c, const char *b_end, enum encoding_source *source)
+char *DetectEncoding(struct SGFInfo *sgfc, enum encoding_source *source)
 {
 	int state = 1, brace_state = 1, brace_count = 0;
+	const char *c = sgfc->buffer;
+	const char *b_end = sgfc->b_end;
+	size_t scan_limit = sgfc->config->encoding_detect_scan_limit;
 
 	*source = ENCODING_SOURCE_NONE;
 
@@ -84,8 +86,8 @@ char *DetectEncoding(const char *c, const char *b_end, enum encoding_source *sou
 		/* no encoding found (not even enough place for BOM) --> assume default */
 		return NULL;
 
-	if((size_t)(b_end - c) > ENCODING_DETECT_SCAN_LIMIT)
-		b_end = c + ENCODING_DETECT_SCAN_LIMIT;	/* limit search to first SCAN_LIMIT bytes */
+	if((size_t)(b_end - c) > scan_limit)
+		b_end = c + scan_limit;	/* limit search to first SCAN_LIMIT bytes */
 
 	/* check for Unicode BOM */
 	if(*c == (char)0xFE && *(c+1) == (char)0xFF)
@@ -281,7 +283,7 @@ char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
 
 char *DecodeSGFBuffer(struct SGFInfo *sgfc, const char **encbuffer_end, char **encoding_name)
 {
-	char *encoding = DetectEncoding(sgfc->buffer, sgfc->b_end, &sgfc->global_encoding_source);
+	char *encoding = DetectEncoding(sgfc, &sgfc->global_encoding_source);
 	const char *selected_encoding;
 	iconv_t cd = OpenIconV(sgfc, encoding, &selected_encoding);
 	if(encoding != selected_encoding)

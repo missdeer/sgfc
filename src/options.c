@@ -403,20 +403,46 @@ struct SGFCOptions *SGFCDefaultOptions(void)
 
 
 /**************************************************************************
+*** Function:	SGFCDefaultConfig
+***				Allocates SGFCConfig structure and initializes it with
+***				default configuration values.
+*** Parameters: -
+*** Returns:	SGFCConfig structure
+**************************************************************************/
+
+struct SGFCConfig *SGFCDefaultConfig(void)
+{
+	struct SGFCConfig *config;
+
+	config = SafeMalloc(sizeof(struct SGFCConfig), "SGFC config");
+	config->max_reorder_variations = DEFAULT_MAX_REORDER_VARIATIONS;
+	config->encoding_detect_scan_limit = DEFAULT_ENCODING_DETECT_SCAN_LIMIT;
+	config->max_input_size = DEFAULT_MAX_INPUT_SIZE;
+	config->tree_nesting_limit = DEFAULT_TREE_NESTING_LIMIT;
+	return config;
+}
+
+
+/**************************************************************************
 *** Function:	SetupSGFInfo
 ***				Allocates SGFInfo structure and initializes it with
 ***             default values for ->options, ->sfh, and internal structures.
 *** Parameters: options ... pointer to SGFCOptions;
 ***							if NULL filled with SGFCDefaultOptions()
+***             config  ... pointer to SGFCConfig;
+***							if NULL filled with SGFCDefaultConfig()
 *** Returns:	pointer to SGFInfo structure ready for use in LoadSGF etc.
 **************************************************************************/
 
-struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options)
+struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options, struct SGFCConfig *config)
 {
 	struct SGFInfo *sgfc = SafeCalloc(sizeof(struct SGFInfo), "SGFInfo structure");
 
 	if(options)		sgfc->options = options;
 	else			sgfc->options = SGFCDefaultOptions();
+
+	if(config)		sgfc->config = config;
+	else			sgfc->config = SGFCDefaultConfig();
 
 	sgfc->_error_c = SetupErrorC_internal();
 	return sgfc;
@@ -463,6 +489,8 @@ void FreeSGFInfo(struct SGFInfo *sgfc)
 		free(sgfc->buffer);
 	if(sgfc->options)
 		free(sgfc->options);
+	if(sgfc->config)
+		free(sgfc->config);
 	if(sgfc->_error_c)
 		free(sgfc->_error_c);
 	free(sgfc);

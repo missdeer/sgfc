@@ -48,24 +48,6 @@ struct LoadInfo
 	bool is_utf8;			/* if buffer is already decoded, it's in UTF-8 */
 };
 
-/* Maximum input size that SGFC will handle */
-static size_t max_input_size = DEFAULT_MAX_INPUT_SIZE;
-
-
-/**************************************************************************
-*** Function:	SetMaxInputSize
-***				Sets max_input_size to supplied value and ensures that
-***				the limit is between 100 byte and 4GB.
-*** Parameters:	size ... maximum size that SGFC should handle
-**************************************************************************/
-
-void SetMaxInputSize(size_t size)
-{
-	size = size > UINT32_MAX ? UINT32_MAX : size;
-	size = size < 100 ? 100 : size;
-	max_input_size = size;
-}
-
 
 /**************************************************************************
 *** Function:	NextCharInBuffer
@@ -579,9 +561,10 @@ static int BuildSGFTree(struct LoadInfo *load, struct Node *r, int nesting, bool
 	int end_tree = 0, empty = 1, result;
 
 	/* protect from stack overflow */
-	if(nesting > TREE_NESTING_LIMIT)
+	if(nesting > load->sgfc->config->tree_nesting_limit)
 	{
-		PrintError(FE_DEEP_NESTING, load->sgfc, load->cur_row, load->cur_col, TREE_NESTING_LIMIT);
+		PrintError(FE_DEEP_NESTING, load->sgfc, load->cur_row, load->cur_col,
+				   load->sgfc->config->tree_nesting_limit);
 		return -1;
 	}
 
@@ -748,6 +731,7 @@ bool LoadSGFFromStdin(struct SGFInfo *sgfc)
 {
 	size_t capacity = DEFAULT_BUFFER_SIZE;
 	size_t size = 0;
+	size_t max_input_size = sgfc->config->max_input_size;
 
 	if(capacity > max_input_size)
 		capacity = max_input_size;
@@ -830,8 +814,12 @@ bool LoadSGFFromStdin(struct SGFInfo *sgfc)
 
 bool LoadSGF(struct SGFInfo *sgfc, const char *name)
 {
-	long size;
 	FILE *file;
+	long size;
+	size_t max_input_size = sgfc->config->max_input_size;
+
+	if(sgfc->buffer)
+		panic_impossible();	/* LoadSGF should be called with an empty buffer */
 
 	if (!strcmp(name, "-"))
 		return LoadSGFFromStdin(sgfc);
@@ -875,6 +863,11 @@ bool LoadSGF(struct SGFInfo *sgfc, const char *name)
 
 load_error:
 	fclose(file);
+	if(sgfc->buffer)
+	{
+		free(sgfc->buffer);
+		sgfc->buffer = NULL;
+	}
 	PrintError(FE_SOURCE_READ, sgfc, name);
 	return false;
 }

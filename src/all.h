@@ -218,8 +218,8 @@ typedef enum {
 
 #define MAX_BOARDSIZE	52
 
-#define MAX_REORDER_VARIATIONS 100
-#define ENCODING_DETECT_SCAN_LIMIT 1000
+#define DEFAULT_MAX_REORDER_VARIATIONS 100
+#define DEFAULT_ENCODING_DETECT_SCAN_LIMIT 1000
 
 /* separate structure, so that it can be re-used when iterating the node tree */
 struct PathBoard
@@ -405,6 +405,14 @@ struct SGFCOptions
 	bool delete_property[NUM_SGF_TOKENS];
 };
 
+struct SGFCConfig
+{
+	size_t max_input_size;
+	size_t encoding_detect_scan_limit;
+	size_t max_reorder_variations;
+	int tree_nesting_limit;
+};
+
 
 /* Start with ~5kb buffer which suffices in many cases */
 #define DEFAULT_BUFFER_SIZE ((size_t) 5000)
@@ -413,7 +421,7 @@ struct SGFCOptions
 #define DEFAULT_MAX_INPUT_SIZE ((size_t) 1024 * 1024 * 1024)
 
 /* Maxmimum nesting of tree branches (for stack protection) */
-#define TREE_NESTING_LIMIT 1000
+#define DEFAULT_TREE_NESTING_LIMIT 1000
 
 /* used by save.c when using MemoryIO SaveFileHandler functions */
 struct MemoryIOHandle {
@@ -454,6 +462,7 @@ struct SGFInfo
 	enum encoding_source global_encoding_source;
 
 	struct SGFCOptions *options;
+	struct SGFCConfig *config;
 
 	int fatal_error_count;	/* message count filled during parsing */
 	int error_count;

@@ -17,9 +17,9 @@
 
 START_TEST (test_deep_nesting_limit)
 {
-	char buffer[TREE_NESTING_LIMIT*2+10] = {0};
+	char buffer[DEFAULT_TREE_NESTING_LIMIT*2+10] = {0};
 
-	for(ptrdiff_t i=0; i <= TREE_NESTING_LIMIT; i++)
+	for(ptrdiff_t i=0; i <= DEFAULT_TREE_NESTING_LIMIT; i++)
 	{
 		buffer[i*2] = '(';
 		buffer[i*2+1] = ';';
@@ -35,9 +35,9 @@ END_TEST
 
 START_TEST (test_deeper_nesting_limit)
 {
-	char buffer[TREE_NESTING_LIMIT*2+10] = {0};
+	char buffer[DEFAULT_TREE_NESTING_LIMIT*2+10] = {0};
 
-	for(ptrdiff_t i=0; i <= TREE_NESTING_LIMIT+1; i++)
+	for(ptrdiff_t i=0; i <= DEFAULT_TREE_NESTING_LIMIT+1; i++)
 	{
 		buffer[i*2] = '(';
 		buffer[i*2+1] = ';';

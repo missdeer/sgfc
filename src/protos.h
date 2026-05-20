@@ -18,8 +18,9 @@ void PrintStatusLine(const struct SGFInfo *sgfc);
 void PrintGameSignatures(const struct SGFInfo *sgfc);
 bool ParseArgs(struct SGFInfo *sgfc, int argc, const char *argv[]);
 struct SGFCOptions *SGFCDefaultOptions(void);
+struct SGFCConfig *SGFCDefaultConfig(void);
 
-struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options);
+struct SGFInfo *SetupSGFInfo(struct SGFCOptions *options, struct SGFCConfig *config);
 void FreeSGFInfo(struct SGFInfo *sgfc);
 
 
@@ -28,12 +29,11 @@ void FreeSGFInfo(struct SGFInfo *sgfc);
 bool LoadSGF(struct SGFInfo *sgfc, const char *name);
 bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc);
 bool LoadSGFFromStdin(struct SGFInfo *sgfc);
-void SetMaxInputSize(size_t size);
 
 
 /**** encoding.c ****/
 
-char *DetectEncoding(const char *c, const char *b_end, enum encoding_source *source);
+char *DetectEncoding(struct SGFInfo *sgfc, enum encoding_source *source);
 char *DecodeSGFBuffer(struct SGFInfo *sgfc, const char **encbuffer_end, char **encoding_name);
 char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd, char *buffer, size_t size,
 				   size_t err_offset, const char **buffer_end);

@@ -122,13 +122,14 @@ static void input_size_setup(void)
 	expected_error = FE_SOURCE_TOO_LARGE;
 	expected_error_occurred = false;
 	print_error_handler = verifying_error_handler;
-	SetMaxInputSize(TEST_MAX_INPUT_SIZE);
+	sgfc->config->max_input_size = TEST_MAX_INPUT_SIZE;
 }
 
 
 static void input_size_teardown(void)
 {
-	SetMaxInputSize(DEFAULT_MAX_INPUT_SIZE);
+	free(sgfc->buffer);
+	sgfc->buffer = NULL;
 	common_teardown();
 }
 

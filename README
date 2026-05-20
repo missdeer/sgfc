@@ -660,9 +660,10 @@ This option fixes bad style SGF files, where the main line of the game
 is not in the main branch (variation 'A'), but instead is the last
 variation. Effectively, variations A,B,C,D are reordered as D,C,B,A.
 
-The function cannot reorder more than 100 variations of a single node.
-If this limit is too low for you, then you need to set
-MAX_REORDER_VARIATIONS in all.h to a higher value and recompile SGFC.
+The function cannot reorder more than 100 variations of a single node by
+default. If this limit is too low for you, then you need to set
+DEFAULT_MAX_REORDER_VARIATIONS in all.h to a higher value and recompile SGFC,
+or set max_reorder_variations in SGFCConfig when using SGFC as a library.
 
 
 

@@ -316,9 +316,9 @@ static bool CorrectVariations(struct SGFInfo *sgfc, struct Node *r, struct TreeI
 	if(!r)
 		return true;
 
-	if(nesting > TREE_NESTING_LIMIT)
+	if(nesting > sgfc->config->tree_nesting_limit)
 	{
-		PrintError(FE_DEEP_NESTING, sgfc, r->row, r->col, TREE_NESTING_LIMIT);
+		PrintError(FE_DEEP_NESTING, sgfc, r->row, r->col, sgfc->config->tree_nesting_limit);
 		return false;
 	}
 
@@ -375,15 +375,15 @@ static bool CorrectVariations(struct SGFInfo *sgfc, struct Node *r, struct TreeI
 
 static bool ReorderVariations(struct SGFInfo *sgfc, struct Node *r, int nesting)
 {
-	struct Node *n, *s[MAX_REORDER_VARIATIONS];
-	int i;
+	struct Node *n, **s;
+	size_t max_reorder_variations = sgfc->config->max_reorder_variations;
 
 	if(!r)
 		return true;
 
-	if(nesting > TREE_NESTING_LIMIT)
+	if(nesting > sgfc->config->tree_nesting_limit)
 	{
-		PrintError(FE_DEEP_NESTING, sgfc, r->row, r->col, TREE_NESTING_LIMIT);
+		PrintError(FE_DEEP_NESTING, sgfc, r->row, r->col, sgfc->config->tree_nesting_limit);
 		return false;
 	}
 
@@ -391,21 +391,31 @@ static bool ReorderVariations(struct SGFInfo *sgfc, struct Node *r, int nesting)
 	{
 		if(r->child && r->child->sibling)
 		{
-			i = 0;
+			if(!max_reorder_variations)
+			{
+				PrintError(E_TOO_MANY_VARIATIONS, sgfc, r->child->row, r->child->col);
+				break;
+			}
+			s = (struct Node **)SafeMalloc(sizeof(struct Node *) * max_reorder_variations,
+										   "variation reorder buffer");
+			size_t i = 0;
 			n = r->child;
 			while(n)
 			{
-				if(i >= MAX_REORDER_VARIATIONS)
+				if(i >= max_reorder_variations)
 				{
 					PrintError(E_TOO_MANY_VARIATIONS, sgfc, n->row, n->col);
 					break;
 				}
 				s[i++] = n;
 				if(!ReorderVariations(sgfc, n, nesting+1))
+				{
+					free((void *)s);
 					return false;
+				}
 				n = n->sibling;
 			}
-			if(i < MAX_REORDER_VARIATIONS)
+			if(i < max_reorder_variations)
 			{
 				i--;
 				s[0]->sibling = NULL;
@@ -413,6 +423,7 @@ static bool ReorderVariations(struct SGFInfo *sgfc, struct Node *r, int nesting)
 				for(; i > 0; i--)
 					s[i]->sibling = s[i-1];
 			}
+			free((void *)s);
 			break;
 		}
 		r = r->child;
@@ -937,7 +948,7 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 	struct Node *n;
 	unsigned int area;
 
-	if(nesting > TREE_NESTING_LIMIT)
+	if(nesting > sgfc->config->tree_nesting_limit)
 		return;
 
 	struct BoardStatus *st = SafeMalloc(sizeof(struct BoardStatus), "board status buffer");
@@ -964,7 +975,7 @@ static void CheckSGFSubTree(struct SGFInfo *sgfc, struct Node *r, struct BoardSt
 			st->markup_changed = false;
 
 			/* for n=r loop is done outside */
-			if(n->sibling && n != r && nesting <= TREE_NESTING_LIMIT)
+			if(n->sibling && n != r && nesting <= sgfc->config->tree_nesting_limit)
 			{
 				CheckSGFSubTree(sgfc, n, st, nesting+1);
 				break;						/* did complete subtree -> break */

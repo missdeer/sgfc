@@ -37,6 +37,14 @@ static bool LoadParseBuffer(char *buffer, size_t size)
 }
 
 
+static char *CallDetectEncoding(char *buffer, size_t size, enum encoding_source *source)
+{
+	sgfc->buffer = buffer;
+	sgfc->b_end = buffer + size;
+	return DetectEncoding(sgfc, source);
+}
+
+
 static void AssertRootComment(const char *expected)
 {
 	struct Property *comment = FindProperty(sgfc->root, TKN_C);
@@ -52,21 +60,21 @@ START_TEST (test_detect_encoding_BOM)
 	enum encoding_source source;
 	char buffer[4] = {'\xFE', '\xFF', ' ', ' '};
 
-	result = DetectEncoding(buffer, buffer+4, &source);
+	result = CallDetectEncoding(buffer, 4, &source);
 	ck_assert_str_eq(result, "UTF-16BE");
 	ck_assert_int_eq(source, ENCODING_SOURCE_BOM);
 	free(result);
 
 	buffer[0] = '\xFF';
 	buffer[1] = '\xFE';
-	result = DetectEncoding(buffer, buffer+4, &source);
+	result = CallDetectEncoding(buffer, 4, &source);
 	ck_assert_str_eq(result, "UTF-16LE");
 	ck_assert_int_eq(source, ENCODING_SOURCE_BOM);
 	free(result);
 
 	buffer[2] = 0;
 	buffer[3] = 0;
-	result = DetectEncoding(buffer, buffer+4, &source);
+	result = CallDetectEncoding(buffer, 4, &source);
 	ck_assert_str_eq(result, "UTF-32LE");
 	ck_assert_int_eq(source, ENCODING_SOURCE_BOM);
 	free(result);
@@ -75,7 +83,7 @@ START_TEST (test_detect_encoding_BOM)
 	buffer[1] = 0;
 	buffer[2] = '\xFE';
 	buffer[3] = '\xFF';
-	result = DetectEncoding(buffer, buffer+4, &source);
+	result = CallDetectEncoding(buffer, 4, &source);
 	ck_assert_str_eq(result, "UTF-32BE");
 	ck_assert_int_eq(source, ENCODING_SOURCE_BOM);
 	free(result);
@@ -84,7 +92,7 @@ START_TEST (test_detect_encoding_BOM)
 	buffer[1] = '\xBB';
 	buffer[2] = '\xBF';
 	buffer[3] = '\n';
-	result = DetectEncoding(buffer, buffer+4, &source);
+	result = CallDetectEncoding(buffer, 4, &source);
 	ck_assert_str_eq(result, "UTF-8");
 	ck_assert_int_eq(source, ENCODING_SOURCE_BOM);
 	free(result);
@@ -96,16 +104,16 @@ START_TEST (test_detect_encoding_limits)
 {
 	char nested[] = "(((CA[UTF-8]))";
 	enum encoding_source source;
-	char *result = DetectEncoding(nested, nested + strlen(nested), &source);
+	char *result = CallDetectEncoding(nested, strlen(nested), &source);
 	ck_assert_ptr_eq(result, NULL);
 	ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 
-	char delayed[ENCODING_DETECT_SCAN_LIMIT + 200];
+	char delayed[DEFAULT_ENCODING_DETECT_SCAN_LIMIT + 200];
 	memset(delayed, 'a', sizeof(delayed));
 	delayed[0] = '(';
-	memcpy(delayed + ENCODING_DETECT_SCAN_LIMIT + 5, "CA[UTF-8]", 9);
+	memcpy(delayed + DEFAULT_ENCODING_DETECT_SCAN_LIMIT + 5, "CA[UTF-8]", 9);
 	delayed[sizeof(delayed)-1] = 0;
-	result = DetectEncoding(delayed, delayed + sizeof(delayed) - 1, &source);
+	result = CallDetectEncoding(delayed, sizeof(delayed) - 1, &source);
 	ck_assert_ptr_eq(result, NULL);
 	ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 }
@@ -118,43 +126,43 @@ START_TEST (test_detect_encoding)
 	enum encoding_source source;
 
 	char buffer[] = "some (text CA[basic-case] more text";
-	result = DetectEncoding(buffer, buffer + strlen(buffer), &source);
+	result = CallDetectEncoding(buffer, strlen(buffer), &source);
 	ck_assert_str_eq(result, "basic-case");
 	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer2[] = "some (CA\n [ spaces \n] ";
-	result = DetectEncoding(buffer2, buffer2 + strlen(buffer2), &source);
+	result = CallDetectEncoding(buffer2, strlen(buffer2), &source);
 	ck_assert_str_eq(result, "spaces");
 	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer3[] = "some text in (front ClowerAcase\n [ lower-case]";
-	result = DetectEncoding(buffer3, buffer3 + strlen(buffer3), &source);
+	result = CallDetectEncoding(buffer3, strlen(buffer3), &source);
 	ck_assert_str_eq(result, "lower-case");
 	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer4[] = "(CCA[one]CA[second]";
-	result = DetectEncoding(buffer4, buffer4 + strlen(buffer4), &source);
+	result = CallDetectEncoding(buffer4, strlen(buffer4), &source);
 	ck_assert_str_eq(result, "second");
 	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer5[] = "(xCyAzA[one]CxA[second-lower]";
-	result = DetectEncoding(buffer5, buffer5 + strlen(buffer5), &source);
+	result = CallDetectEncoding(buffer5, strlen(buffer5), &source);
 	ck_assert_str_eq(result, "second-lower");
 	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer6[] = "(xCyA.CzA[word-boundary] more";
-	result = DetectEncoding(buffer6, buffer6 + strlen(buffer6), &source);
+	result = CallDetectEncoding(buffer6, strlen(buffer6), &source);
 	ck_assert_str_eq(result, "word-boundary");
 	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
 
 	char buffer7[] = "no:CA[one] (CA[after-brace]";
-	result = DetectEncoding(buffer7, buffer7 + strlen(buffer7), &source);
+	result = CallDetectEncoding(buffer7, strlen(buffer7), &source);
 	ck_assert_str_eq(result, "after-brace");
 	ck_assert_int_eq(source, ENCODING_SOURCE_CA);
 	free(result);
@@ -168,24 +176,24 @@ START_TEST (test_no_encoding_specified)
 	enum encoding_source source;
 
 	char buffer[] = "you're not gonna find it";
-	result = DetectEncoding(buffer, buffer + strlen(buffer), &source);
+	result = CallDetectEncoding(buffer, strlen(buffer), &source);
 	ck_assert_ptr_eq(result, NULL);
 	ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 
 	char buffer2[] = "you're not gonna CA[it";
-	result = DetectEncoding(buffer2, buffer2 + strlen(buffer2), &source);
+	result = CallDetectEncoding(buffer2, strlen(buffer2), &source);
 	ck_assert_ptr_eq(result, NULL);
 	ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 
 	char buffer3[] = "(;CA[])";
-	result = DetectEncoding(buffer3, buffer3 + strlen(buffer3), &source);
+	result = CallDetectEncoding(buffer3, strlen(buffer3), &source);
 	ck_assert_ptr_eq(result, NULL);
 	ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 
 	char tiny[] = "abc";
 	for(size_t len = 0; len < 4; len++)
 	{
-		result = DetectEncoding(tiny, tiny + len, &source);
+		result = CallDetectEncoding(tiny, len, &source);
 		ck_assert_ptr_eq(result, NULL);
 		ck_assert_int_eq(source, ENCODING_SOURCE_NONE);
 	}

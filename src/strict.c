@@ -68,7 +68,7 @@ static void CheckMoveOrder(struct SGFInfo *sgfc, struct Node *node, bool check_s
 {
 	int old_col = 0;
 
-	if(nesting > TREE_NESTING_LIMIT)
+	if(nesting > sgfc->config->tree_nesting_limit)
 		return; 
 
 	while(node)
