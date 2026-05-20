@@ -112,13 +112,12 @@ bool Check_GameInfo(struct SGFInfo *sgfc, struct Property *p, struct PropValue *
 
 struct ErrorC_internal *SetupErrorC_internal(void);
 
-typedef void (*panic_hook_t)(uint32_t error, const char *detail) ATTRIBUTE_NORETURN;
-
 extern bool (*print_error_handler)(uint32_t type, struct SGFInfo *sgfc, va_list arglist);
 extern void (*print_error_output_hook)(struct SGFCError *error);
-extern panic_hook_t panic_hook;
+extern void (*panic_hook)(uint32_t error, const char *detail);
 
 int PrintError(uint32_t type, struct SGFInfo *sgfc, ...);
+ATTRIBUTE_NORETURN void panic(uint32_t error, const char *detail);
 ATTRIBUTE_NORETURN void ExitWithFatalError(uint32_t error, const char *detail);
 bool PrintErrorHandler(uint32_t type, struct SGFInfo *sgfc, va_list arglist);
 void PrintErrorOutputHook(struct SGFCError *error);

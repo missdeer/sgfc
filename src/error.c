@@ -22,7 +22,7 @@
 /* Error reporting hooks */
 bool (*print_error_handler)(uint32_t, struct SGFInfo *, va_list) = PrintErrorHandler;
 void (*print_error_output_hook)(struct SGFCError *) = PrintErrorOutputHook;
-panic_hook_t panic_hook = ExitWithFatalError;
+void (*panic_hook)(uint32_t, const char *) = ExitWithFatalError;
 
 
 static const char *error_mesg[] =
@@ -171,6 +171,23 @@ int PrintError(uint32_t type, struct SGFInfo *sgfc, ...) {
 		result = (*print_error_handler)(type, sgfc, arglist);
 	va_end(arglist);
 	return result;
+}
+
+
+/**************************************************************************
+*** Function:	panic
+***				The only purpose is to call the panic_hook and to
+***             provide a function to which ATTRIBUTE_NORETURN can be attached.
+***             (because [[noreturn]] cannot realiably be attached to pointers.)
+**************************************************************************/
+
+ATTRIBUTE_NORETURN
+void panic(uint32_t error, const char *detail)
+{
+	(*panic_hook)(error, detail);
+	/* safeguard, just in case the hook does indeed return.
+	 * Also, it makes linters happy */
+	exit(20);
 }
 
 

@@ -18,8 +18,8 @@
 #define TO_STR_HELPER(x) #x
 #define TO_STR(x) TO_STR_HELPER(x)
 
-#define panic_out_of_memory(x) (*panic_hook)(FE_OUT_OF_MEMORY, (x))
-#define panic_impossible() (*panic_hook)(FE_INTERNAL_ERROR, __FILE__ ":" TO_STR(__LINE__))
+#define panic_out_of_memory(x) panic(FE_OUT_OF_MEMORY, (x))
+#define panic_impossible() panic(FE_INTERNAL_ERROR, __FILE__ ":" TO_STR(__LINE__))
 #define safe_add(a, b) SafeAddSize((a), (b), "overflow " __FILE__ ":" TO_STR(__LINE__))
 #define safe_add3(a, b, c) safe_add((a), safe_add((b), (c)))
 
