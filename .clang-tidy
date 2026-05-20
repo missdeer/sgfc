@@ -19,7 +19,6 @@ Checks: >-
   -readability-isolate-declaration,
   -readability-magic-numbers,
   -readability-math-missing-parentheses,
-  -readability-math-missing-parentheses,
   -readability-misleading-indentation
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'

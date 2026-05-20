@@ -183,7 +183,7 @@ char *DetectEncoding(const char *c, const char *b_end, enum encoding_source *sou
 **************************************************************************/
 
 char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd,
-				   char *buffer, size_t size, uint32_t err_offset,
+				   char *buffer, size_t size, size_t err_offset,
 				   const char **buffer_end)
 {
 	char *out_buffer, *out_pos, *in_buffer;

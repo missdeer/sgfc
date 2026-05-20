@@ -83,7 +83,7 @@ START_TEST (test_E_ILLEGAL_OUTSIDE_CHARS_large_accumulation)
 	accumulated_illegal_len = 0;
 	accumulated_flush_count = 0;
 
-	PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, 1UL, 1UL, true, illegal, (uint32_t)strlen(illegal));
+	PrintError(E_ILLEGAL_OUTSIDE_CHARS, sgfc, (uint32_t)1, (uint32_t)1, true, illegal, (uint32_t)strlen(illegal));
 	PrintError(E_NO_ERROR, sgfc);	/* flush the final partial chunk */
 
 	print_error_output_hook = PrintErrorOutputHook;

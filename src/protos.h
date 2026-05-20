@@ -35,7 +35,7 @@ bool LoadSGFFromStdin(struct SGFInfo *sgfc);
 char *DetectEncoding(const char *c, const char *b_end, enum encoding_source *source);
 char *DecodeSGFBuffer(struct SGFInfo *sgfc, const char **encbuffer_end, char **encoding_name);
 char *DecodeBuffer(struct SGFInfo *sgfc, iconv_t cd, char *buffer, size_t size,
-				   uint32_t err_offset, const char **buffer_end);
+				   size_t err_offset, const char **buffer_end);
 iconv_t OpenIconV(struct SGFInfo *sgfc, const char *encoding, const char **encoding_name);
 
 /**** save.c ****/

@@ -42,7 +42,7 @@ START_TEST (test_extend_save_buffer)
 {
 	char buffer[DEFAULT_BUFFER_SIZE + 100];
 
-	for(uint32_t i=0; i < DEFAULT_BUFFER_SIZE + 100; i++)
+	for(size_t i=0; i < DEFAULT_BUFFER_SIZE + 100; i++)
 		buffer[i] = (char)('a' + (i % 26));
 	strcpy(buffer, "(;FF[4]CA[UTF-8]GM[1]SZ[19]XX["); // fragile: header as output by SGFC
 	buffer[strlen(buffer)] = 'x';

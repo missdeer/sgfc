@@ -34,9 +34,9 @@ struct LoadInfo
 	const char *b_end;		/* exclusive buffer end, i.e. one past the last valid byte */
 
 	const char *current;	/* actual read position (cursor) in buffer */
-	uint32_t cur_row;			/* row & column associated with current */
+	uint32_t cur_row;		/* row & column associated with current */
 	uint32_t cur_col;
-	uint32_t lowercase;		/* load.c: number of lowercase chars in front of propID */
+	uint32_t lowercase;		/* number of lowercase chars in front of propID */
 
 	bool is_utf8;			/* if buffer is already decoded, it's in UTF-8 */
 };
@@ -661,7 +661,7 @@ static int FindStart(struct LoadInfo *load, bool first_time)
 				}
 
 				if(!first_time)
-					PrintError(E_ILLEGAL_OUTSIDE_CHARS, load->sgfc, load->cur_row, load->cur_col, true, load->current, 4UL);
+					PrintError(E_ILLEGAL_OUTSIDE_CHARS, load->sgfc, load->cur_row, load->cur_col, true, load->current, (uint32_t)4);
 
 				load->current += 4;	/* skip '[aa]' */
 				continue;
