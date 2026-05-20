@@ -120,6 +120,7 @@ static const char *error_mesg[] =
 /* 75 */
 		"nesting of branches is too deep and exceeds limit of %d nested branches\n",
 		"internal error occured (%s) - that shouldn't happen. Sorry.\n",
+		"source input exceeds maximum size of %zu bytes\n",
 };
 
 

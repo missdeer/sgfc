@@ -58,6 +58,7 @@ if(BUILD_TESTING)
                 tests/delete-node.c
                 tests/gameinfo-correction.c
                 tests/gameinfo-interactive.c
+                tests/input-size.c
                 tests/load-properties.c
                 tests/nesting.c
                 tests/other-games.c

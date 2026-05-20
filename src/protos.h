@@ -28,6 +28,7 @@ void FreeSGFInfo(struct SGFInfo *sgfc);
 bool LoadSGF(struct SGFInfo *sgfc, const char *name);
 bool LoadSGFFromFileBuffer(struct SGFInfo *sgfc);
 bool LoadSGFFromStdin(struct SGFInfo *sgfc);
+void SetMaxInputSize(size_t size);
 
 
 /**** encoding.c ****/

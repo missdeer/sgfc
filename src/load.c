@@ -23,7 +23,14 @@
 #include "protos.h"
 #include "helpers.h"
 
+
 #define SGF_EOF			(load->current >= load->b_end)
+
+/* defines for SkipText */
+#define INSIDE	0u
+#define OUTSIDE 1u
+#define P_ERROR	2u
+
 
 /* Internal data structure for load.c functions */
 struct LoadInfo
@@ -41,11 +48,23 @@ struct LoadInfo
 	bool is_utf8;			/* if buffer is already decoded, it's in UTF-8 */
 };
 
+/* Maximum input size that SGFC will handle */
+static size_t max_input_size = DEFAULT_MAX_INPUT_SIZE;
 
-/* defines for SkipText */
-#define INSIDE	0u
-#define OUTSIDE 1u
-#define P_ERROR	2u
+
+/**************************************************************************
+*** Function:	SetMaxInputSize
+***				Sets max_input_size to supplied value and ensures that
+***				the limit is between 100 byte and 4GB.
+*** Parameters:	size ... maximum size that SGFC should handle
+**************************************************************************/
+
+void SetMaxInputSize(size_t size)
+{
+	size = size > UINT32_MAX ? UINT32_MAX : size;
+	size = size < 100 ? 100 : size;
+	max_input_size = size;
+}
 
 
 /**************************************************************************
@@ -730,18 +749,40 @@ bool LoadSGFFromStdin(struct SGFInfo *sgfc)
 	size_t capacity = DEFAULT_BUFFER_SIZE;
 	size_t size = 0;
 
+	if(capacity > max_input_size)
+		capacity = max_input_size;
+
 	char *buffer = malloc(capacity);
 	if (!buffer)
 		return false;
 
 	while (true)
 	{
+		if(size == max_input_size)
+		{
+			int c = fgetc(stdin);
+			if(c == EOF)
+			{
+				if(feof(stdin))
+					break;
+				if(ferror(stdin))
+				{
+					free(buffer);
+					return false;
+				}
+			}
+			free(buffer);
+			PrintError(FE_SOURCE_TOO_LARGE, sgfc, max_input_size);
+			return false;
+		}
+
 		if (size == capacity)
 		{
 			char *tmp = NULL;
-			if(capacity < SIZE_MAX / 2)
+			if(capacity < max_input_size)
 			{
-				capacity *= 2;
+				size_t new_capacity = capacity < SIZE_MAX / 2 ? capacity * 2 : max_input_size;
+				capacity = new_capacity <= max_input_size ? new_capacity : max_input_size;
 				tmp = realloc(buffer, capacity);
 			}
 			if (!tmp)
@@ -807,6 +848,12 @@ bool LoadSGF(struct SGFInfo *sgfc, const char *name)
 	size = ftell(file);
 	if(size == -1L || size == LONG_MAX) /* Linux may return LONG_MAX in some cases :o( */
 		goto load_error;
+	if((size_t)size > max_input_size)
+	{
+		fclose(file);
+		PrintError(FE_SOURCE_TOO_LARGE, sgfc, max_input_size);
+		return false;
+	}
 
 	sgfc->buffer = (char *) malloc((size_t) size);
 	if(!sgfc->buffer)

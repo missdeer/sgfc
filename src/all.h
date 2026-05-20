@@ -149,8 +149,9 @@ struct SGFCError {
 #define FE_MULTIPLE_ENCODINGS	(75UL | E_FATAL_ERROR | E_SEARCHPOS)
 #define FE_DEEP_NESTING			(76UL | E_FATAL_ERROR | E_SEARCHPOS)
 #define FE_INTERNAL_ERROR		(77UL | E_FATAL_ERROR)
+#define FE_SOURCE_TOO_LARGE		(78UL | E_FATAL_ERROR)
 
-#define MAX_ERROR_NUM	77UL
+#define MAX_ERROR_NUM	78UL
 
 
 /* order must match order in sgf_token[] !! */
@@ -407,6 +408,9 @@ struct SGFCOptions
 
 /* Start with ~5kb buffer which suffices in many cases */
 #define DEFAULT_BUFFER_SIZE ((size_t) 5000)
+
+/* Maximum number of input bytes read from a source file or stdin */
+#define DEFAULT_MAX_INPUT_SIZE ((size_t) 1024 * 1024 * 1024)
 
 /* Maxmimum nesting of tree branches (for stack protection) */
 #define TREE_NESTING_LIMIT 1000
