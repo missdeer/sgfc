@@ -40,8 +40,11 @@ target_include_directories(sgfc_core
 
 target_link_libraries(sgfc_core
         PUBLIC
-        m
         Iconv::Iconv)
+
+if(NOT MSVC)
+        target_link_libraries(sgfc_core PUBLIC m)
+endif()
 
 add_executable(sgfc
         src/main.c)
